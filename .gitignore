@@ -764,3 +764,6 @@ FodyWeavers.xsd
 
 # Certificats
 certs/
+
+# Config file
+uniride-sme/config.ini
