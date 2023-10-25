@@ -42,32 +42,30 @@ def disconnect(conn):
     print("Database connection closed.")
 
 
-def execute_commands(conn, commands):
+def execute_command(conn, query, params=None):
     """Execute a SQL command"""
     cur = conn.cursor()
 
     returning_value = None
 
-    # create table one by one
-    for command in commands:
-        if command:
-            print(command)
-            cur.execute(command)
-            if " returning " in command.lower():
-                returning_value = cur.fetchone()[0]
-    # close communication with the PostgreSQL database server
+    print(query)
+    cur.execute(query, params)
+    if "returning" in query.lower():
+        returning_value = cur.fetchone()[0]
+
+    # Close communication with the PostgreSQL database server
     cur.close()
-    # commit the changes
+    # Commit the changes
     conn.commit()
     return returning_value
 
 
-def get_query(conn, query):
+def get_query(conn, query, params=None):
     """Query data from db"""
     try:
         rows = None
         cur = conn.cursor()
-        cur.execute(query)
+        cur.execute(query, params)
         rows = cur.fetchall()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
