@@ -17,7 +17,8 @@ dependencies = [
   "flask",
   "flask_restful",
   "flask_cors",
-  "python-dotenv"]
+  "python-dotenv",
+  "psycopg2"]
 
 [project.optional-dependencies]
 dev = []
