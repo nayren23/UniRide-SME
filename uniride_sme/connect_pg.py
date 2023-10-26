@@ -2,6 +2,8 @@
 #!/usr/bin/python
 
 import psycopg2
+import psycopg2.extras
+
 from config import config
 
 
@@ -60,13 +62,16 @@ def execute_command(conn, query, params=None):
     return returning_value
 
 
-def get_query(conn, query, params=None):
+def get_query(conn, query, params=None, return_dict=False):
     """Query data from db"""
     try:
         rows = None
         cur = conn.cursor()
         cur.execute(query, params)
-        rows = cur.fetchall()
+        if return_dict:
+            rows = cur.fetchall(cursor_factory=psycopg2.extras.RealDictCursor)
+        else:
+            rows = cur.fetchall()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)

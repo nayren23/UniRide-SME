@@ -12,13 +12,14 @@ def sign_up():
     json_object = request.json
     user_bo = UserBO(
         id=json_object.get("id", None),
+        login=json_object.get("login", None),
+        firstname=json_object.get("firstname", None),
         lastname=json_object.get("lastname", None),
         student_email=json_object.get("student_email", None),
         password=json_object.get("password", None),
         gender=json_object.get("gender", None),
-        firstname=json_object.get("firstname", None),
         phone_number=json_object.get("phone_number", None),
         description=json_object.get("description", None),
     )
-    user_bo.add_in_db()
-    return jsonify({"message": "User created successfully"}), 200
+    response = user_bo.add_in_db()
+    return jsonify({"message": response["message"]}), response["status_code"]
