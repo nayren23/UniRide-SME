@@ -15,7 +15,7 @@ def register():
     try:
         json_object = request.json
         user_bo = UserBO(
-            id=json_object.get("id", None),
+            user_id=json_object.get("id", None),
             login=json_object.get("login", None),
             firstname=json_object.get("firstname", None),
             lastname=json_object.get("lastname", None),

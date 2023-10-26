@@ -1,11 +1,12 @@
 """User business owner"""
+import re
+import os
+
 import connect_pg
 from models.exception.user_exceptions import (
     InvalidInputException,
     MissingInputException,
 )
-import re
-import os
 
 
 class UserBO:
@@ -13,18 +14,17 @@ class UserBO:
 
     def __init__(
         self,
-        id: int = None,
+        user_id: int = None,
         login: str = None,
         firstname: str = None,
         lastname: str = None,
         student_email: str = None,
         password: str = None,
-        password_confirmation: str = None,
         gender: str = None,
         phone_number: str = None,
         description: str = None,
     ):
-        self.id = id
+        self.user_id = user_id
         self.login = login
         self.firstname = firstname
         self.lastname = lastname
@@ -36,6 +36,7 @@ class UserBO:
 
     def add_in_db(self, password_confirmation):
         """Insert the user in the database"""
+
         # validate values
         self.validate_login()
         self.validate_email()
@@ -63,10 +64,12 @@ class UserBO:
         query = f"INSERT INTO uniride.ur_user ({fields}) VALUES ({placeholders}) RETURNING u_id"
 
         conn = connect_pg.connect()
-        id = connect_pg.execute_command(conn, query, values)
-        self.id = id
+        user_id = connect_pg.execute_command(conn, query, values)
+        self.user_id = user_id
 
     def validate_login(self):
+        """Check if the login is valid"""
+
         # check if exist
         if not self.login:
             raise MissingInputException("LOGIN_MISSING")
@@ -87,6 +90,8 @@ class UserBO:
             raise InvalidInputException("LOGIN_TAKEN")
 
     def validate_email(self):
+        """Check if the email is valid"""
+
         # check if exist
         if not self.student_email:
             raise MissingInputException("EMAIL_MISSING")
@@ -126,39 +131,49 @@ class UserBO:
             raise InvalidInputException(f"{name_type}_INVALID_CHARACTERS")
 
     def validate_firstname(self):
+        """Check if the firstname is valid"""
+
         self._validate_name(self.firstname, "FIRSTNAME")
 
     def validate_lastname(self):
+        """Check if the lastname is valid"""
+
         self._validate_name(self.lastname, "LASTNAME")
 
     def validate_gender(self):
+        """Check if the gender is valid"""
+
         # check if exist
         if not self.gender:
-            raise MissingInputException(f"GENDER_MISSING")
+            raise MissingInputException("GENDER_MISSING")
 
         # check if the format is valid
         if self.gender not in ("N", "H", "F"):
-            raise InvalidInputException(f"GENDER_INVALID")
+            raise InvalidInputException("GENDER_INVALID")
 
     def validate_phone_number(self):
+        """Check if the phone number is valid"""
+
         # check if exist
         if not self.phone_number:
-            raise MissingInputException(f"PHONE_NUMBER_MISSING")
+            raise MissingInputException("PHONE_NUMBER_MISSING")
 
         # check if the format is valid
         if not (self.phone_number.isdigit() and len(self.phone_number) == 9):
-            raise InvalidInputException(f"PHONE_NUMBER_INVALID")
+            raise InvalidInputException("PHONE_NUMBER_INVALID")
 
     def validate_password(self, password_confirmation):
+        """Check if the password is valid"""
+
         # check if exist
         if not self.password:
-            raise MissingInputException(f"PASSWORD_MISSING")
+            raise MissingInputException("PASSWORD_MISSING")
         if not password_confirmation:
-            raise MissingInputException(f"PASSWORD_CONFIRMATION_MISSING")
+            raise MissingInputException("PASSWORD_CONFIRMATION_MISSING")
 
         # check if password and password confirmation are equals
         if self.password != password_confirmation:
-            raise InvalidInputException(f"PASSWORD_NOT_MATCHING")
+            raise InvalidInputException("PASSWORD_NOT_MATCHING")
 
         # check if the format is valid
         contains_lower_case_letter = re.search(r"[a-z]", self.password)
@@ -174,12 +189,14 @@ class UserBO:
             and contains_special
             and correct_size
         ):
-            raise InvalidInputException(f"PASSWORD_INVALID")
+            raise InvalidInputException("PASSWORD_INVALID")
 
     def validate_description(self):
+        """Check if the description is valid"""
+
         # check if exist
         if not self.description:
-            raise MissingInputException(f"DESCRIPTION_MISSING")
+            raise MissingInputException("DESCRIPTION_MISSING")
 
         # check if description not too long
         if len(self.description) > 500:
