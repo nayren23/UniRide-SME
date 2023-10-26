@@ -9,7 +9,7 @@ user = Blueprint("user", __name__)
 
 @user.route("/user/register", methods=["POST"])
 def register():
-    """Sign up route"""
+    """Sign up endpoint"""
     response = jsonify({"message": "User created successfuly"}), 200
 
     try:
@@ -25,7 +25,7 @@ def register():
             phone_number=json_object.get("phone_number", None),
             description=json_object.get("description", None),
         )
-        response = user_bo.add_in_db()
+        user_bo.add_in_db()
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 
@@ -34,7 +34,7 @@ def register():
 
 @user.route("/user/validate_email", methods=["POST"])
 def validate_email():
-    """Email validation route"""
+    """Email validation endpoint"""
     response = jsonify({"message": "Email valid"}), 200
 
     try:
@@ -51,7 +51,7 @@ def validate_email():
 
 @user.route("/user/validate_login", methods=["POST"])
 def validate_login():
-    """Login validation route"""
+    """Login validation endpoint"""
     response = jsonify({"message": "Login valid"}), 200
 
     try:
@@ -60,6 +60,40 @@ def validate_login():
             login=json_object.get("login", None),
         )
         user_bo.validate_login()
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+@user.route("/user/validate_firstname", methods=["POST"])
+def validate_firstname():
+    """Firstname validation endpoint"""
+    response = jsonify({"message": "Firstname valid"}), 200
+
+    try:
+        json_object = request.json
+        user_bo = UserBO(
+            firstname=json_object.get("firstname", None),
+        )
+        user_bo.validate_firstname()
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+@user.route("/user/validate_lastname", methods=["POST"])
+def validate_lastname():
+    """Lastname validation endpoint"""
+    response = jsonify({"message": "Lastname valid"}), 200
+
+    try:
+        json_object = request.json
+        user_bo = UserBO(
+            lastname=json_object.get("lastname", None),
+        )
+        user_bo.validate_lastname()
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 

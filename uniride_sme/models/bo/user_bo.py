@@ -5,6 +5,7 @@ from models.exception.user_exceptions import (
     MissingInputException,
 )
 import re
+import os
 
 
 class UserBO:
@@ -34,8 +35,10 @@ class UserBO:
 
     def add_in_db(self):
         """Insert the user in the database"""
-        self.validate_email()
         self.validate_login()
+        self.validate_email()
+        self.validate_firstname()
+        self.validate_lastname()
 
         attr_dict = {}
         for attr, value in self.__dict__.items():
@@ -52,6 +55,28 @@ class UserBO:
         id = connect_pg.execute_command(conn, query, values)
         self.id = id
 
+    def validate_login(self):
+        # check if exist
+        if not self.login:
+            raise MissingInputException("Login missing")
+
+        # check if the format is valid
+        if len(self.login) > 50:
+            raise InvalidInputException("Login invalid format : too long")
+        regex = r"[A-Za-z0-9._-]+"
+        if not re.fullmatch(regex, self.login):
+            raise InvalidInputException(
+                "Login invalid format : not allowed special characters"
+            )
+
+        # check if the login is already taken
+        query = "select count(*) from uniride.ur_user where u_login = %s"
+
+        conn = connect_pg.connect()
+        count = connect_pg.get_query(conn, query, (self.login,))[0][0]
+        if count:
+            raise InvalidInputException("Login already taken")
+
     def validate_email(self):
         # check if exist
         if not self.student_email:
@@ -62,32 +87,33 @@ class UserBO:
         if not re.fullmatch(regex, self.student_email):
             raise InvalidInputException("Email invalid format")
 
+        # check if the domain is valid
+        email_domain = self.student_email.split("@")[1]
+        valid_domain = os.getenv("EMAIL_VALID_DOMAIN")
+        if email_domain != valid_domain:
+            raise InvalidInputException("Email invalid : not a student email")
+
         # check if the email is already taken
         query = "select count(*) from uniride.ur_user where u_student_email = %s"
-
         conn = connect_pg.connect()
         count = connect_pg.get_query(conn, query, (self.student_email,))[0][0]
         if count:
-            raise InvalidInputException("Email adresse already taken", 422)
+            raise InvalidInputException("Email adresse already taken")
 
-    def validate_login(self):
+    def validate_name(self, name, name_type):
         # check if exist
-        if not self.login:
-            raise MissingInputException("Login missing", 400)
+        if not name:
+            raise MissingInputException(f"{name_type} missing")
 
         # check if the format is valid
-        if len(self.login) > 50:
-            raise InvalidInputException("Login invalid format : too long", 422)
-        regex = r"[A-Za-z0-9._-]+"
-        if not re.fullmatch(regex, self.login):
+        regex = r"[A-Za-z-\s]+"
+        if not re.fullmatch(regex, name):
             raise InvalidInputException(
-                "Login invalid format : not allowed special characters", 422
+                f"{name_type} format: not allowed special characters"
             )
 
-        # check if the login is already taken
-        query = "select count(*) from uniride.ur_user where u_login = %s"
+    def validate_firstname(self):
+        self.validate_name(self.firstname, "Firstname")
 
-        conn = connect_pg.connect()
-        count = connect_pg.get_query(conn, query, (self.login,))[0][0]
-        if count:
-            raise InvalidInputException("Login already taken", 422)
+    def validate_lastname(self):
+        self.validate_name(self.lastname, "Lastname")
