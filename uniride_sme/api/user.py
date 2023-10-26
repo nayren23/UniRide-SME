@@ -21,12 +21,11 @@ def register():
             lastname=json_object.get("lastname", None),
             student_email=json_object.get("student_email", None),
             password=json_object.get("password", None),
-            password_confirmation=json_object.get("password_confirmation", None),
             gender=json_object.get("gender", None),
             phone_number=json_object.get("phone_number", None),
             description=json_object.get("description", None),
         )
-        user_bo.add_in_db()
+        user_bo.add_in_db(json_object.get("password_confirmation", None))
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 
@@ -136,16 +135,32 @@ def validate_phone_number():
 
 @user.route("/user/validate_password", methods=["POST"])
 def validate_password():
-    """Phone number validation endpoint"""
+    """Password validation endpoint"""
     response = jsonify({"message": "PASSWORD_VALID"}), 200
 
     try:
         json_object = request.json
         user_bo = UserBO(
             password=json_object.get("password", None),
-            password_confirmation=json_object.get("password_confirmation", None),
         )
-        user_bo.validate_password()
+        user_bo.validate_password(json_object.get("password_confirmation", None))
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+@user.route("/user/validate_description", methods=["POST"])
+def validate_description():
+    """Description validation endpoint"""
+    response = jsonify({"message": "DESCRIPTION_VALID"}), 200
+
+    try:
+        json_object = request.json
+        user_bo = UserBO(
+            description=json_object.get("description", None),
+        )
+        user_bo.validate_description()
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 

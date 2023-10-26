@@ -30,26 +30,32 @@ class UserBO:
         self.lastname = lastname
         self.student_email = student_email
         self.password = password
-        self.password_confirmation = password_confirmation
         self.gender = gender
         self.phone_number = phone_number
         self.description = description
 
-    def add_in_db(self):
+    def add_in_db(self, password_confirmation):
         """Insert the user in the database"""
+        # validate values
         self.validate_login()
         self.validate_email()
         self.validate_firstname()
         self.validate_lastname()
         self.validate_gender()
         self.validate_phone_number()
-        self.validate_password()
+        self.validate_password(password_confirmation)
+        try:
+            self.validate_description()
+        except MissingInputException:
+            pass
 
+        # retrieve not None values
         attr_dict = {}
         for attr, value in self.__dict__.items():
             if value:
                 attr_dict["u_" + attr] = value
 
+        # format for sql query
         fields = ", ".join(attr_dict.keys())
         placeholders = ", ".join(["%s"] * len(attr_dict))
         values = tuple(attr_dict.values())
@@ -75,7 +81,6 @@ class UserBO:
 
         # check if the login is already taken
         query = "select count(*) from uniride.ur_user where u_login = %s"
-
         conn = connect_pg.connect()
         count = connect_pg.get_query(conn, query, (self.login,))[0][0]
         if count:
@@ -91,10 +96,10 @@ class UserBO:
         if not re.fullmatch(regex, self.student_email):
             raise InvalidInputException("EMAIL_INVALID_FORMAT")
 
-        # check if the domain is valid
         if len(self.student_email) > 254:
             raise InvalidInputException("EMAIL_TOO_LONG")
 
+        # check if the domain is valid
         email_domain = self.student_email.split("@")[1]
         valid_domain = os.getenv("EMAIL_VALID_DOMAIN")
         if email_domain != valid_domain:
@@ -107,7 +112,7 @@ class UserBO:
         if count:
             raise InvalidInputException("EMAIL_TAKEN")
 
-    def _validate_name(name, name_type):
+    def _validate_name(self, name, name_type):
         # check if exist
         if not name:
             raise MissingInputException(f"{name_type}_MISSING")
@@ -121,10 +126,10 @@ class UserBO:
             raise InvalidInputException(f"{name_type}_INVALID_CHARACTERS")
 
     def validate_firstname(self):
-        self.validate_name(self.firstname, "FIRSTNAME")
+        self._validate_name(self.firstname, "FIRSTNAME")
 
     def validate_lastname(self):
-        self.validate_name(self.lastname, "LASTNAME")
+        self._validate_name(self.lastname, "LASTNAME")
 
     def validate_gender(self):
         # check if exist
@@ -144,15 +149,15 @@ class UserBO:
         if not (self.phone_number.isdigit() and len(self.phone_number) == 9):
             raise InvalidInputException(f"PHONE_NUMBER_INVALID")
 
-    def validate_password(self):
+    def validate_password(self, password_confirmation):
         # check if exist
         if not self.password:
             raise MissingInputException(f"PASSWORD_MISSING")
-        if not self.password_confirmation:
+        if not password_confirmation:
             raise MissingInputException(f"PASSWORD_CONFIRMATION_MISSING")
 
         # check if password and password confirmation are equals
-        if self.password != self.password_confirmation:
+        if self.password != password_confirmation:
             raise InvalidInputException(f"PASSWORD_NOT_MATCHING")
 
         # check if the format is valid
@@ -170,3 +175,12 @@ class UserBO:
             and correct_size
         ):
             raise InvalidInputException(f"PASSWORD_INVALID")
+
+    def validate_description(self):
+        # check if exist
+        if not self.description:
+            raise MissingInputException(f"DESCRIPTION_MISSING")
+
+        # check if description not too long
+        if len(self.description) > 500:
+            raise InvalidInputException("DESCRIPTION_TOO_LONG")
