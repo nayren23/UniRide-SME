@@ -1,6 +1,9 @@
 """User business owner"""
 import connect_pg
-from models.exception.user_exceptions import InvalidInputException
+from models.exception.user_exceptions import (
+    InvalidInputException,
+    MissingInputException,
+)
 import re
 
 
@@ -31,10 +34,8 @@ class UserBO:
 
     def add_in_db(self):
         """Insert the user in the database"""
-        try:
-            self._validate_email()
-        except InvalidInputException as e:
-            return {"message": str(e), "status_code": 422}
+        self.validate_email()
+        self.validate_login()
 
         attr_dict = {}
         for attr, value in self.__dict__.items():
@@ -50,22 +51,43 @@ class UserBO:
         conn = connect_pg.connect()
         id = connect_pg.execute_command(conn, query, values)
         self.id = id
-        return {"message": "User created successfuly", "status_code": 422}
 
-    def _validate_email(self):
+    def validate_email(self):
         # check if exist
         if not self.student_email:
-            raise InvalidInputException("Email missing")
+            raise MissingInputException("Email missing")
 
         # check if the format is valid
         regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
         if not re.fullmatch(regex, self.student_email):
-            raise InvalidInputException("Email invalid")
+            raise InvalidInputException("Email invalid format")
 
         # check if the email is already taken
         query = "select count(*) from uniride.ur_user where u_student_email = %s"
 
         conn = connect_pg.connect()
-        email_count = connect_pg.get_query(conn, query, (self.student_email,))[0][0]
-        if email_count:
-            raise InvalidInputException("Email adresse already taken")
+        count = connect_pg.get_query(conn, query, (self.student_email,))[0][0]
+        if count:
+            raise InvalidInputException("Email adresse already taken", 422)
+
+    def validate_login(self):
+        # check if exist
+        if not self.login:
+            raise MissingInputException("Login missing", 400)
+
+        # check if the format is valid
+        if len(self.login) > 50:
+            raise InvalidInputException("Login invalid format : too long", 422)
+        regex = r"[A-Za-z0-9._-]+"
+        if not re.fullmatch(regex, self.login):
+            raise InvalidInputException(
+                "Login invalid format : not allowed special characters", 422
+            )
+
+        # check if the login is already taken
+        query = "select count(*) from uniride.ur_user where u_login = %s"
+
+        conn = connect_pg.connect()
+        count = connect_pg.get_query(conn, query, (self.login,))[0][0]
+        if count:
+            raise InvalidInputException("Login already taken", 422)
