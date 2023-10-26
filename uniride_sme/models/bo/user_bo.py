@@ -41,6 +41,7 @@ class UserBO:
         self.validate_lastname()
         self.validate_gender()
         self.validate_phone_number()
+        self.validate_password()
 
         attr_dict = {}
         for attr, value in self.__dict__.items():
@@ -60,16 +61,15 @@ class UserBO:
     def validate_login(self):
         # check if exist
         if not self.login:
-            raise MissingInputException("Login missing")
+            raise MissingInputException("LOGIN_MISSING")
 
         # check if the format is valid
         if len(self.login) > 50:
-            raise InvalidInputException("Login invalid format : too long")
+            raise InvalidInputException("LOGIN_TOO_LONG")
+
         regex = r"[A-Za-z0-9._-]+"
         if not re.fullmatch(regex, self.login):
-            raise InvalidInputException(
-                "Login invalid format : not allowed special characters"
-            )
+            raise InvalidInputException("LOGIN_INVALID_CHARACTERS")
 
         # check if the login is already taken
         query = "select count(*) from uniride.ur_user where u_login = %s"
@@ -77,63 +77,67 @@ class UserBO:
         conn = connect_pg.connect()
         count = connect_pg.get_query(conn, query, (self.login,))[0][0]
         if count:
-            raise InvalidInputException("Login already taken")
+            raise InvalidInputException("LOGIN_TAKEN")
 
     def validate_email(self):
         # check if exist
         if not self.student_email:
-            raise MissingInputException("Email missing")
+            raise MissingInputException("EMAIL_MISSING")
 
         # check if the format is valid
         regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
         if not re.fullmatch(regex, self.student_email):
-            raise InvalidInputException("Email invalid format")
+            raise InvalidInputException("EMAIL_INVALID_FORMAT")
 
         # check if the domain is valid
+        if len(self.student_email) > 254:
+            raise InvalidInputException("EMAIL_TOO_LONG")
+
         email_domain = self.student_email.split("@")[1]
         valid_domain = os.getenv("EMAIL_VALID_DOMAIN")
         if email_domain != valid_domain:
-            raise InvalidInputException("Email invalid : not a student email")
+            raise InvalidInputException("EMAIL_INVALID_DOMAIN")
 
         # check if the email is already taken
         query = "select count(*) from uniride.ur_user where u_student_email = %s"
         conn = connect_pg.connect()
         count = connect_pg.get_query(conn, query, (self.student_email,))[0][0]
         if count:
-            raise InvalidInputException("Email adresse already taken")
+            raise InvalidInputException("EMAIL_TAKEN")
 
-    def validate_name(self, name, name_type):
+    def _validate_name(name, name_type):
         # check if exist
         if not name:
-            raise MissingInputException(f"{name_type} missing")
+            raise MissingInputException(f"{name_type}_MISSING")
 
         # check if the format is valid
+        if len(name) > 50:
+            raise InvalidInputException(f"{name_type}_TOO_LONG")
+
         regex = r"[A-Za-z-\s]+"
         if not re.fullmatch(regex, name):
-            raise InvalidInputException(
-                f"{name_type} format: not allowed special characters"
-            )
+            raise InvalidInputException(f"{name_type}_INVALID_CHARACTERS")
 
     def validate_firstname(self):
-        self.validate_name(self.firstname, "Firstname")
+        self.validate_name(self.firstname, "FIRSTNAME")
 
     def validate_lastname(self):
-        self.validate_name(self.lastname, "Lastname")
+        self.validate_name(self.lastname, "LASTNAME")
 
     def validate_gender(self):
         # check if exist
         if not self.gender:
-            raise MissingInputException(f"Gender is missing")
+            raise MissingInputException(f"GENDER_MISSING")
 
         # check if the format is valid
         if self.gender not in ("N", "H", "F"):
-            raise InvalidInputException(f"Gender incorrect")
+            raise InvalidInputException(f"GENDER_INVALID")
 
     def validate_phone_number(self):
         # check if exist
         if not self.phone_number:
-            raise MissingInputException(f"Phone number is missing")
+            raise MissingInputException(f"PHONE_NUMBER_MISSING")
 
         # check if the format is valid
         if not (self.phone_number.isdigit() and len(self.phone_number) == 9):
-            raise InvalidInputException(f"Phone number incorrect")
+            raise InvalidInputException(f"PHONE_NUMBER_INVALID")

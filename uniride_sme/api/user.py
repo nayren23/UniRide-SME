@@ -10,7 +10,7 @@ user = Blueprint("user", __name__)
 @user.route("/user/register", methods=["POST"])
 def register():
     """Sign up endpoint"""
-    response = jsonify({"message": "User created successfuly"}), 200
+    response = jsonify({"message": "USER_CREATED_SUCCESSFULLY"}), 200
 
     try:
         json_object = request.json
@@ -35,7 +35,7 @@ def register():
 @user.route("/user/validate_email", methods=["POST"])
 def validate_email():
     """Email validation endpoint"""
-    response = jsonify({"message": "Email valid"}), 200
+    response = jsonify({"message": "EMAIL_VALID"}), 200
 
     try:
         json_object = request.json
@@ -52,7 +52,7 @@ def validate_email():
 @user.route("/user/validate_login", methods=["POST"])
 def validate_login():
     """Login validation endpoint"""
-    response = jsonify({"message": "Login valid"}), 200
+    response = jsonify({"message": "LOGIN_VALID"}), 200
 
     try:
         json_object = request.json
@@ -69,7 +69,7 @@ def validate_login():
 @user.route("/user/validate_firstname", methods=["POST"])
 def validate_firstname():
     """Firstname validation endpoint"""
-    response = jsonify({"message": "Firstname valid"}), 200
+    response = jsonify({"message": "FIRSTNAME_VALID"}), 200
 
     try:
         json_object = request.json
@@ -86,7 +86,7 @@ def validate_firstname():
 @user.route("/user/validate_lastname", methods=["POST"])
 def validate_lastname():
     """Lastname validation endpoint"""
-    response = jsonify({"message": "Lastname valid"}), 200
+    response = jsonify({"message": "LASTNAME_VALID"}), 200
 
     try:
         json_object = request.json
@@ -103,7 +103,7 @@ def validate_lastname():
 @user.route("/user/validate_gender/<gender>", methods=["GET"])
 def validate_gender(gender):
     """Lastname validation endpoint"""
-    response = jsonify({"message": "Gender valid"}), 200
+    response = jsonify({"message": "GENDER_VALID"}), 200
 
     try:
         user_bo = UserBO(
@@ -119,7 +119,7 @@ def validate_gender(gender):
 @user.route("/user/validate_phone_number", methods=["POST"])
 def validate_phone_number():
     """Phone number validation endpoint"""
-    response = jsonify({"message": "Phone number valid"}), 200
+    response = jsonify({"message": "PHONE_NUMBER_VALID"}), 200
 
     try:
         json_object = request.json
