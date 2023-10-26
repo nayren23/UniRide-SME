@@ -19,6 +19,7 @@ class UserBO:
         lastname: str = None,
         student_email: str = None,
         password: str = None,
+        password_confirmation: str = None,
         gender: str = None,
         phone_number: str = None,
         description: str = None,
@@ -29,6 +30,7 @@ class UserBO:
         self.lastname = lastname
         self.student_email = student_email
         self.password = password
+        self.password_confirmation = password_confirmation
         self.gender = gender
         self.phone_number = phone_number
         self.description = description
@@ -141,3 +143,30 @@ class UserBO:
         # check if the format is valid
         if not (self.phone_number.isdigit() and len(self.phone_number) == 9):
             raise InvalidInputException(f"PHONE_NUMBER_INVALID")
+
+    def validate_password(self):
+        # check if exist
+        if not self.password:
+            raise MissingInputException(f"PASSWORD_MISSING")
+        if not self.password_confirmation:
+            raise MissingInputException(f"PASSWORD_CONFIRMATION_MISSING")
+
+        # check if password and password confirmation are equals
+        if self.password != self.password_confirmation:
+            raise InvalidInputException(f"PASSWORD_NOT_MATCHING")
+
+        # check if the format is valid
+        contains_lower_case_letter = re.search(r"[a-z]", self.password)
+        contains_upper_case_letter = re.search(r"[A-Z]", self.password)
+        contains_digit = re.search(r"\d", self.password)
+        contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", self.password)
+        correct_size = 8 <= len(self.password) <= 50
+
+        if not (
+            contains_lower_case_letter
+            and contains_upper_case_letter
+            and contains_digit
+            and contains_special
+            and correct_size
+        ):
+            raise InvalidInputException(f"PASSWORD_INVALID")

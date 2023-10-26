@@ -21,6 +21,7 @@ def register():
             lastname=json_object.get("lastname", None),
             student_email=json_object.get("student_email", None),
             password=json_object.get("password", None),
+            password_confirmation=json_object.get("password_confirmation", None),
             gender=json_object.get("gender", None),
             phone_number=json_object.get("phone_number", None),
             description=json_object.get("description", None),
@@ -127,6 +128,24 @@ def validate_phone_number():
             phone_number=json_object.get("phone_number", None),
         )
         user_bo.validate_phone_number()
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+@user.route("/user/validate_password", methods=["POST"])
+def validate_password():
+    """Phone number validation endpoint"""
+    response = jsonify({"message": "PASSWORD_VALID"}), 200
+
+    try:
+        json_object = request.json
+        user_bo = UserBO(
+            password=json_object.get("password", None),
+            password_confirmation=json_object.get("password_confirmation", None),
+        )
+        user_bo.validate_password()
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 
