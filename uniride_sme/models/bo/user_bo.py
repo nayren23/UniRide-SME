@@ -39,6 +39,8 @@ class UserBO:
         self.validate_email()
         self.validate_firstname()
         self.validate_lastname()
+        self.validate_gender()
+        self.validate_phone_number()
 
         attr_dict = {}
         for attr, value in self.__dict__.items():
@@ -117,3 +119,21 @@ class UserBO:
 
     def validate_lastname(self):
         self.validate_name(self.lastname, "Lastname")
+
+    def validate_gender(self):
+        # check if exist
+        if not self.gender:
+            raise MissingInputException(f"Gender is missing")
+
+        # check if the format is valid
+        if self.gender not in ("N", "H", "F"):
+            raise InvalidInputException(f"Gender incorrect")
+
+    def validate_phone_number(self):
+        # check if exist
+        if not self.phone_number:
+            raise MissingInputException(f"Phone number is missing")
+
+        # check if the format is valid
+        if not (self.phone_number.isdigit() and len(self.phone_number) == 9):
+            raise InvalidInputException(f"Phone number incorrect")

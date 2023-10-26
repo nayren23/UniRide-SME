@@ -98,3 +98,36 @@ def validate_lastname():
         response = jsonify({"message": e.message}), e.status_code
 
     return response
+
+
+@user.route("/user/validate_gender/<gender>", methods=["GET"])
+def validate_gender(gender):
+    """Lastname validation endpoint"""
+    response = jsonify({"message": "Gender valid"}), 200
+
+    try:
+        user_bo = UserBO(
+            gender=gender,
+        )
+        user_bo.validate_gender()
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+@user.route("/user/validate_phone_number", methods=["POST"])
+def validate_phone_number():
+    """Phone number validation endpoint"""
+    response = jsonify({"message": "Phone number valid"}), 200
+
+    try:
+        json_object = request.json
+        user_bo = UserBO(
+            phone_number=json_object.get("phone_number", None),
+        )
+        user_bo.validate_phone_number()
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
