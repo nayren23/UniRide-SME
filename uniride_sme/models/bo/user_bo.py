@@ -1,6 +1,7 @@
 """User business owner"""
 import re
 import os
+import bcrypt
 
 from uniride_sme import connect_pg
 from uniride_sme.models.exception.user_exceptions import (
@@ -36,7 +37,6 @@ class UserBO:
 
     def add_in_db(self, password_confirmation):
         """Insert the user in the database"""
-
         # validate values
         self.validate_login()
         self.validate_email()
@@ -44,11 +44,14 @@ class UserBO:
         self.validate_lastname()
         self.validate_gender()
         self.validate_phone_number()
+        self.validate_description()
         self.validate_password(password_confirmation)
-        try:
-            self.validate_description()
-        except MissingInputException:
-            pass
+
+        self._hash_password()
+
+        # user id is generated automatically
+        # put None in case someone try to set it manually
+        self.user_id = None
 
         # retrieve not None values
         attr_dict = {}
@@ -162,6 +165,12 @@ class UserBO:
         if not (self.phone_number.isdigit() and len(self.phone_number) == 9):
             raise InvalidInputException("PHONE_NUMBER_INVALID")
 
+    def validate_description(self):
+        """Check if the description is valid"""
+        # check if description not too long
+        if self.description and len(self.description) > 500:
+            raise InvalidInputException("DESCRIPTION_TOO_LONG")
+
     def validate_password(self, password_confirmation):
         """Check if the password is valid"""
 
@@ -191,13 +200,21 @@ class UserBO:
         ):
             raise InvalidInputException("PASSWORD_INVALID")
 
-    def validate_description(self):
-        """Check if the description is valid"""
+    def _hash_password(self):
+        """Hash the password"""
+        salt = bcrypt.gensalt(rounds=15)
+        # convert to bytes
+        self.password = self.password.encode("utf8")
+        self.password = bcrypt.hashpw(self.password, salt)
+        # convert back to string
+        self.password = str(self.password, "utf8")
 
-        # check if exist
-        if not self.description:
-            raise MissingInputException("DESCRIPTION_MISSING")
-
-        # check if description not too long
-        if len(self.description) > 500:
-            raise InvalidInputException("DESCRIPTION_TOO_LONG")
+    def _verify_password(
+        self,
+        hashed_password,
+    ):
+        """Verify the password is correct"""
+        return bcrypt.checkpw(
+            self.password.encode("utf8"),
+            hashed_password.encode("utf8"),
+        )
