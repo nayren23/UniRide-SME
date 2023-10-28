@@ -5,7 +5,7 @@ from flask import Flask
 from flask_restful import Api
 from flask_cors import CORS
 from uniride_sme.config import config
-from uniride_sme.api.user import user
+from uniride_sme.api.user_api import user
 
 app = Flask(__name__)
 app.register_blueprint(user)

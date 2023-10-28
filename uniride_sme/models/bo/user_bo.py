@@ -25,21 +25,21 @@ class UserBO:
         phone_number: str = None,
         description: str = None,
     ):
-        self.user_id = user_id
-        self.login = login
-        self.firstname = firstname
-        self.lastname = lastname
-        self.student_email = student_email
-        self.password = password
-        self.gender = gender
-        self.phone_number = phone_number
-        self.description = description
+        self.u_id = user_id
+        self.u_login = login
+        self.u_firstname = firstname
+        self.u_lastname = lastname
+        self.u_student_email = student_email
+        self.u_password = password
+        self.u_gender = gender
+        self.u_phone_number = phone_number
+        self.u_description = description
 
     def add_in_db(self, password_confirmation):
         """Insert the user in the database"""
         # validate values
         self.validate_login()
-        self.validate_email()
+        self.validate_student_email()
         self.validate_firstname()
         self.validate_lastname()
         self.validate_gender()
@@ -49,15 +49,12 @@ class UserBO:
 
         self._hash_password()
 
-        # user id is generated automatically
-        # put None in case someone try to set it manually
-        self.user_id = None
-
         # retrieve not None values
+        self.u_id = None
         attr_dict = {}
         for attr, value in self.__dict__.items():
             if value:
-                attr_dict["u_" + attr] = value
+                attr_dict[attr] = value
 
         # format for sql query
         fields = ", ".join(attr_dict.keys())
@@ -68,47 +65,47 @@ class UserBO:
 
         conn = connect_pg.connect()
         user_id = connect_pg.execute_command(conn, query, values)
-        self.user_id = user_id
+        self.u_id = user_id
 
     def validate_login(self):
         """Check if the login is valid"""
 
         # check if exist
-        if not self.login:
+        if not self.u_login:
             raise MissingInputException("LOGIN_MISSING")
 
         # check if the format is valid
-        if len(self.login) > 50:
+        if len(self.u_login) > 50:
             raise InvalidInputException("LOGIN_TOO_LONG")
 
         regex = r"[A-Za-z0-9._-]+"
-        if not re.fullmatch(regex, self.login):
+        if not re.fullmatch(regex, self.u_login):
             raise InvalidInputException("LOGIN_INVALID_CHARACTERS")
 
         # check if the login is already taken
         query = "select count(*) from uniride.ur_user where u_login = %s"
         conn = connect_pg.connect()
-        count = connect_pg.get_query(conn, query, (self.login,))[0][0]
+        count = connect_pg.get_query(conn, query, (self.u_login,))[0][0]
         if count:
             raise InvalidInputException("LOGIN_TAKEN")
 
-    def validate_email(self):
+    def validate_student_email(self):
         """Check if the email is valid"""
 
         # check if exist
-        if not self.student_email:
+        if not self.u_student_email:
             raise MissingInputException("EMAIL_MISSING")
 
         # check if the format is valid
         regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
-        if not re.fullmatch(regex, self.student_email):
+        if not re.fullmatch(regex, self.u_student_email):
             raise InvalidInputException("EMAIL_INVALID_FORMAT")
 
-        if len(self.student_email) > 254:
+        if len(self.u_student_email) > 254:
             raise InvalidInputException("EMAIL_TOO_LONG")
 
         # check if the domain is valid
-        email_domain = self.student_email.split("@")[1]
+        email_domain = self.u_student_email.split("@")[1]
         valid_domain = os.getenv("EMAIL_VALID_DOMAIN")
         if email_domain != valid_domain:
             raise InvalidInputException("EMAIL_INVALID_DOMAIN")
@@ -116,7 +113,7 @@ class UserBO:
         # check if the email is already taken
         query = "select count(*) from uniride.ur_user where u_student_email = %s"
         conn = connect_pg.connect()
-        count = connect_pg.get_query(conn, query, (self.student_email,))[0][0]
+        count = connect_pg.get_query(conn, query, (self.u_student_email,))[0][0]
         if count:
             raise InvalidInputException("EMAIL_TAKEN")
 
@@ -136,60 +133,60 @@ class UserBO:
     def validate_firstname(self):
         """Check if the firstname is valid"""
 
-        self._validate_name(self.firstname, "FIRSTNAME")
+        self._validate_name(self.u_firstname, "FIRSTNAME")
 
     def validate_lastname(self):
         """Check if the lastname is valid"""
 
-        self._validate_name(self.lastname, "LASTNAME")
+        self._validate_name(self.u_lastname, "LASTNAME")
 
     def validate_gender(self):
         """Check if the gender is valid"""
 
         # check if exist
-        if not self.gender:
+        if not self.u_gender:
             raise MissingInputException("GENDER_MISSING")
 
         # check if the format is valid
-        if self.gender not in ("N", "H", "F"):
+        if self.u_gender not in ("N", "H", "F"):
             raise InvalidInputException("GENDER_INVALID")
 
     def validate_phone_number(self):
         """Check if the phone number is valid"""
 
         # check if exist
-        if not self.phone_number:
+        if not self.u_phone_number:
             raise MissingInputException("PHONE_NUMBER_MISSING")
 
         # check if the format is valid
-        if not (self.phone_number.isdigit() and len(self.phone_number) == 9):
+        if not (self.u_phone_number.isdigit() and len(self.u_phone_number) == 9):
             raise InvalidInputException("PHONE_NUMBER_INVALID")
 
     def validate_description(self):
         """Check if the description is valid"""
         # check if description not too long
-        if self.description and len(self.description) > 500:
+        if self.u_description and len(self.u_description) > 500:
             raise InvalidInputException("DESCRIPTION_TOO_LONG")
 
     def validate_password(self, password_confirmation):
         """Check if the password is valid"""
 
         # check if exist
-        if not self.password:
+        if not self.u_password:
             raise MissingInputException("PASSWORD_MISSING")
         if not password_confirmation:
             raise MissingInputException("PASSWORD_CONFIRMATION_MISSING")
 
         # check if password and password confirmation are equals
-        if self.password != password_confirmation:
+        if self.u_password != password_confirmation:
             raise InvalidInputException("PASSWORD_NOT_MATCHING")
 
         # check if the format is valid
-        contains_lower_case_letter = re.search(r"[a-z]", self.password)
-        contains_upper_case_letter = re.search(r"[A-Z]", self.password)
-        contains_digit = re.search(r"\d", self.password)
-        contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", self.password)
-        correct_size = 8 <= len(self.password) <= 50
+        contains_lower_case_letter = re.search(r"[a-z]", self.u_password)
+        contains_upper_case_letter = re.search(r"[A-Z]", self.u_password)
+        contains_digit = re.search(r"\d", self.u_password)
+        contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", self.u_password)
+        correct_size = 8 <= len(self.u_password) <= 50
 
         if not (
             contains_lower_case_letter
@@ -204,10 +201,10 @@ class UserBO:
         """Hash the password"""
         salt = bcrypt.gensalt(rounds=15)
         # convert to bytes
-        self.password = self.password.encode("utf8")
-        self.password = bcrypt.hashpw(self.password, salt)
+        self.u_password = self.u_password.encode("utf8")
+        self.u_password = bcrypt.hashpw(self.u_password, salt)
         # convert back to string
-        self.password = str(self.password, "utf8")
+        self.u_password = str(self.u_password, "utf8")
 
     def _verify_password(
         self,
@@ -215,6 +212,19 @@ class UserBO:
     ):
         """Verify the password is correct"""
         return bcrypt.checkpw(
-            self.password.encode("utf8"),
+            self.u_password.encode("utf8"),
             hashed_password.encode("utf8"),
         )
+
+    def get_from_db(self):
+        """Get user infos from db"""
+        if not self.u_id:
+            raise MissingInputException("USER_ID_MISSING")
+
+        query = "select * from uniride.ur_user where u_id = %s"
+        conn = connect_pg.connect()
+        infos = connect_pg.get_query(conn, query, (self.u_id,), True)[0]
+        for key in infos:
+            setattr(self, key, infos[key])
+        for attr, value in self.__dict__.items():
+            print(f"{attr} : {value}")

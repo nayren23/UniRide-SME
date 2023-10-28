@@ -1,4 +1,4 @@
-"""User related routes"""
+"""User related endpoints"""
 from flask import Blueprint, request, jsonify
 
 from uniride_sme.models.bo.user_bo import UserBO
@@ -32,7 +32,7 @@ def register():
     return response
 
 
-@user.route("/user/validate_email", methods=["POST"])
+@user.route("/user/validate/email", methods=["POST"])
 def validate_email():
     """Email validation endpoint"""
     response = jsonify({"message": "EMAIL_VALID"}), 200
@@ -42,14 +42,14 @@ def validate_email():
         user_bo = UserBO(
             student_email=json_object.get("student_email", None),
         )
-        user_bo.validate_email()
+        user_bo.validate_student_email()
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 
     return response
 
 
-@user.route("/user/validate_login", methods=["POST"])
+@user.route("/user/validate/login", methods=["POST"])
 def validate_login():
     """Login validation endpoint"""
     response = jsonify({"message": "LOGIN_VALID"}), 200
@@ -66,7 +66,7 @@ def validate_login():
     return response
 
 
-@user.route("/user/validate_firstname", methods=["POST"])
+@user.route("/user/validate/firstname", methods=["POST"])
 def validate_firstname():
     """Firstname validation endpoint"""
     response = jsonify({"message": "FIRSTNAME_VALID"}), 200
@@ -83,7 +83,7 @@ def validate_firstname():
     return response
 
 
-@user.route("/user/validate_lastname", methods=["POST"])
+@user.route("/user/validate/lastname", methods=["POST"])
 def validate_lastname():
     """Lastname validation endpoint"""
     response = jsonify({"message": "LASTNAME_VALID"}), 200
@@ -100,7 +100,7 @@ def validate_lastname():
     return response
 
 
-@user.route("/user/validate_gender/<gender>", methods=["GET"])
+@user.route("/user/validate/gender/<gender>", methods=["GET"])
 def validate_gender(gender):
     """Lastname validation endpoint"""
     response = jsonify({"message": "GENDER_VALID"}), 200
@@ -116,7 +116,7 @@ def validate_gender(gender):
     return response
 
 
-@user.route("/user/validate_phone_number", methods=["POST"])
+@user.route("/user/validate/phone_number", methods=["POST"])
 def validate_phone_number():
     """Phone number validation endpoint"""
     response = jsonify({"message": "PHONE_NUMBER_VALID"}), 200
@@ -133,7 +133,7 @@ def validate_phone_number():
     return response
 
 
-@user.route("/user/validate_password", methods=["POST"])
+@user.route("/user/validate/password", methods=["POST"])
 def validate_password():
     """Password validation endpoint"""
     response = jsonify({"message": "PASSWORD_VALID"}), 200
@@ -150,7 +150,7 @@ def validate_password():
     return response
 
 
-@user.route("/user/validate_description", methods=["POST"])
+@user.route("/user/validate/description", methods=["POST"])
 def validate_description():
     """Description validation endpoint"""
     response = jsonify({"message": "DESCRIPTION_VALID"}), 200
@@ -161,6 +161,20 @@ def validate_description():
             description=json_object.get("description", None),
         )
         user_bo.validate_description()
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+@user.route("/user/get/<user_id>", methods=["GET"])
+def get_user(user_id):
+    """Get user's infos endpoint"""
+
+    response = jsonify({"message": "DESCRIPTION_VALID"}), 200
+    try:
+        user_bo = UserBO(user_id=user_id)
+        user_bo.get_from_db()
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 

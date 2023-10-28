@@ -66,12 +66,12 @@ def get_query(conn, query, params=None, return_dict=False):
     """Query data from db"""
     try:
         rows = None
-        cur = conn.cursor()
-        cur.execute(query, params)
         if return_dict:
-            rows = cur.fetchall(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         else:
-            rows = cur.fetchall()
+            cur = conn.cursor()
+        cur.execute(query, params)
+        rows = cur.fetchall()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
