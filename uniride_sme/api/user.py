@@ -1,8 +1,8 @@
 """User related routes"""
 from flask import Blueprint, request, jsonify
 
-from models.bo.user_bo import UserBO
-from models.exception.exceptions import ApiException
+from uniride_sme.models.bo.user_bo import UserBO
+from uniride_sme.models.exception.exceptions import ApiException
 
 user = Blueprint("user", __name__)
 

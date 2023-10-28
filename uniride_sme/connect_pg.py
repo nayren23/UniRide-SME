@@ -1,10 +1,10 @@
 """Postgresql databse interactions"""
-#!/usr/bin/python
+# !/usr/bin/python
 
 import psycopg2
 import psycopg2.extras
 
-from config import config
+from uniride_sme.config import config
 
 
 def connect(filename="config.ini", section="postgresql"):

@@ -1,11 +1,11 @@
 """Rest API"""
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 from flask import Flask
 from flask_restful import Api
 from flask_cors import CORS
-from config import config
-from api.user import user
+from uniride_sme.config import config
+from uniride_sme.api.user import user
 
 app = Flask(__name__)
 app.register_blueprint(user)

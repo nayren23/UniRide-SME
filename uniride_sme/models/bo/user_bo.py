@@ -2,8 +2,8 @@
 import re
 import os
 
-import connect_pg
-from models.exception.user_exceptions import (
+from uniride_sme import connect_pg
+from uniride_sme.models.exception.user_exceptions import (
     InvalidInputException,
     MissingInputException,
 )
