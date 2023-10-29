@@ -1,16 +1,9 @@
 """Rest API"""
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-from flask import Flask
-from flask_restful import Api
-from flask_cors import CORS
+from uniride_sme import app
 from uniride_sme.config import config
 from uniride_sme.api.user_api import user
-
-app = Flask(__name__)
-app.register_blueprint(user)
-cors = CORS(app, resources={r"*": {"origins": "*"}})
-api = Api(app)
 
 
 @app.after_request
@@ -26,6 +19,8 @@ if __name__ == "__main__":
     # read server parameters
     params = config("config.ini", "server")
     context = (params["cert"], params["key"])  # certificate and key files
+
+    app.register_blueprint(user)
     # Launch Flask server0
     app.run(
         debug=params["debug"],

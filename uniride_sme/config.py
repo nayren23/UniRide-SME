@@ -1,6 +1,22 @@
 """Configure database connection"""
 # !/usr/bin/python
 from configparser import ConfigParser
+import os
+
+
+class Config:
+    """Config variables"""
+
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
+
+    MAIL_SERVER = os.getenv("MAIL_SERVER")
+    MAIL_PORT = 465
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
+    MAIL_DEBUG = False
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
 
 def config(filename="config.ini", section="postgresql"):

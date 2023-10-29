@@ -1,0 +1,1 @@
+"""Exceptions for UserBO endpoints"""

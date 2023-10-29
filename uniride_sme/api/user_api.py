@@ -1,8 +1,9 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, url_for
 
 from uniride_sme.models.bo.user_bo import UserBO
-from uniride_sme.models.exception.exceptions import ApiException
+from uniride_sme.utils.exception.exceptions import ApiException
+import uniride_sme.utils.email as email
 
 user = Blueprint("user", __name__)
 
@@ -26,6 +27,27 @@ def register():
             description=json_object.get("description", None),
         )
         user_bo.add_in_db(json_object.get("password_confirmation", None))
+        email.send_email(
+            user_bo.u_student_email,
+            "Validate email",
+            None,
+            f"{url_for("user.verify_email", token=email.generate_token(user_bo.u_student_email), _external=True)}",
+        )
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+@user.route("/user/verify/email/<token>", methods=["GET"])
+def verify_email(token):
+    """Sign up endpoint"""
+    response = jsonify({"message": "EMAIL_VERIFIED_SUCCESSFULLY"}), 200
+    try:
+        user_bo = UserBO(
+            student_email=email.confirm_token(token),
+        )
+        user_bo.verify_student_email()
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 
@@ -161,20 +183,6 @@ def validate_description():
             description=json_object.get("description", None),
         )
         user_bo.validate_description()
-    except ApiException as e:
-        response = jsonify({"message": e.message}), e.status_code
-
-    return response
-
-
-@user.route("/user/get/<user_id>", methods=["GET"])
-def get_user(user_id):
-    """Get user's infos endpoint"""
-
-    response = jsonify({"message": "DESCRIPTION_VALID"}), 200
-    try:
-        user_bo = UserBO(user_id=user_id)
-        user_bo.get_from_db()
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 

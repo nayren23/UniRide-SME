@@ -4,7 +4,7 @@ import os
 import bcrypt
 
 from uniride_sme import connect_pg
-from uniride_sme.models.exception.user_exceptions import (
+from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
     MissingInputException,
 )
@@ -34,6 +34,19 @@ class UserBO:
         self.u_gender = gender
         self.u_phone_number = phone_number
         self.u_description = description
+
+    def get_from_db(self):
+        """Get user infos from db"""
+        if not self.u_id:
+            raise MissingInputException("USER_ID_MISSING")
+
+        query = "select * from uniride.ur_user where u_id = %s"
+        conn = connect_pg.connect()
+        infos = connect_pg.get_query(conn, query, (self.u_id,), True)[0]
+        for key in infos:
+            setattr(self, key, infos[key])
+        for attr, value in self.__dict__.items():
+            print(f"{attr} : {value}")
 
     def add_in_db(self, password_confirmation):
         """Insert the user in the database"""
@@ -106,7 +119,7 @@ class UserBO:
 
         # check if the domain is valid
         email_domain = self.u_student_email.split("@")[1]
-        valid_domain = os.getenv("EMAIL_VALID_DOMAIN")
+        valid_domain = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
         if email_domain != valid_domain:
             raise InvalidInputException("EMAIL_INVALID_DOMAIN")
 
@@ -153,13 +166,10 @@ class UserBO:
 
     def validate_phone_number(self):
         """Check if the phone number is valid"""
-
-        # check if exist
-        if not self.u_phone_number:
-            raise MissingInputException("PHONE_NUMBER_MISSING")
-
         # check if the format is valid
-        if not (self.u_phone_number.isdigit() and len(self.u_phone_number) == 9):
+        if self.u_phone_number and not (
+            self.u_phone_number.isdigit() and len(self.u_phone_number) == 9
+        ):
             raise InvalidInputException("PHONE_NUMBER_INVALID")
 
     def validate_description(self):
@@ -177,10 +187,6 @@ class UserBO:
         if not password_confirmation:
             raise MissingInputException("PASSWORD_CONFIRMATION_MISSING")
 
-        # check if password and password confirmation are equals
-        if self.u_password != password_confirmation:
-            raise InvalidInputException("PASSWORD_NOT_MATCHING")
-
         # check if the format is valid
         contains_lower_case_letter = re.search(r"[a-z]", self.u_password)
         contains_upper_case_letter = re.search(r"[A-Z]", self.u_password)
@@ -196,6 +202,10 @@ class UserBO:
             and correct_size
         ):
             raise InvalidInputException("PASSWORD_INVALID")
+
+        # check if password and password confirmation are equals
+        if self.u_password != password_confirmation:
+            raise InvalidInputException("PASSWORD_NOT_MATCHING")
 
     def _hash_password(self):
         """Hash the password"""
@@ -216,15 +226,26 @@ class UserBO:
             hashed_password.encode("utf8"),
         )
 
-    def get_from_db(self):
-        """Get user infos from db"""
-        if not self.u_id:
-            raise MissingInputException("USER_ID_MISSING")
+    def verify_student_email(
+        self,
+    ):
+        """Verify the student email"""
+        # check if exist
+        if not self.u_student_email:
+            raise MissingInputException("EMAIL_MISSING")
 
-        query = "select * from uniride.ur_user where u_id = %s"
+        query = (
+            "select u_email_verified from uniride.ur_user where u_student_email = %s"
+        )
         conn = connect_pg.connect()
-        infos = connect_pg.get_query(conn, query, (self.u_id,), True)[0]
-        for key in infos:
-            setattr(self, key, infos[key])
-        for attr, value in self.__dict__.items():
-            print(f"{attr} : {value}")
+        email_verified = connect_pg.get_query(conn, query, (self.u_student_email,))
+        # check if the email belongs to a user
+        if not email_verified:
+            raise InvalidInputException("EMAIL_NOT_OWNED")
+        # check if the email is already verified
+        if email_verified[0][0]:
+            raise InvalidInputException("EMAIL_ALREADY_VERIFIED")
+
+        query = "update uniride.ur_user set u_email_verified=True where u_student_email = %s"
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, (self.u_student_email,))
