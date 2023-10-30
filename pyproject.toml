@@ -21,7 +21,12 @@ dependencies = [
   "psycopg2"]
 
 [project.optional-dependencies]
-dev = []
+dev = [
+    "bandit[toml]==1.7.4",
+    "black==22.10.0",
+    "coverage[toml]==7.2.6",
+    "pycodestyle==2.10.0",
+    "pylint>=2.15.16",]
 
 tests = [
     "bandit[toml]==1.7.4",
@@ -39,6 +44,9 @@ exclude = ''
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["uniride_sme"]
 
 [tool.pytest.ini_options]
 python_paths = "./"
