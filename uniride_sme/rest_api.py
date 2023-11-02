@@ -5,10 +5,12 @@ from flask_restful import Api
 from flask_cors import CORS
 from config import config
 from api.trip_api import trip
-
+from api.address_api import address
 
 app = Flask(__name__)
 app.register_blueprint(trip)
+app.register_blueprint(address)
+
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
 
