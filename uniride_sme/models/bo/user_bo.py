@@ -9,6 +9,8 @@ from uniride_sme.utils.exception.exceptions import (
     MissingInputException,
 )
 
+from uniride_sme.utils.exception.user_exceptions import UserNotFoundException
+
 
 class UserBO:
     """User business owner class"""
@@ -42,11 +44,11 @@ class UserBO:
 
         query = "select * from uniride.ur_user where u_id = %s"
         conn = connect_pg.connect()
-        infos = connect_pg.get_query(conn, query, (self.u_id,), True)[0]
-        for key in infos:
+        infos = connect_pg.get_query(conn, query, (self.u_id,), True)
+        if not infos:
+            raise UserNotFoundException()
+        for key in infos[0]:
             setattr(self, key, infos[key])
-        for attr, value in self.__dict__.items():
-            print(f"{attr} : {value}")
 
     def add_in_db(self, password_confirmation):
         """Insert the user in the database"""

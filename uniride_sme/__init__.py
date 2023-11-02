@@ -4,10 +4,12 @@ from flask_cors import CORS
 from flask_mail import Mail
 from uniride_sme.config import Config
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config["PATH"] = os.path.dirname(__file__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
 mail = Mail(app)

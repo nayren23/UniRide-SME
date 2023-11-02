@@ -1,6 +1,7 @@
 """User related endpoints"""
 from flask import Blueprint, request, jsonify, url_for
 
+from uniride_sme import app
 from uniride_sme.models.bo.user_bo import UserBO
 from uniride_sme.utils.exception.exceptions import ApiException
 import uniride_sme.utils.email as email
@@ -27,16 +28,45 @@ def register():
             description=json_object.get("description", None),
         )
         user_bo.add_in_db(json_object.get("password_confirmation", None))
-        email.send_email(
-            user_bo.u_student_email,
-            "Validate email",
-            None,
-            f"{url_for("user.verify_email", token=email.generate_token(user_bo.u_student_email), _external=True)}",
-        )
+        send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 
     return response
+
+
+@user.route("/user/email-confirmation/<user_id>", methods=["GET"])
+def send_email_confirmation(user_id):
+    """Send email verification endpoint"""
+    response = jsonify({"message": "EMAIL_SEND_SUCCESSFULLY"}), 200
+
+    try:
+        user_bo = UserBO(user_id=user_id)
+        user_bo.get_from_db()
+        send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+    return response
+
+
+def send_verification_email(student_email, firstname):
+    """Send verification email"""
+    with open(
+        f"{app.config['PATH']}\\resource\\email\\email_verification_template.html",
+        "r",
+        encoding="UTF-8",
+    ) as html:
+        # TODO remplacer l'url par l'url du front
+        url = url_for(
+            "user.verify_email",
+            token=email.generate_token(student_email),
+            _external=True,
+        )
+        email.send_email(
+            student_email,
+            "Vérifier votre email",
+            html.read().replace("{firstname}", firstname).replace("{link}", url),
+        )
 
 
 @user.route("/user/verify/email/<token>", methods=["GET"])

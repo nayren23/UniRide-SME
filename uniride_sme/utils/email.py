@@ -6,13 +6,12 @@ from uniride_sme.utils.exception.exceptions import InvalidInputException
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
 
-def send_email(to, subject, template, body):
+def send_email(to, subject, template):
     """Send email"""
     msg = Message(
         subject,
         recipients=[to],
         html=template,
-        body=body,
         sender=app.config["MAIL_USERNAME"],
     )
     mail.send(msg)
