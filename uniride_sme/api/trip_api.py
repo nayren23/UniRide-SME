@@ -101,12 +101,10 @@ def get_available_trips():
         
 
         print("trips", trips)
-        response = jsonify(trips)
-        return response, 200
+
     
         available_trips = []
 
-        print("trips", trips)
         for trip in trips:
             trip_id, total_passenger_count, proposed_date, creation_timestamp, trip_status, trip_price, user_id, \
             departure_address_id, arrival_address_id, departure_latitude, departure_longitude, arrival_latitude, \
@@ -115,19 +113,15 @@ def get_available_trips():
             point_depart = (departure_latitude, departure_longitude)
             point_arrivee = (arrival_latitude, arrival_longitude)
             
-
-            
-                            
-                
             if point_intermediaire_depart == point_universite:
                 # Si le point de départ est l'université, alors l'université est l'adresse d'arrivée du trajet
                 print("QUOIIII!!!!!!!!!!!!!!!!!!!!")
-                is_viable = trip_bo.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
+                is_viable = trip_bo.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_arrivee)
             
             elif point_intermediaire_arrivee == point_universite:
                 # Si le point d'arrivée est l'université, alors l'université est l'adresse de départ du trajet
                 print("OUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII")
-                is_viable = trip_bo.check_if_route_is_viable(point_intermediaire_depart, point_arrivee, point_depart)
+                is_viable = trip_bo.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
                 
             else:
                 # Sinon, l'université est l'adresse d'arrivée du trajet

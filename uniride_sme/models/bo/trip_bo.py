@@ -148,6 +148,7 @@ class TripBO:
         return trip_id
     
     def check_if_route_is_viable(self, origin, destination, intermediate_point):
+        accept_time_difference_minutes = 10
         """Check if the route is viable"""
     
         now = datetime.now()
@@ -161,19 +162,30 @@ class TripBO:
         # Calcule l'itinéraire initial sans le point intermédiaire
         mode = "driving"
         
-        initial_route = gmaps.directions( origin, destination, mode , departure_time=now)
+        initial_route = gmaps.directions(origin, destination, mode , departure_time=now)
 
         # Calcule l'itinéraire avec le point intermédiaire
-        route_with_intermediate = gmaps.directions(origin, intermediate_point, mode, destination, departure_time=now)
+        route_initial_intermediate = gmaps.directions(origin, intermediate_point, mode,  departure_time=now)
 
+        route_with_intermediate = gmaps.directions(intermediate_point, destination, mode,  departure_time=now)
+        
         #Vérifie si l'ajout du point intermédiaire augmente la durée de trajet de plus de 10 minutes
         initial_duration = initial_route[0]['legs'][0]['duration']['value']  # Durée en secondes
-        new_duration = route_with_intermediate[0]['legs'][0]['duration']['value']  # Durée en secondes
+        intermediate_duration = route_initial_intermediate[0]['legs'][0]['duration']['value']  # Durée en secondes
+        intermediate_destination_duration = route_with_intermediate[0]['legs'][0]['duration']['value'] # Durée en secondes
+        
+        new_duration = intermediate_duration + intermediate_destination_duration
+
+        print("initial_duration", initial_duration)
+        print("intermediate_duration", intermediate_duration)
+        print("intermediate_destination_duration", intermediate_destination_duration)
+        print("new_duration", new_duration)
 
         time_difference = new_duration - initial_duration  # Différence de temps en secondes
         time_difference_minutes = time_difference / 60  # Différence de temps en minutes
 
-        if time_difference_minutes <= 10:
+        print("time_difference_minutes", time_difference_minutes)
+        if time_difference_minutes <= accept_time_difference_minutes:
             return True
         else:
             return False
