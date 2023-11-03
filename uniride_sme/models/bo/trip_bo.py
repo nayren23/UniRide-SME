@@ -6,9 +6,10 @@ from models.exception.trip_exceptions import (
     InvalidInputException,
     MissingInputException,
 )
-import requests
 
-#from googlemaps import DirectionsService
+from dotenv import load_dotenv
+
+import googlemaps
 
 
 class TripBO:
@@ -146,34 +147,74 @@ class TripBO:
         
         return trip_id
     
-    def check_if_route_is_viable(self, departure_latitude, departure_longitude, arrival_latitude,  arrival_longitude, intermediate_point_latitude, intermediate_point_longitude):
-        # Calculez le trajet initial
-        directions_service = DirectionsService(key="YOUR_API_KEY")
-        directions_result = directions_service.directions(
-            departure_latitude, departure_longitude, arrival_latitude, arrival_longitude
-        )
-
-        # Calculez le trajet modifié
-        directions_result_modified = directions_service.directions(
-            departure_latitude, departure_longitude, arrival_latitude, arrival_longitude, waypoints=[
-                intermediate_point_latitude, intermediate_point_longitude
-            ]
-        )
-
-        # Comparez la durée des deux trajets
-        original_duration = directions_result["routes"][0]["legs"][0]["duration"]["value"]
-        modified_duration = directions_result_modified["routes"][0]["legs"][0]["duration"]["value"]
+    def check_if_route_is_viable(self, origin, destination, intermediate_point):
+        """Check if the route is viable"""
+    
+        now = datetime.now()
         
-        # Obtenez le temps de trajet du trajet modifié
-        modified_duration = directions_result_modified["routes"][0]["legs"][0]["duration"]["value"]
+        load_dotenv()
+        google_api_key = os.getenv("GOOGLE_API_KEY")
 
-        # Obtenez la distance du trajet modifié
-        modified_distance = directions_result_modified["routes"][0]["legs"][0]["distance"]["value"]
+        # Calculez le trajet initial
+        gmaps = googlemaps.Client(key=google_api_key)
+        
+        # Calcule l'itinéraire initial sans le point intermédiaire
+        mode = "driving"
+        
+        initial_route = gmaps.directions( origin, destination, mode , departure_time=now)
 
-        # Vérifiez que le trajet modifié ne rajoute pas plus de 10 minutes supplémentaires
-        if modified_duration <= original_duration + 600:
-            print("Le trajet passe par l'endroit où vous vous trouvez et ne rajoute pas plus de 10 minutes supplémentaires.")
+        # Calcule l'itinéraire avec le point intermédiaire
+        route_with_intermediate = gmaps.directions(origin, intermediate_point, mode, destination, departure_time=now)
+
+        #Vérifie si l'ajout du point intermédiaire augmente la durée de trajet de plus de 10 minutes
+        initial_duration = initial_route[0]['legs'][0]['duration']['value']  # Durée en secondes
+        new_duration = route_with_intermediate[0]['legs'][0]['duration']['value']  # Durée en secondes
+
+        time_difference = new_duration - initial_duration  # Différence de temps en secondes
+        time_difference_minutes = time_difference / 60  # Différence de temps en minutes
+
+        if time_difference_minutes <= 10:
             return True
         else:
-            print("Le trajet ne passe pas par l'endroit où vous vous trouvez ou rajoute plus de 10 minutes supplémentaires.")
             return False
+    
+       
+        
+    def get_trips(self, departure_or_arrived_latitude, departure__or_arrived_longitude, condition_where):
+        """Get the trips from the database"""
+        
+        query = f"""
+            SELECT
+                t.t_id AS trip_id,
+                t.t_total_passenger_count AS total_passenger_count,
+                t.t_timestamp_proposed AS proposed_date,
+                t.t_timestamp_creation AS creation_timestamp,
+                t.t_status AS trip_status,
+                t.t_price AS trip_price,
+                t.t_user_id AS user_id,
+                t.t_address_depart_id AS departure_address_id,
+                t.t_address_arrival_id AS arrival_address_id,
+                departure_address.a_latitude AS departure_latitude,
+                departure_address.a_longitude AS departure_longitude,
+                arrival_address.a_latitude AS arrival_latitude,
+                arrival_address.a_longitude AS arrival_longitude
+            FROM
+                uniride.ur_trip t
+            JOIN
+                uniride.ur_address departure_address ON t.t_address_depart_id = departure_address.a_id
+            JOIN
+                uniride.ur_address arrival_address ON t.t_address_arrival_id = arrival_address.a_id
+            WHERE
+                {condition_where}
+                AND t.t_timestamp_proposed BETWEEN 
+                (TIMESTAMP %s - INTERVAL '1 hour') 
+                AND 
+                (TIMESTAMP %s + INTERVAL '1 hour')
+                AND t.t_total_passenger_count >= %s;
+        """
+    
+        conn = connect_pg.connect()
+        trips = connect_pg.get_query(conn, query, (departure_or_arrived_latitude, departure__or_arrived_longitude, self.timestamp_proposed, self.timestamp_proposed, self.total_passenger_count))
+        connect_pg.disconnect(conn)
+        
+        return trips

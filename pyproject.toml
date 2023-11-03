@@ -15,8 +15,8 @@ requires-python = ">3.7"
 
 dependencies = [
   "flask",
-  "flask_restful",
-  "flask_cors",
+  "Flask-RESTful",
+  "Flask-Cors",
   "python-dotenv",
   "psycopg2",
   "requests",
