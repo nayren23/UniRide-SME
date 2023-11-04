@@ -41,6 +41,23 @@ def register():
     return response
 
 
+@user.route("/user/auth", methods=["POST"])
+def authentificate():
+    """Save profil picture endpoint"""
+    response = jsonify({"message": "AUTHENTIFIED_SUCCESSFULLY"}), 200
+    try:
+        json_object = request.json
+        user_bo = UserBO(
+            login=json_object.get("login", None),
+            password=json_object.get("password", None),
+        )
+        user_bo.authentificate()
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
 @user.route("/user/save/pfp", methods=["POST"])
 def save_pfp():
     """Save profil picture endpoint"""

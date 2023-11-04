@@ -3,13 +3,17 @@ import re
 import os
 import bcrypt
 
+from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
     MissingInputException,
 )
 
-from uniride_sme.utils.exception.user_exceptions import UserNotFoundException
+from uniride_sme.utils.exception.user_exceptions import (
+    UserNotFoundException,
+    PasswordIncorrectException,
+)
 
 
 class UserBO:
@@ -47,7 +51,6 @@ class UserBO:
         infos = connect_pg.get_query(conn, query, (self.u_id,), True)
         if not infos:
             raise UserNotFoundException()
-        print(infos[0])
         for key in infos[0]:
             setattr(self, key, infos[0][key])
 
@@ -212,17 +215,15 @@ class UserBO:
 
     def _hash_password(self):
         """Hash the password"""
-        salt = bcrypt.gensalt(rounds=15)
+        salt = app.config["SECURITY_PASSWORD_SALT"]
         # convert to bytes
+        salt = salt.encode("utf8")
         self.u_password = self.u_password.encode("utf8")
         self.u_password = bcrypt.hashpw(self.u_password, salt)
         # convert back to string
         self.u_password = str(self.u_password, "utf8")
 
-    def _verify_password(
-        self,
-        hashed_password,
-    ):
+    def _verify_password(self, hashed_password):
         """Verify the password is correct"""
         return bcrypt.checkpw(
             self.u_password.encode("utf8"),
@@ -252,3 +253,21 @@ class UserBO:
         query = "update uniride.ur_user set u_email_verified=True where u_student_email = %s"
         conn = connect_pg.connect()
         connect_pg.execute_command(conn, query, (self.u_student_email,))
+
+    def authentificate(self):
+        """Verify the login and password"""
+        # check if exist
+        if not self.u_login:
+            raise MissingInputException("LOGIN_MISSING")
+        if not self.u_password:
+            raise MissingInputException("PASSWORD_MISSING")
+
+        query = "select u_password from uniride.ur_user where u_login = %s"
+        conn = connect_pg.connect()
+        password = connect_pg.get_query(conn, query, (self.u_login,))
+
+        if not password:
+            raise UserNotFoundException()
+
+        if not self._verify_password(password[0][0]):
+            raise PasswordIncorrectException()
