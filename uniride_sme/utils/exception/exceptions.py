@@ -9,6 +9,13 @@ class ApiException(Exception):
         self.status_code = status_code
 
 
+class InternalServerErrorException(ApiException):
+    """Exception for internal server error"""
+
+    def __init__(self):
+        super().__init__("INTERNAL_SERVER_ERROR", 500)
+
+
 class InvalidInputException(ApiException):
     """Exception for invalid input"""
 

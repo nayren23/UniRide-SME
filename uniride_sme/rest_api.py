@@ -20,7 +20,7 @@ def after_request(response):
 def reformat_jwt_response(response):
     """Reformat the response for jwt errors"""
     response_json = response.get_json()
-    if "msg" in response_json:
+    if response_json and "msg" in response_json:
         message = (
             "TOKEN_" + response_json["msg"].split(":")[0].replace(" ", "_").upper()
         )

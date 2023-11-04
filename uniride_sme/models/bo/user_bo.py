@@ -5,11 +5,12 @@ import bcrypt
 
 from uniride_sme import app
 from uniride_sme import connect_pg
+from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
     MissingInputException,
+    InternalServerErrorException,
 )
-
 from uniride_sme.utils.exception.user_exceptions import (
     UserNotFoundException,
     PasswordIncorrectException,
@@ -41,6 +42,9 @@ class UserBO:
         self.u_phone_number = phone_number
         self.u_description = description
 
+        if self.u_id:
+            self.get_from_db()
+
     def get_from_db(self):
         """Get user infos from db"""
         if not self.u_id and not self.u_login:
@@ -60,17 +64,35 @@ class UserBO:
         for key in infos[0]:
             setattr(self, key, infos[0][key])
 
-    def add_in_db(self, password_confirmation):
+        # get documents
+        query = "select * from uniride.ur_documents where u_id = %s"
+        params = (self.u_id,)
+
+        conn = connect_pg.connect()
+        infos = connect_pg.get_query(conn, query, params, True)
+        for key in infos[0]:
+            setattr(self, key, infos[0][key])
+
+        # get document verification
+        query = "select * from uniride.ur_document_verification where u_id = %s"
+        params = (self.u_id,)
+
+        conn = connect_pg.connect()
+        infos = connect_pg.get_query(conn, query, params, True)
+        for key in infos[0]:
+            setattr(self, key, infos[0][key])
+
+    def add_in_db(self, password_confirmation, files):
         """Insert the user in the database"""
-        # validate values
-        self.validate_login()
-        self.validate_student_email()
-        self.validate_firstname()
-        self.validate_lastname()
-        self.validate_gender()
-        self.validate_phone_number()
-        self.validate_description()
-        self.validate_password(password_confirmation)
+        # _validate values
+        self._validate_login()
+        self._validate_student_email()
+        self._validate_firstname()
+        self._validate_lastname()
+        self._validate_gender()
+        self._validate_phone_number()
+        self._validate_description()
+        self._validate_password(password_confirmation)
 
         self._hash_password()
 
@@ -87,12 +109,92 @@ class UserBO:
         values = tuple(attr_dict.values())
 
         query = f"INSERT INTO uniride.ur_user ({fields}) VALUES ({placeholders}) RETURNING u_id"
-
         conn = connect_pg.connect()
         user_id = connect_pg.execute_command(conn, query, values)
+
         self.u_id = user_id
 
-    def validate_login(self):
+        query = "INSERT INTO uniride.ur_documents (u_id) VALUES (%s)"
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, (self.u_id,))
+
+        query = "INSERT INTO uniride.ur_document_verification (u_id) VALUES (%s)"
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, (self.u_id,))
+
+        self.get_from_db()
+
+        try:
+            self.save_pfp(files)
+            self.save_license(files)
+            self.save_id_card(files)
+            self.save_school_certificate(files)
+        except MissingInputException:
+            pass
+
+    def save_pfp(self, files):
+        """Save profil picture"""
+        if "pfp" not in files:
+            raise MissingInputException("MISSING_PFP_FILE")
+        file = files["pfp"]
+        if file.filename == "":
+            raise MissingInputException("MISSING_PFP_FILE")
+
+        allowed_extensions = ["png", "jpg", "jpeg"]
+        file_name = save_file(
+            file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, self.u_id
+        )
+        if file_name != self.u_profile_picture:
+            try:
+                if self.u_profile_picture:
+                    delete_file(self.u_profile_picture, app.config["PFP_UPLOAD_FOLDER"])
+            except FileNotFoundError:
+                pass
+            query = "UPDATE uniride.ur_user SET u_profile_picture=%s WHERE u_id=%s"
+            values = (file_name, self.u_id)
+            conn = connect_pg.connect()
+            connect_pg.execute_command(conn, query, values)
+
+    def save_license(self, files):
+        """Save license"""
+        self.d_license = self._save_document(files, self.d_license, "license")
+
+    def save_id_card(self, files):
+        """Save id card"""
+        self.d_id_card = self._save_document(files, self.d_id_card, "id_card")
+
+    def save_school_certificate(self, files):
+        """Save school certificate"""
+        self.d_school_certificate = self._save_document(
+            files, self.d_school_certificate, "school_certificate"
+        )
+
+    def _save_document(self, files, old_file_name, document_type):
+        """Save document"""
+        if document_type not in files:
+            raise MissingInputException(f"MISSING_{document_type.upper()}_FILE")
+        file = files[document_type]
+        if file.filename == "":
+            raise MissingInputException(f"MISSING_{document_type.upper()}_FILE")
+
+        allowed_extensions = ["pdf", "png", "jpg", "jpeg"]
+        directory = app.config[f"{document_type.upper()}_UPLOAD_FOLDER"]
+        file_name = save_file(file, directory, allowed_extensions, self.u_id)
+        if file_name != old_file_name:
+            try:
+                if old_file_name:
+                    delete_file(old_file_name, directory)
+            except FileNotFoundError:
+                pass
+            query = (
+                f"UPDATE uniride.ur_documents SET d_{document_type}=%s WHERE u_id=%s"
+            )
+            values = (file_name, self.u_id)
+            conn = connect_pg.connect()
+            connect_pg.execute_command(conn, query, values)
+        return file_name
+
+    def _validate_login(self):
         """Check if the login is valid"""
 
         # check if exist
@@ -114,7 +216,7 @@ class UserBO:
         if count:
             raise InvalidInputException("LOGIN_TAKEN")
 
-    def validate_student_email(self):
+    def _validate_student_email(self):
         """Check if the email is valid"""
 
         # check if exist
@@ -155,17 +257,17 @@ class UserBO:
         if not re.fullmatch(regex, name):
             raise InvalidInputException(f"{name_type}_INVALID_CHARACTERS")
 
-    def validate_firstname(self):
+    def _validate_firstname(self):
         """Check if the firstname is valid"""
 
         self._validate_name(self.u_firstname, "FIRSTNAME")
 
-    def validate_lastname(self):
+    def _validate_lastname(self):
         """Check if the lastname is valid"""
 
         self._validate_name(self.u_lastname, "LASTNAME")
 
-    def validate_gender(self):
+    def _validate_gender(self):
         """Check if the gender is valid"""
 
         # check if exist
@@ -176,7 +278,7 @@ class UserBO:
         if self.u_gender not in ("N", "H", "F"):
             raise InvalidInputException("GENDER_INVALID")
 
-    def validate_phone_number(self):
+    def _validate_phone_number(self):
         """Check if the phone number is valid"""
         # check if the format is valid
         if self.u_phone_number and not (
@@ -184,13 +286,13 @@ class UserBO:
         ):
             raise InvalidInputException("PHONE_NUMBER_INVALID")
 
-    def validate_description(self):
+    def _validate_description(self):
         """Check if the description is valid"""
         # check if description not too long
         if self.u_description and len(self.u_description) > 500:
             raise InvalidInputException("DESCRIPTION_TOO_LONG")
 
-    def validate_password(self, password_confirmation):
+    def _validate_password(self, password_confirmation):
         """Check if the password is valid"""
 
         # check if exist

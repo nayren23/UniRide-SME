@@ -8,10 +8,8 @@ from uniride_sme import app
 from uniride_sme.models.bo.user_bo import UserBO
 from uniride_sme.utils.exception.exceptions import (
     ApiException,
-    MissingInputException,
 )
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
-from uniride_sme.utils.file import save_file
 import uniride_sme.utils.email as email
 
 
@@ -24,19 +22,19 @@ def register():
     response = jsonify(message="USER_CREATED_SUCCESSFULLY"), 200
 
     try:
-        json_object = request.json
+        form = request.form
+        print(form)
         user_bo = UserBO(
-            user_id=json_object.get("id", None),
-            login=json_object.get("login", None),
-            firstname=json_object.get("firstname", None),
-            lastname=json_object.get("lastname", None),
-            student_email=json_object.get("student_email", None),
-            password=json_object.get("password", None),
-            gender=json_object.get("gender", None),
-            phone_number=json_object.get("phone_number", None),
-            description=json_object.get("description", None),
+            login=form.get("login", None),
+            firstname=form.get("firstname", None),
+            lastname=form.get("lastname", None),
+            student_email=form.get("student_email", None),
+            password=form.get("password", None),
+            gender=form.get("gender", None),
+            phone_number=form.get("phone_number", None),
+            description=form.get("description", None),
         )
-        user_bo.add_in_db(json_object.get("password_confirmation", None))
+        user_bo.add_in_db(form.get("password_confirmation", None), request.files)
         send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
@@ -73,25 +71,57 @@ def save_pfp():
     response = jsonify(message="PROFIL_PICTURE_SAVED_SUCCESSFULLY"), 200
     user_id = get_jwt_identity()
     try:
-        save_pfp_file(user_id)
+        user_bo = UserBO(user_id=user_id)
+        user_bo.save_pfp(request.files)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
     return response
 
 
-def save_pfp_file(user_id):
-    """Save profil picture"""
-    if "pfp" not in request.files:
-        raise MissingInputException("MISSING_PFP_FILE")
-    file = request.files["pfp"]
-    if file.filename == "":
-        raise MissingInputException("MISSING_PFP_FILE")
+@user.route("/user/save/license", methods=["POST"])
+@jwt_required()
+def save_license():
+    """Save profil license endpoint"""
+    response = jsonify(message="LICENSE_SAVED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    try:
+        user_bo = UserBO(user_id=user_id)
+        user_bo.save_license(request.files)
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
 
-    allowed_extensions = ["png", "jpg", "jpeg"]
-    save_file(
-        file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, f"{user_id}.jpg"
-    )
+    return response
+
+
+@user.route("/user/save/id-card", methods=["POST"])
+@jwt_required()
+def save_id_card():
+    """Save profil id_card endpoint"""
+    response = jsonify(message="ID_CARD_SAVED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    try:
+        user_bo = UserBO(user_id=user_id)
+        user_bo.save_id_card(request.files)
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@user.route("/user/save/school-certificate", methods=["POST"])
+@jwt_required()
+def save_school_certificate():
+    """Save profil school_certificate endpoint"""
+    response = jsonify(message="SCHOOL_CERTIFICATE_SAVED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    try:
+        user_bo = UserBO(user_id=user_id)
+        user_bo.save_school_certificate(request.files)
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
 
 
 @user.route("/user/email-confirmation", methods=["GET"])
@@ -102,7 +132,6 @@ def send_email_confirmation():
     user_id = get_jwt_identity()
     try:
         user_bo = UserBO(user_id=user_id)
-        user_bo.get_from_db()
         if user_bo.u_email_verified:
             raise EmailAlreadyVerifiedException()
         send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
@@ -140,141 +169,6 @@ def verify_email(token):
             student_email=email.confirm_token(token),
         )
         user_bo.verify_student_email()
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-
-@user.route("/user/validate/email", methods=["POST"])
-def validate_email():
-    """Email validation endpoint"""
-    response = jsonify(message="EMAIL_VALID"), 200
-
-    try:
-        json_object = request.json
-        user_bo = UserBO(
-            student_email=json_object.get("student_email", None),
-        )
-        user_bo.validate_student_email()
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-
-@user.route("/user/validate/login", methods=["POST"])
-def validate_login():
-    """Login validation endpoint"""
-    response = jsonify(message="LOGIN_VALID"), 200
-
-    try:
-        json_object = request.json
-        user_bo = UserBO(
-            login=json_object.get("login", None),
-        )
-        user_bo.validate_login()
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-
-@user.route("/user/validate/firstname", methods=["POST"])
-def validate_firstname():
-    """Firstname validation endpoint"""
-    response = jsonify(message="FIRSTNAME_VALID"), 200
-
-    try:
-        json_object = request.json
-        user_bo = UserBO(
-            firstname=json_object.get("firstname", None),
-        )
-        user_bo.validate_firstname()
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-
-@user.route("/user/validate/lastname", methods=["POST"])
-def validate_lastname():
-    """Lastname validation endpoint"""
-    response = jsonify(message="LASTNAME_VALID"), 200
-
-    try:
-        json_object = request.json
-        user_bo = UserBO(
-            lastname=json_object.get("lastname", None),
-        )
-        user_bo.validate_lastname()
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-
-@user.route("/user/validate/gender/<gender>", methods=["GET"])
-def validate_gender(gender):
-    """Lastname validation endpoint"""
-    response = jsonify(message="GENDER_VALID"), 200
-
-    try:
-        user_bo = UserBO(
-            gender=gender,
-        )
-        user_bo.validate_gender()
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-
-@user.route("/user/validate/phone_number", methods=["POST"])
-def validate_phone_number():
-    """Phone number validation endpoint"""
-    response = jsonify(message="PHONE_NUMBER_VALID"), 200
-
-    try:
-        json_object = request.json
-        user_bo = UserBO(
-            phone_number=json_object.get("phone_number", None),
-        )
-        user_bo.validate_phone_number()
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-
-@user.route("/user/validate/password", methods=["POST"])
-def validate_password():
-    """Password validation endpoint"""
-    response = jsonify(message="PASSWORD_VALID"), 200
-
-    try:
-        json_object = request.json
-        user_bo = UserBO(
-            password=json_object.get("password", None),
-        )
-        user_bo.validate_password(json_object.get("password_confirmation", None))
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-
-@user.route("/user/validate/description", methods=["POST"])
-def validate_description():
-    """Description validation endpoint"""
-    response = jsonify(message="DESCRIPTION_VALID"), 200
-
-    try:
-        json_object = request.json
-        user_bo = UserBO(
-            description=json_object.get("description", None),
-        )
-        user_bo.validate_description()
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
