@@ -5,6 +5,7 @@ from models.bo.trip_bo import TripBO
 
 from models.exception.exceptions import ApiException
 from datetime import datetime
+from models.bo.address_bo import AddressBO
 
 from models.exception.trip_exceptions import (
     InvalidInputException,
@@ -65,14 +66,25 @@ def propose_trip():
 @trip.route("/trips", methods=["GET"])
 def get_available_trips():
     try:
-        # Récupérer les critères de recherche depuis la requête
+        # Get the intermediate address from the request
         intermediate_departure_latitude = str(request.args.get("departure_latitude"))
         intermediate_departure_longitude = str(request.args.get("departure_longitude"))
         intermediate_arrival_latitude = str(request.args.get("arrival_latitude"))
         intermediate_arrival_longitude = str(request.args.get("arrival_longitude"))
 
-        university_latitude = str(os.getenv("UNIVERSITY_LATITUDE"))
-        university_longitude = str(os.getenv("UNIVERSITY_LONGITUDE"))
+        #We use the environment variables to get the university address
+        address_bo = AddressBO(
+            street_number = str(os.getenv("UNIVERSITY_STREET_NUMBER")),
+            street_name = str(os.getenv("UNIVERSITY_STREET_NAME")),
+            city = str(os.getenv("UNIVERSITY_CITY")),
+            postal_code = str(os.getenv("UNIVERSITY_POSTAL_CODE")),
+        )
+        address_bo.get_latitude_longitude_from_address()
+        
+        #We need to round the latitude and longitude to 10 decimal places
+        university_latitude = "{:.10f}".format(address_bo.latitude)
+        university_longitude = "{:.10f}".format(address_bo.longitude)
+                
         point_universite = (university_latitude, university_longitude)
         
         point_intermediaire_depart = (intermediate_departure_latitude, intermediate_departure_longitude)
@@ -82,11 +94,7 @@ def get_available_trips():
             total_passenger_count= str(request.args.get("passenger_count", 1)),
             timestamp_proposed= request.args.get("departure_date"),
         )
-        
-        print("point_intermediaire_depart", point_intermediaire_depart) 
-        print("point_intermediaire_arrivee", point_intermediaire_arrivee)
-        print("point_universite", point_universite)
-        
+                
         if(point_intermediaire_depart == point_universite):
             print("intermediaire_depart == universite")
             condition_where = "(departure_address.a_latitude = %s AND departure_address.a_longitude = %s)"
@@ -96,7 +104,7 @@ def get_available_trips():
             condition_where = "(arrival_address.a_latitude = %s AND arrival_address.a_longitude = %s)"
             trips = trip_bo.get_trips(university_latitude, university_longitude, condition_where)
         else:   
-            # Si l'adresse intermédiaire n'est pas l'université, lever une exception
+            # If the intermediate address is not the university, raise an exception
             raise Exception("L'adresse intermédiaire ne correspond pas à l'université.")
         
 
