@@ -18,6 +18,7 @@ dependencies = [
   "flask_restful",
   "flask_cors",
   "flask_email",
+  "flask_jwt_extended",
   "python-dotenv",
   "psycopg2",
   "bcrypt"]

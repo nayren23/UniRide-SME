@@ -43,12 +43,18 @@ class UserBO:
 
     def get_from_db(self):
         """Get user infos from db"""
-        if not self.u_id:
-            raise MissingInputException("USER_ID_MISSING")
+        if not self.u_id and not self.u_login:
+            raise MissingInputException("IDENTIFIER_MISSING")
 
-        query = "select * from uniride.ur_user where u_id = %s"
+        if self.u_id:
+            query = "select * from uniride.ur_user where u_id = %s"
+            params = (self.u_id,)
+        else:
+            query = "select * from uniride.ur_user where u_login = %s"
+            params = (self.u_login,)
+
         conn = connect_pg.connect()
-        infos = connect_pg.get_query(conn, query, (self.u_id,), True)
+        infos = connect_pg.get_query(conn, query, params, True)
         if not infos:
             raise UserNotFoundException()
         for key in infos[0]:

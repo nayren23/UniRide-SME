@@ -11,7 +11,7 @@ def allowed_file(filename, allowed_extensions):
         raise FileException("INVALID_FILE_EXTENSION", 422)
 
 
-def save_file(file, directory, allowed_extensions, user_id):
+def save_file(file, directory, allowed_extensions, filename):
     """Save file"""
     allowed_file(file.filename, allowed_extensions)
-    file.save(os.path.join(directory, user_id + ".jpg"))
+    file.save(os.path.join(directory, filename))

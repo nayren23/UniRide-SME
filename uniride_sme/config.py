@@ -19,6 +19,7 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
     PFP_UPLOAD_FOLDER = os.getenv("PFP_UPLOAD_FOLDER")
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 
 def config(filename="config.ini", section="postgresql"):
