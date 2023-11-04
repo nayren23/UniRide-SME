@@ -18,6 +18,8 @@ class Config:
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
+    PFP_UPLOAD_FOLDER = os.getenv("PFP_UPLOAD_FOLDER")
+
 
 def config(filename="config.ini", section="postgresql"):
     """Configure database connection"""

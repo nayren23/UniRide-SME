@@ -3,8 +3,14 @@ from flask import Blueprint, request, jsonify, url_for
 
 from uniride_sme import app
 from uniride_sme.models.bo.user_bo import UserBO
-from uniride_sme.utils.exception.exceptions import ApiException
+from uniride_sme.utils.exception.exceptions import (
+    ApiException,
+    MissingInputException,
+)
+from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
+from uniride_sme.utils.file import save_file
 import uniride_sme.utils.email as email
+
 
 user = Blueprint("user", __name__)
 
@@ -35,6 +41,30 @@ def register():
     return response
 
 
+@user.route("/user/save/pfp", methods=["POST"])
+def save_pfp():
+    """Save profil picture endpoint"""
+    response = jsonify({"message": "PROFIL_PICTURE_SAVED_SUCCESSFULLY"}), 200
+    try:
+        save_pfp_file()
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+def save_pfp_file():
+    """Save profil picture"""
+    if "pfp" not in request.files:
+        raise MissingInputException("MISSING_PFP_FILE")
+    file = request.files["pfp"]
+    if file.filename == "":
+        raise MissingInputException("MISSING_PFP_FILE")
+
+    allowed_extensions = ["png", "jpg", "jpeg"]
+    save_file(file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, "1")
+
+
 @user.route("/user/email-confirmation/<user_id>", methods=["GET"])
 def send_email_confirmation(user_id):
     """Send email verification endpoint"""
@@ -43,6 +73,8 @@ def send_email_confirmation(user_id):
     try:
         user_bo = UserBO(user_id=user_id)
         user_bo.get_from_db()
+        if user_bo.u_email_verified:
+            raise EmailAlreadyVerifiedException()
         send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code

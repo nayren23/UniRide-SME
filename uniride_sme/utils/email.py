@@ -1,4 +1,4 @@
-"""Send email"""
+"""Email related functions"""
 from flask_mail import Message
 
 from uniride_sme import app, mail

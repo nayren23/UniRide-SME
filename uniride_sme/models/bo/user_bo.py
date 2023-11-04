@@ -47,8 +47,9 @@ class UserBO:
         infos = connect_pg.get_query(conn, query, (self.u_id,), True)
         if not infos:
             raise UserNotFoundException()
+        print(infos[0])
         for key in infos[0]:
-            setattr(self, key, infos[key])
+            setattr(self, key, infos[0][key])
 
     def add_in_db(self, password_confirmation):
         """Insert the user in the database"""
