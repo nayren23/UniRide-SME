@@ -1,9 +1,9 @@
 """Email related functions"""
 from flask_mail import Message
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
 from uniride_sme import app, mail
 from uniride_sme.utils.exception.exceptions import InvalidInputException
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
 
 def send_email(to, subject, template):

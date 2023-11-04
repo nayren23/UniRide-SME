@@ -10,7 +10,7 @@ from uniride_sme.utils.exception.exceptions import (
     ApiException,
 )
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
-import uniride_sme.utils.email as email
+from uniride_sme.utils import email
 
 
 user = Blueprint("user", __name__)

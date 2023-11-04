@@ -9,7 +9,6 @@ from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
     MissingInputException,
-    InternalServerErrorException,
 )
 from uniride_sme.utils.exception.user_exceptions import (
     UserNotFoundException,
