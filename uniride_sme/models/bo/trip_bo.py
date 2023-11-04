@@ -216,17 +216,21 @@ class TripBO:
                 uniride.ur_address departure_address ON t.t_address_depart_id = departure_address.a_id
             JOIN
                 uniride.ur_address arrival_address ON t.t_address_arrival_id = arrival_address.a_id
+            LEFT JOIN
+                uniride.ur_join j ON t.t_id = j.j_trip_id
             WHERE
                 {condition_where}
                 AND t.t_timestamp_proposed BETWEEN 
                 (TIMESTAMP %s - INTERVAL '1 hour') 
                 AND 
                 (TIMESTAMP %s + INTERVAL '1 hour')
-                AND t.t_total_passenger_count >= %s;
+                AND t.t_total_passenger_count >= %s
+                AND t.t_total_passenger_count >= COALESCE((SELECT SUM(j_passenger_count) FROM uniride.ur_join WHERE j_trip_id = t.t_id), 0) + %s
+                ;
         """
     
         conn = connect_pg.connect()
-        trips = connect_pg.get_query(conn, query, (departure_or_arrived_latitude, departure__or_arrived_longitude, self.timestamp_proposed, self.timestamp_proposed, self.total_passenger_count))
+        trips = connect_pg.get_query(conn, query, (departure_or_arrived_latitude, departure__or_arrived_longitude, self.timestamp_proposed, self.timestamp_proposed, self.total_passenger_count, self.total_passenger_count))
         connect_pg.disconnect(conn)
         
         return trips
