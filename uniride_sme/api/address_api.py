@@ -27,7 +27,7 @@ def add_address():
                                 timestamp_modification=datetime.now()
                             )
         address_bo.add_in_db()
-        response = jsonify({"message": "ADDRESS_CREATED_SUCCESSFULLY!", "id_address": address_bo.address_id}), 200
+        response = jsonify({"message": "ADDRESS_CREATED_SUCCESSFULLY!", "id_address": address_bo.id}), 200
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
     return response
