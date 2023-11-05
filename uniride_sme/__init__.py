@@ -14,6 +14,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.config["PATH"] = os.path.dirname(__file__)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1000 * 1000
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
 mail = Mail(app)

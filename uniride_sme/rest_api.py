@@ -2,6 +2,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+from flask import jsonify
 from uniride_sme import app
 from uniride_sme.config import config
 from uniride_sme.api.user_api import user
@@ -28,6 +29,12 @@ def reformat_jwt_response(response):
         del response_json["msg"]
         response.data = json.dumps(response_json)
     return response
+
+
+@app.errorhandler(413)
+def file_too_large(e):
+    """Return a custom response when a file is too large"""
+    return jsonify(message="FILE_TOO_LARGE"), 413
 
 
 if __name__ == "__main__":
