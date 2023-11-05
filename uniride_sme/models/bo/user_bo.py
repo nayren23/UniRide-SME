@@ -4,6 +4,7 @@ import bcrypt
 
 from uniride_sme import app
 from uniride_sme import connect_pg
+from uniride_sme.models.bo.documents_bo import DocumentsBO
 from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
@@ -62,23 +63,8 @@ class UserBO:
         for key in infos[0]:
             setattr(self, key, infos[0][key])
 
-        # get documents
-        query = "select * from uniride.ur_documents where u_id = %s"
-        params = (self.u_id,)
-
-        conn = connect_pg.connect()
-        infos = connect_pg.get_query(conn, query, params, True)
-        for key in infos[0]:
-            setattr(self, key, infos[0][key])
-
-        # get document verification
-        query = "select * from uniride.ur_document_verification where u_id = %s"
-        params = (self.u_id,)
-
-        conn = connect_pg.connect()
-        infos = connect_pg.get_query(conn, query, params, True)
-        for key in infos[0]:
-            setattr(self, key, infos[0][key])
+        self.documents_bo = DocumentsBO(self.u_id)
+        self.documents_bo.get_from_db()
 
     def add_in_db(self, password_confirmation, files):
         """Insert the user in the database"""
@@ -109,24 +95,13 @@ class UserBO:
         query = f"INSERT INTO uniride.ur_user ({fields}) VALUES ({placeholders}) RETURNING u_id"
         conn = connect_pg.connect()
         user_id = connect_pg.execute_command(conn, query, values)
-
         self.u_id = user_id
 
-        query = "INSERT INTO uniride.ur_documents (u_id) VALUES (%s)"
-        conn = connect_pg.connect()
-        connect_pg.execute_command(conn, query, (self.u_id,))
-
-        query = "INSERT INTO uniride.ur_document_verification (u_id) VALUES (%s)"
-        conn = connect_pg.connect()
-        connect_pg.execute_command(conn, query, (self.u_id,))
-
-        self.get_from_db()
-
+        self.documents_bo = DocumentsBO(self.u_id)
+        self.documents_bo.add_in_db(files)
         try:
+            self.u_profile_picture = None
             self.save_pfp(files)
-            self.save_license(files)
-            self.save_id_card(files)
-            self.save_school_certificate(files)
         except MissingInputException:
             pass
 
@@ -142,55 +117,27 @@ class UserBO:
         file_name = save_file(
             file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, self.u_id
         )
-        if file_name != self.u_profile_picture:
-            try:
-                if self.u_profile_picture:
-                    delete_file(self.u_profile_picture, app.config["PFP_UPLOAD_FOLDER"])
-            except FileNotFoundError:
-                pass
-            query = "UPDATE uniride.ur_user SET u_profile_picture=%s WHERE u_id=%s"
-            values = (file_name, self.u_id)
-            conn = connect_pg.connect()
-            connect_pg.execute_command(conn, query, values)
+        try:
+            if self.u_profile_picture and file_name != self.u_profile_picture:
+                delete_file(self.u_profile_picture, app.config["PFP_UPLOAD_FOLDER"])
+        except FileNotFoundError:
+            pass
+        query = "UPDATE uniride.ur_user SET u_profile_picture=%s, u_timestamp_modification=CURRENT_TIMESTAMP WHERE u_id=%s"
+        values = (file_name, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
 
     def save_license(self, files):
         """Save license"""
-        self.d_license = self._save_document(files, self.d_license, "license")
+        self.documents_bo.save_license(files)
 
     def save_id_card(self, files):
         """Save id card"""
-        self.d_id_card = self._save_document(files, self.d_id_card, "id_card")
+        self.documents_bo.save_id_card(files)
 
     def save_school_certificate(self, files):
         """Save school certificate"""
-        self.d_school_certificate = self._save_document(
-            files, self.d_school_certificate, "school_certificate"
-        )
-
-    def _save_document(self, files, old_file_name, document_type):
-        """Save document"""
-        if document_type not in files:
-            raise MissingInputException(f"MISSING_{document_type.upper()}_FILE")
-        file = files[document_type]
-        if file.filename == "":
-            raise MissingInputException(f"MISSING_{document_type.upper()}_FILE")
-
-        allowed_extensions = ["pdf", "png", "jpg", "jpeg"]
-        directory = app.config[f"{document_type.upper()}_UPLOAD_FOLDER"]
-        file_name = save_file(file, directory, allowed_extensions, self.u_id)
-        if file_name != old_file_name:
-            try:
-                if old_file_name:
-                    delete_file(old_file_name, directory)
-            except FileNotFoundError:
-                pass
-            query = (
-                f"UPDATE uniride.ur_documents SET d_{document_type}=%s WHERE u_id=%s"
-            )
-            values = (file_name, self.u_id)
-            conn = connect_pg.connect()
-            connect_pg.execute_command(conn, query, values)
-        return file_name
+        self.documents_bo.save_school_certificate(files)
 
     def _validate_login(self):
         """Check if the login is valid"""

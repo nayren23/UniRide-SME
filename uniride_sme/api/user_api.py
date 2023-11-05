@@ -23,7 +23,6 @@ def register():
 
     try:
         form = request.form
-        print(form)
         user_bo = UserBO(
             login=form.get("login", None),
             firstname=form.get("firstname", None),
