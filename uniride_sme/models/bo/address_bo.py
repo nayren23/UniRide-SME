@@ -1,5 +1,5 @@
 
-import connect_pg
+from uniride_sme import connect_pg
 from datetime import datetime
 import requests
 
@@ -12,10 +12,10 @@ class AddressBO:
                  postal_code = None, 
                  latitude = None, 
                  longitude = None,
-                 description = None, 
+                 description = "", 
                  timestamp_modification = None
                  ):
-        self.address_id = address_id
+        self.id = address_id
         self.street_number = street_number
         self.street_name = street_name
         self.city = city
@@ -31,7 +31,7 @@ class AddressBO:
 
         # Check if the address already exists
         if existing_address_id :
-            self.address_id = existing_address_id[0][0]
+            self.id = existing_address_id[0][0]
         else:
             # validate values            
             self.valid_street_number()
@@ -59,7 +59,7 @@ class AddressBO:
 
             conn = connect_pg.connect()
             address_id = connect_pg.execute_command(conn, query, values)
-            self.address_id = address_id
+            self.id = address_id
             
     
     def valid_street_number(self):
@@ -87,7 +87,7 @@ class AddressBO:
         return isinstance(self.description, str) and len(self.description) <= 50
 
     def valid_timestamp_modification(self):
-        return isinstance(self.timestamp_modification, datetime.datetime)
+        return isinstance(self.timestamp_modification, datetime)
 
     def valid(self):
         return self.valid_street_number() and self.valid_street_name() and self.valid_city() and \

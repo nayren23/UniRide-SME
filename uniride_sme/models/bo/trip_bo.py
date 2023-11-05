@@ -1,8 +1,8 @@
 import os
-import connect_pg
+import uniride_sme.connect_pg as connect_pg
 from datetime import datetime
 
-from models.exception.trip_exceptions import (
+from uniride_sme.models.exception.trip_exceptions import (
     InvalidInputException,
     MissingInputException,
 )
@@ -22,12 +22,11 @@ class TripBO:
     timestamp_proposed = None ,
     status = None , #En cours, en attente, annulé, terminé
     price = None,
-    daily_id = None,
     user_id = None,
     address_depart_id  = None,
     address_arrival_id = None,
     ):
-        self.trip_id  = trip_id
+        self.id  = trip_id
         self.total_passenger_count = total_passenger_count
         self.timestamp_creation  = timestamp_creation
         self.timestamp_proposed  = timestamp_proposed
@@ -41,10 +40,10 @@ class TripBO:
         """Insert the trip in the database"""
         
         existing_trip_id = self.trip_exists()
-
+        print(f"AAAAAAAAAAAAAAAA {existing_trip_id}")
         # Check if the address already exists
         if existing_trip_id :
-            self.trip_id = existing_trip_id[0][0]
+            self.id = existing_trip_id[0][0]
         else:
                         
             # validate values
@@ -74,7 +73,7 @@ class TripBO:
             
             conn = connect_pg.connect()
             trip_id = connect_pg.execute_command(conn, query, values)
-            self.trip_id = trip_id
+            self.id = trip_id
 
     def validate_total_passenger_count(self):
         if self.total_passenger_count is None:
@@ -98,12 +97,6 @@ class TripBO:
             raise MissingInputException("price cannot be null")
         if self.price < 0:
             raise InvalidInputException("price cannot be negative")
-        
-    def validate_daily_id(self):
-        if self.daily_id is None:
-            raise MissingInputException("daily_id cannot be null")
-        if self.daily_id < 0:
-            raise InvalidInputException("daily_id cannot be negative")
         
     def validate_user_id(self):
         if self.user_id is None:
