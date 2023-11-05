@@ -1,5 +1,5 @@
 import os
-import connect_pg
+import uniride_sme.connect_pg as connect_pg
 from datetime import datetime
 
 from uniride_sme.models.exception.trip_exceptions import (
@@ -66,7 +66,7 @@ class TripBO:
     address_depart_id :int  = None,
     address_arrival_id :int = None,
     ):
-        self.trip_id  = trip_id
+        self.id  = trip_id
         self.total_passenger_count = total_passenger_count
         self.timestamp_creation  = timestamp_creation
         self.timestamp_proposed  = timestamp_proposed
@@ -80,10 +80,10 @@ class TripBO:
         """Insert the trip in the database"""
         
         existing_trip_id = self.trip_exists()
-
+        print(f"AAAAAAAAAAAAAAAA {existing_trip_id}")
         # Check if the address already exists
         if existing_trip_id :
-            self.trip_id = existing_trip_id[0][0]
+            self.id = existing_trip_id[0][0]
         else:
                         
             # validate values
@@ -113,7 +113,7 @@ class TripBO:
             
             conn = connect_pg.connect()
             trip_id = connect_pg.execute_command(conn, query, values)
-            self.trip_id = trip_id
+            self.id = trip_id
 
     def validate_total_passenger_count(self):
         if self.total_passenger_count is None:

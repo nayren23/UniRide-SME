@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import psycopg2
-from config import config
+from uniride_sme.config import config
 
 
 def connect(filename="config.ini", section="postgresql"):
@@ -70,7 +70,7 @@ def get_query(conn, query, params=None):
         rows = cur.fetchall()
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        return error
     return rows
 
 

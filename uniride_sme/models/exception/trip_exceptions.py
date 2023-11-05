@@ -1,6 +1,6 @@
 """Exceptions for TripBO endpoints"""
 
-from models.exception.exceptions import ApiException
+from uniride_sme.models.exception.exceptions import ApiException
 
 class InvalidInputException(ApiException):
     """Exception for invalid input"""
