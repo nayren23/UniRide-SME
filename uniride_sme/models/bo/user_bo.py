@@ -1,6 +1,5 @@
 """User business owner"""
 import re
-import os
 import bcrypt
 
 from uniride_sme import app
@@ -232,7 +231,7 @@ class UserBO:
 
         # check if the domain is valid
         email_domain = self.u_student_email.split("@")[1]
-        valid_domain = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
+        valid_domain = app.config["UNIVERSITY_EMAIL_DOMAIN"]
         if email_domain != valid_domain:
             raise InvalidInputException("EMAIL_INVALID_DOMAIN")
 
