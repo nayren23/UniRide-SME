@@ -2,30 +2,69 @@ import os
 import connect_pg
 from datetime import datetime
 
-from models.exception.trip_exceptions import (
+from uniride_sme.models.exception.trip_exceptions import (
     InvalidInputException,
     MissingInputException,
 )
 
-from dotenv import load_dotenv
+from uniride_sme.models.dto.trips_get_dto import TripsGetDto
+from uniride_sme.models.dto.trip_dto import TripDto
+from uniride_sme.models.dto.address_dto import AddressDto
 
+from dotenv import load_dotenv
 import googlemaps
 
+def check_if_route_is_viable(origin, destination, intermediate_point):
+    accept_time_difference_minutes = 10
+    """Check if the route is viable"""
+
+    now = datetime.now()
+    
+    load_dotenv()
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+
+    # Calculez le trajet initial
+    gmaps = googlemaps.Client(key=google_api_key)
+    
+    # Calcule l'itinéraire initial sans le point intermédiaire
+    mode = "driving"
+    
+    initial_route = gmaps.directions(origin, destination, mode , departure_time=now)
+
+    # Calcule l'itinéraire avec le point intermédiaire
+    route_initial_intermediate = gmaps.directions(origin, intermediate_point, mode,  departure_time=now)
+
+    route_with_intermediate = gmaps.directions(intermediate_point, destination, mode,  departure_time=now)
+    
+    #Vérifie si l'ajout du point intermédiaire augmente la durée de trajet de plus de 10 minutes
+    initial_duration = initial_route[0]['legs'][0]['duration']['value']  # Durée en secondes
+    intermediate_duration = route_initial_intermediate[0]['legs'][0]['duration']['value']  # Durée en secondes
+    intermediate_destination_duration = route_with_intermediate[0]['legs'][0]['duration']['value'] # Durée en secondes
+    
+    new_duration = intermediate_duration + intermediate_destination_duration
+
+    time_difference = new_duration - initial_duration  # Différence de temps en secondes
+    time_difference_minutes = time_difference / 60  # Différence de temps en minutes
+
+    print("time_difference_minutes", time_difference_minutes)
+    if time_difference_minutes <= accept_time_difference_minutes:
+        return True
+    else:
+        return False
 
 class TripBO:
     
     def __init__(
     self ,
-    trip_id = None ,
-    total_passenger_count = None,
+    trip_id : int = None ,
+    total_passenger_count : int = None,
     timestamp_creation = None ,
     timestamp_proposed = None ,
-    status = None , #En cours, en attente, annulé, terminé
-    price = None,
-    daily_id = None,
-    user_id = None,
-    address_depart_id  = None,
-    address_arrival_id = None,
+    status : int = None , #En cours, en attente, annulé, terminé
+    price : float = None,
+    user_id :int = None,
+    address_depart_id :int  = None,
+    address_arrival_id :int = None,
     ):
         self.trip_id  = trip_id
         self.total_passenger_count = total_passenger_count
@@ -99,12 +138,6 @@ class TripBO:
         if self.price < 0:
             raise InvalidInputException("price cannot be negative")
         
-    def validate_daily_id(self):
-        if self.daily_id is None:
-            raise MissingInputException("daily_id cannot be null")
-        if self.daily_id < 0:
-            raise InvalidInputException("daily_id cannot be negative")
-        
     def validate_user_id(self):
         if self.user_id is None:
             raise MissingInputException("user_id cannot be null")
@@ -146,51 +179,7 @@ class TripBO:
         connect_pg.disconnect(conn)
         
         return trip_id
-    
-    def check_if_route_is_viable(self, origin, destination, intermediate_point):
-        accept_time_difference_minutes = 10
-        """Check if the route is viable"""
-    
-        now = datetime.now()
         
-        load_dotenv()
-        google_api_key = os.getenv("GOOGLE_API_KEY")
-
-        # Calculez le trajet initial
-        gmaps = googlemaps.Client(key=google_api_key)
-        
-        # Calcule l'itinéraire initial sans le point intermédiaire
-        mode = "driving"
-        
-        initial_route = gmaps.directions(origin, destination, mode , departure_time=now)
-
-        # Calcule l'itinéraire avec le point intermédiaire
-        route_initial_intermediate = gmaps.directions(origin, intermediate_point, mode,  departure_time=now)
-
-        route_with_intermediate = gmaps.directions(intermediate_point, destination, mode,  departure_time=now)
-        
-        #Vérifie si l'ajout du point intermédiaire augmente la durée de trajet de plus de 10 minutes
-        initial_duration = initial_route[0]['legs'][0]['duration']['value']  # Durée en secondes
-        intermediate_duration = route_initial_intermediate[0]['legs'][0]['duration']['value']  # Durée en secondes
-        intermediate_destination_duration = route_with_intermediate[0]['legs'][0]['duration']['value'] # Durée en secondes
-        
-        new_duration = intermediate_duration + intermediate_destination_duration
-
-        print("initial_duration", initial_duration)
-        print("intermediate_duration", intermediate_duration)
-        print("intermediate_destination_duration", intermediate_destination_duration)
-        print("new_duration", new_duration)
-
-        time_difference = new_duration - initial_duration  # Différence de temps en secondes
-        time_difference_minutes = time_difference / 60  # Différence de temps en minutes
-
-        print("time_difference_minutes", time_difference_minutes)
-        if time_difference_minutes <= accept_time_difference_minutes:
-            return True
-        else:
-            return False
-    
-       
         
     def get_trips(self, departure_or_arrived_latitude, departure__or_arrived_longitude, condition_where):
         """Get the trips from the database"""
@@ -234,3 +223,89 @@ class TripBO:
         connect_pg.disconnect(conn)
         
         return trips
+    
+    def get_trips_for_university_address(self, depart_address_bo, address_arrival_bo,university_address_bo):
+        
+            # Get the intermediate address from the request
+            intermediate_departure_latitude = depart_address_bo.latitude
+            intermediate_departure_longitude = depart_address_bo.longitude
+            intermediate_arrival_latitude = address_arrival_bo.latitude
+            intermediate_arrival_longitude = address_arrival_bo.longitude
+        
+            #We need to round the latitude and longitude to 10 decimal places
+            university_latitude = university_address_bo.latitude
+            university_longitude = university_address_bo.longitude
+                    
+            point_universite = (university_latitude, university_longitude)
+            
+            point_intermediaire_depart = (intermediate_departure_latitude, intermediate_departure_longitude)
+            point_intermediaire_arrivee = (intermediate_arrival_latitude, intermediate_arrival_longitude)
+            
+            if point_intermediaire_depart == point_universite:
+                print("intermediaire_depart == universite")
+                condition_where = "(departure_address.a_latitude = %s AND departure_address.a_longitude = %s)"
+                trips = self.get_trips(university_latitude, university_longitude, condition_where)
+            elif point_intermediaire_arrivee == point_universite:
+                print("intermediaire_arrivee == universite")
+                condition_where = "(arrival_address.a_latitude = %s AND arrival_address.a_longitude = %s)"
+                trips = self.get_trips(university_latitude, university_longitude, condition_where)
+            else:   
+                # Si l'adresse intermédiaire n'est pas l'université, lever une exception
+                raise Exception("L'adresse intermédiaire ne correspond pas à l'université.")
+            
+        
+            available_trips = []
+
+            for trip in trips:
+                trip_id, total_passenger_count, proposed_date, creation_timestamp, trip_status, trip_price, user_id, \
+                departure_address_id, arrival_address_id, departure_latitude, departure_longitude, arrival_latitude, \
+                arrival_longitude = trip
+
+                point_depart = (departure_latitude, departure_longitude)
+                point_arrivee = (arrival_latitude, arrival_longitude)
+                
+                if point_intermediaire_depart == point_universite:
+                    # Si le point de départ est l'université, alors l'université est l'adresse d'arrivée du trajet
+                    is_viable = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_arrivee)
+                
+                elif point_intermediaire_arrivee == point_universite:
+                    # Si le point d'arrivée est l'université, alors l'université est l'adresse de départ du trajet
+                    is_viable = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
+                    
+                else:
+                    # Sinon, l'université est l'adresse d'arrivée du trajet
+
+                    if((point_intermediaire_depart != point_universite) or (point_intermediaire_arrivee != point_universite)):
+                        # Si l'adresse intermédiaire n'est pas l'université, lever une exception
+                        raise Exception("L'adresse intermédiaire ne correspond pas à l'université.")
+                    is_viable = check_if_route_is_viable(point_depart, point_universite,
+                                                                point_arrivee)
+
+                if is_viable:
+                    address_dtos = {
+                        "departure_address": AddressDto(
+                            address_id = departure_address_id,
+                            latitude = departure_latitude,
+                            longitude = departure_longitude,
+                            nom_complet = depart_address_bo.concatene_address()
+                        ),
+                        "arrival_address": AddressDto(
+                            address_id = arrival_address_id,
+                            latitude = arrival_latitude,
+                            longitude = arrival_longitude,
+                            nom_complet = address_arrival_bo.concatene_address()
+                        )
+                    }
+                    trip_dto = TripDto(
+                        trip_id=trip_id,
+                        price_per_passenger=trip_price,
+                        address=address_dtos,
+                        driver_id = user_id
+                    )
+
+                    trips_get_dto = TripsGetDto(
+                        trips=trip_dto
+                    )
+                    available_trips.append(trips_get_dto)
+
+            return available_trips

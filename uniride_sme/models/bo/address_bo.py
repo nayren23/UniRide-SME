@@ -5,14 +5,14 @@ import requests
 
 class AddressBO:
     def __init__(self, 
-                 address_id = None, 
-                 street_number = None, 
-                 street_name= None, 
-                 city = None, 
-                 postal_code = None, 
-                 latitude = None, 
-                 longitude = None,
-                 description = None, 
+                 address_id : str = None, 
+                 street_number : str = None, 
+                 street_name : str = None, 
+                 city : str = None, 
+                 postal_code : str = None, 
+                 latitude : float = None, 
+                 longitude : float = None,
+                 description :str = None, 
                  timestamp_modification = None
                  ):
         self.address_id = address_id
@@ -115,7 +115,7 @@ class AddressBO:
         # URL API Adresse GOUV  /search/
         url_search = "https://api-adresse.data.gouv.fr/search/"
 
-        address = self.street_number + " " + self.street_name + " " + self.city
+        address = self.concatene_address()
         
         # Parameter for research
         params = {
@@ -136,3 +136,7 @@ class AddressBO:
             self.longitude = data['features'][0]['geometry']['coordinates'][0]
         else:    
             raise ValueError("Invalid address")
+        
+    def concatene_address(self):
+        """Concatene the address"""
+        return  str(self.street_number) + " " +self.street_name + " " + self.city + " " + str(self.postal_code)
