@@ -1,5 +1,6 @@
 """Initialisation of the api"""
 import os
+from datetime import timedelta
 from flask import Flask
 from flask_restful import Api
 from flask_cors import CORS
@@ -12,6 +13,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config["PATH"] = os.path.dirname(__file__)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
 mail = Mail(app)
