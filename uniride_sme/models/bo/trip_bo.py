@@ -11,6 +11,8 @@ from uniride_sme.models.exception.trip_exceptions import (
 from uniride_sme.models.dto.trips_get_dto import TripsGetDto
 from uniride_sme.models.dto.trip_dto import TripDto
 from uniride_sme.models.dto.address_dto import AddressDto
+from uniride_sme.utils.trip_status import TripStatus
+
 
 from dotenv import load_dotenv
 import googlemaps
@@ -235,12 +237,12 @@ class TripBO:
                 AND 
                 (TIMESTAMP %s + INTERVAL '1 hour')
                 AND t.t_total_passenger_count >= %s
-                AND t.t_status = 1
+                AND t.t_status = %s
                 ;
         """
     
         conn = connect_pg.connect()
-        trips = connect_pg.get_query(conn, query, (departure_or_arrived_latitude, departure__or_arrived_longitude, self.timestamp_proposed, self.timestamp_proposed, self.total_passenger_count))
+        trips = connect_pg.get_query(conn, query, (departure_or_arrived_latitude, departure__or_arrived_longitude, self.timestamp_proposed, self.timestamp_proposed, self.total_passenger_count, TripStatus.PENDING.value))
         connect_pg.disconnect(conn)
         
         return trips

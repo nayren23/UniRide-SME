@@ -10,6 +10,7 @@ from uniride_sme.models.dto.trips_get_dto import TripsGetDto
 from uniride_sme.models.dto.trip_dto import TripDto
 from uniride_sme.models.dto.address_dto import AddressDto
 from uniride_sme.models.bo.trip_bo import check_if_route_is_viable
+from uniride_sme.utils.trip_status import TripStatus
 
 from uniride_sme.models.exception.trip_exceptions import (
     InvalidInputException,
@@ -52,7 +53,7 @@ def propose_trip():
             address_depart_id = json_object.get("address_depart_id", None),
             address_arrival_id = json_object.get("address_arrival_id", None),
             
-            status = 1,     #proposé, En cours, annulé, terminé, 
+            status = TripStatus.PENDING.value,     # En cours, annulé, terminé, 
             timestamp_creation = datetime.now(),
         )
         trip_bo.add_in_db()
