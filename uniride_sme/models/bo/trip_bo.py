@@ -235,12 +235,12 @@ class TripBO:
                 AND 
                 (TIMESTAMP %s + INTERVAL '1 hour')
                 AND t.t_total_passenger_count >= %s
-                AND t.t_total_passenger_count >= COALESCE((SELECT SUM(j_passenger_count) FROM uniride.ur_join WHERE j_trip_id = t.t_id), 0) + %s
+                AND t.t_status = 1
                 ;
         """
     
         conn = connect_pg.connect()
-        trips = connect_pg.get_query(conn, query, (departure_or_arrived_latitude, departure__or_arrived_longitude, self.timestamp_proposed, self.timestamp_proposed, self.total_passenger_count, self.total_passenger_count))
+        trips = connect_pg.get_query(conn, query, (departure_or_arrived_latitude, departure__or_arrived_longitude, self.timestamp_proposed, self.timestamp_proposed, self.total_passenger_count))
         connect_pg.disconnect(conn)
         
         return trips
