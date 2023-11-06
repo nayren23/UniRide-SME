@@ -54,10 +54,7 @@ def propose_trip():
             
             status = 1,     #proposé, En cours, annulé, terminé, 
             timestamp_creation = datetime.now(),
-            price = 1,
         )
-        #trip_bo.price =  10 #appeller la fonction de calcul du prix,
-
         trip_bo.add_in_db()
         response = jsonify({"message": "TRIP_CREATED_SUCCESSFULLY" , "trip_id": trip_bo.trip_id}), 200
 
@@ -90,9 +87,6 @@ def get_available_trips():
         )
         
         address_arrival_bo.get_latitude_longitude_from_address()
-
-        
-
         
         #We use the environment variables to get the university address
         university_address_bo = AddressBO(
@@ -103,14 +97,12 @@ def get_available_trips():
         )
         university_address_bo.get_latitude_longitude_from_address()
         
-
-
         trip_bo = TripBO(
             total_passenger_count = json_object.get("trip").get("passenger_count", 1),
             timestamp_proposed = json_object.get("trip").get("departure_date", None),
         )
         
-        available_trips = trip_bo.get_trips_for_university_address(depart_address_bo, address_arrival_bo,university_address_bo )
+        available_trips = trip_bo.get_trips_for_university_address(depart_address_bo, address_arrival_bo,university_address_bo)
         
         response = available_trips
         return jsonify(response), 200

@@ -1,6 +1,7 @@
 import os
 import uniride_sme.connect_pg as connect_pg
 from datetime import datetime
+from decimal import Decimal
 
 from uniride_sme.models.exception.trip_exceptions import (
     InvalidInputException,
@@ -46,11 +47,11 @@ def check_if_route_is_viable(origin, destination, intermediate_point):
     time_difference = new_duration - initial_duration  # Différence de temps en secondes
     time_difference_minutes = time_difference / 60  # Différence de temps en minutes
 
-    print("time_difference_minutes", time_difference_minutes)
     if time_difference_minutes <= accept_time_difference_minutes:
-        return True
+        intermediate_destination_distance = route_with_intermediate[0]['legs'][0]['distance']['value']  / 1000 
+        return [True, new_duration, intermediate_destination_distance]
     else:
-        return False
+        return [False]
 
 class TripBO:
     
@@ -80,7 +81,6 @@ class TripBO:
         """Insert the trip in the database"""
         
         existing_trip_id = self.trip_exists()
-        print(f"AAAAAAAAAAAAAAAA {existing_trip_id}")
         # Check if the address already exists
         if existing_trip_id :
             self.id = existing_trip_id[0][0]
@@ -161,9 +161,29 @@ class TripBO:
             raise InvalidInputException("address_depart_id is equal to address_arrival_id")
 
         
-    def calculate_price(self):
-        #TODO
-        return 0
+    def calculate_price(self, distance, base_rate, total_passenger_count):
+        load_dotenv()
+    
+        rate_per_km = Decimal(os.getenv("RATE_PER_KM"))
+        cost_per_km  = Decimal(os.getenv("COST_PER_KM"))
+        
+         # Calculating the total cost of the trip
+        total_cost = (Decimal(distance) * cost_per_km ) + (Decimal(distance) * rate_per_km)
+        
+        # Calculate the recommended fare to be paid by each passenger
+        recommended_price = total_cost / Decimal(total_passenger_count)
+        
+        # The recommended fare is capped at 1.5 times the base fare
+        recommended_price = min(recommended_price, base_rate * Decimal("1.5"))
+        
+        # Reduce the price by 20%.
+        final_price = recommended_price * Decimal("0.8")
+        
+        # Format price with two decimal places
+        formatted_price = '{:.2f}'.format(final_price)  
+          
+        return formatted_price
+   
 
     def trip_exists(self):
         """Check if the address already exists in the database"""
@@ -195,6 +215,7 @@ class TripBO:
                 t.t_user_id AS user_id,
                 t.t_address_depart_id AS departure_address_id,
                 t.t_address_arrival_id AS arrival_address_id,
+                t.t_initial_price AS t_initial_price,
                 departure_address.a_latitude AS departure_latitude,
                 departure_address.a_longitude AS departure_longitude,
                 arrival_address.a_latitude AS arrival_latitude,
@@ -242,11 +263,9 @@ class TripBO:
             point_intermediaire_arrivee = (intermediate_arrival_latitude, intermediate_arrival_longitude)
             
             if point_intermediaire_depart == point_universite:
-                print("intermediaire_depart == universite")
                 condition_where = "(departure_address.a_latitude = %s AND departure_address.a_longitude = %s)"
                 trips = self.get_trips(university_latitude, university_longitude, condition_where)
             elif point_intermediaire_arrivee == point_universite:
-                print("intermediaire_arrivee == universite")
                 condition_where = "(arrival_address.a_latitude = %s AND arrival_address.a_longitude = %s)"
                 trips = self.get_trips(university_latitude, university_longitude, condition_where)
             else:   
@@ -258,7 +277,7 @@ class TripBO:
 
             for trip in trips:
                 trip_id, total_passenger_count, proposed_date, creation_timestamp, trip_status, trip_price, user_id, \
-                departure_address_id, arrival_address_id, departure_latitude, departure_longitude, arrival_latitude, \
+                departure_address_id, arrival_address_id, initial_price, departure_latitude, departure_longitude, arrival_latitude, \
                 arrival_longitude = trip
 
                 point_depart = (departure_latitude, departure_longitude)
@@ -266,11 +285,12 @@ class TripBO:
                 
                 if point_intermediaire_depart == point_universite:
                     # Si le point de départ est l'université, alors l'université est l'adresse d'arrivée du trajet
-                    is_viable = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_arrivee)
-                
+                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
+                    is_viable = info_route[0]                
                 elif point_intermediaire_arrivee == point_universite:
                     # Si le point d'arrivée est l'université, alors l'université est l'adresse de départ du trajet
-                    is_viable = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
+                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
+                    is_viable = info_route[0]
                     
                 else:
                     # Sinon, l'université est l'adresse d'arrivée du trajet
@@ -278,18 +298,22 @@ class TripBO:
                     if((point_intermediaire_depart != point_universite) or (point_intermediaire_arrivee != point_universite)):
                         # Si l'adresse intermédiaire n'est pas l'université, lever une exception
                         raise Exception("L'adresse intermédiaire ne correspond pas à l'université.")
-                    is_viable = check_if_route_is_viable(point_depart, point_universite,
-                                                                point_arrivee)
+                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
+                    is_viable = info_route[0]
 
                 if is_viable:
+                    price = self.calculate_price(info_route[2], initial_price, total_passenger_count)
+                    self.update_trip_price(trip_id, price)
+                    formatted_price = '{:.2f}'.format(float(price) * self.total_passenger_count)
+
                     address_dtos = {
-                        "departure_address": AddressDto(
+                        "departure": AddressDto(
                             address_id = departure_address_id,
                             latitude = departure_latitude,
                             longitude = departure_longitude,
                             nom_complet = depart_address_bo.concatene_address()
                         ),
-                        "arrival_address": AddressDto(
+                        "arrival": AddressDto(
                             address_id = arrival_address_id,
                             latitude = arrival_latitude,
                             longitude = arrival_longitude,
@@ -298,14 +322,28 @@ class TripBO:
                     }
                     trip_dto = TripDto(
                         trip_id=trip_id,
-                        price_per_passenger=trip_price,
                         address=address_dtos,
-                        driver_id = user_id
+                        driver_id = user_id,
+                        price = formatted_price,
                     )
-
                     trips_get_dto = TripsGetDto(
                         trips=trip_dto
                     )
                     available_trips.append(trips_get_dto)
 
             return available_trips
+        
+    def update_trip_price(self, trip_id, new_price):
+        """Update the price of the trip with the specified ID"""        
+        
+        conn = connect_pg.connect()
+        
+        update_query = """
+        UPDATE uniride.ur_trip
+        SET t_price = %s
+        WHERE t_id = %s
+        """
+        
+        connect_pg.execute_command(conn, update_query, (Decimal(new_price), trip_id))
+        
+        connect_pg.disconnect(conn)
