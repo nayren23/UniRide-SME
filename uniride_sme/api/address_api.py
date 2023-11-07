@@ -1,9 +1,9 @@
 """Adress related routes"""
 from flask import Blueprint, request, jsonify
+from datetime import datetime
 
 from uniride_sme.models.bo.address_bo import AddressBO
-from uniride_sme.models.exception.exceptions import ApiException
-from datetime import datetime
+from uniride_sme.utils.exception.exceptions import ApiException
 
 address = Blueprint("address", __name__)
 

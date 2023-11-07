@@ -1,7 +1,14 @@
-
-from uniride_sme import connect_pg
 from datetime import datetime
 import requests
+
+from uniride_sme import connect_pg
+
+from uniride_sme.utils.exception.address_exceptions import (
+    AddressNotFoundException,
+    InvalidAddressException,
+    MissingInputException,
+    InvalidInputException
+)
 
 class AddressBO:
     def __init__(self, 
@@ -64,35 +71,52 @@ class AddressBO:
     
     def valid_street_number(self):
         if self.street_number is None:
-            raise ValueError("street_number cannot be null")
+            raise InvalidInputException("STREET_NUMBER_CANNOT_BE_NULL")
         if len(self.street_number) > 10:    
-            raise ValueError("street_number cannot be greater than 10")
+            raise InvalidInputException("STREET_NUMBER_CANNOT_BE_GREATER_THAN_10")
 
     def valid_street_name(self):
-        return isinstance(self.street_name, str) and len(self.street_name) <= 255
-
+        if self.street_name is None:
+            raise InvalidInputException("STREET_NAME_CANNOT_BE_NULL")
+        if len(self.street_name) > 255:
+            raise InvalidInputException("STREET_NAME_CANNOT_BE_GREATER_THAN_255")
+        
     def valid_city(self):
-        return isinstance(self.city, str) and len(self.city) <= 255
-
+        if self.city is None:
+            raise InvalidInputException("CITY_CANNOT_BE_NULL")
+        if len(self.city) > 255:
+            raise InvalidInputException("CITY_CANNOT_BE_GREATER_THAN_255")
+        
     def valid_postal_code(self):
-        return isinstance(self.postal_code, str) and len(self.postal_code) == 5
+        if self.postal_code is None:
+            raise InvalidInputException("POSTAL_CODE_CANNOT_BE_NULL")
 
     def valid_latitude(self):
-        return isinstance(self.latitude, float)
-
+        if self.latitude is None:
+            raise InvalidInputException("LATITUDE_CANNOT_BE_NULL")
+        if self.latitude > 90 or self.latitude < -90:
+            raise InvalidInputException("LATITUDE_CANNOT_BE_GREATER_THAN_90_OR_LESS_THAN_-90")
+        
     def valid_longitude(self):
-        return isinstance(self.longitude, float)
+        if self.longitude is None:
+            raise InvalidInputException("LONGITUDE_CANNOT_BE_NULL")
+        if self.longitude > 180 or self.longitude < -180:
+            raise InvalidInputException("LONGITUDE_CANNOT_BE_GREATER_THAN_180_OR_LESS_THAN_-180")
 
     def valid_description(self):
-        return isinstance(self.description, str) and len(self.description) <= 50
-
+        if self.description is None:
+            raise InvalidInputException("DESCRIPTION_CANNOT_BE_NULL")
+        if len(self.description) > 50:
+            raise InvalidInputException("DESCRIPTION_CANNOT_BE_GREATER_THAN_50")
+        
     def valid_timestamp_modification(self):
-        return isinstance(self.timestamp_modification, datetime)
-
-    def valid(self):
-        return self.valid_street_number() and self.valid_street_name() and self.valid_city() and \
-               self.valid_postal_code() and self.valid_latitude() and self.valid_longitude() and \
-               self.valid_description() and self.valid_timestamp_modification()
+        if self.timestamp_modification is None:
+            raise MissingInputException("TTIMESTAMP_MODIFICATION_CANNOT_BE_NULL")
+        try:
+            datetime.strptime(self.timestamp_modification, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            raise InvalidInputException("INVALID_TIMESTAMP_FORMAT")
+        
 
     def address_exists(self):
         """Check if the address already exists in the database"""
@@ -135,8 +159,37 @@ class AddressBO:
             self.latitude = data['features'][0]['geometry']['coordinates'][1]
             self.longitude = data['features'][0]['geometry']['coordinates'][0]
         else:    
-            raise ValueError("Invalid address")
+            raise InvalidAddressException()
         
     def concatene_address(self):
         """Concatene the address"""
         return  str(self.street_number) + " " +self.street_name + " " + self.city + " " + str(self.postal_code)
+    
+    def check_address_existence(self):
+        """Get the address from the id"""
+        query = """
+        SELECT a_street_number, a_street_name, a_city, a_postal_code, a_latitude, a_longitude
+        FROM uniride.ur_address
+        WHERE a_id = %s
+        """
+    
+        conn = connect_pg.connect()
+        address = connect_pg.get_query(conn, query, (self.id,))
+        connect_pg.disconnect(conn)
+        
+        if address:
+            self.street_number = address[0][0]
+            self.street_name = address[0][1]
+            self.city = address[0][2]
+            self.postal_code = address[0][3]
+            self.latitude = address[0][4]
+            self.longitude = address[0][5]
+        else:
+            raise AddressNotFoundException()
+        
+    def check_address_exigeance(self):
+        """Check if the address is valid"""
+        self.valid_street_number()
+        self.valid_street_name()
+        self.valid_city()
+        self.valid_postal_code()

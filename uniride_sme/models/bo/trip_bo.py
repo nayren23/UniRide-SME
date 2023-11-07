@@ -2,10 +2,18 @@ import os
 import uniride_sme.connect_pg as connect_pg
 from datetime import datetime
 from decimal import Decimal
+from math import ceil
 
-from uniride_sme.models.exception.trip_exceptions import (
+
+from uniride_sme.utils.exception.trip_exceptions import (
     InvalidInputException,
     MissingInputException,
+    TripAlreadyExistsException,
+    TripNotFoundException
+)
+
+from uniride_sme.utils.exception.address_exceptions import (
+    InvalidIntermediateAddressException
 )
 
 from uniride_sme.models.dto.trips_get_dto import TripsGetDto
@@ -30,7 +38,7 @@ def check_if_route_is_viable(origin, destination, intermediate_point):
     gmaps = googlemaps.Client(key=google_api_key)
     
     # Calcule l'itinéraire initial sans le point intermédiaire
-    mode = "driving"
+    mode = "driving"    
     
     initial_route = gmaps.directions(origin, destination, mode , departure_time=now)
 
@@ -54,6 +62,27 @@ def check_if_route_is_viable(origin, destination, intermediate_point):
         return [True, new_duration, intermediate_destination_distance]
     else:
         return [False]
+
+def get_distance(origin, destination):
+    """Get the distance between two points"""
+    
+    now = datetime.now()
+
+    load_dotenv()
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+
+    # Calculez le trajet initial
+    gmaps = googlemaps.Client(key=google_api_key)
+    
+    # Calcule l'itinéraire initial sans le point intermédiaire
+    mode = "driving"    
+    
+    initial_route = gmaps.directions(origin, destination, mode , departure_time= now)
+    
+    initial_distance = initial_route[0]['legs'][0]['distance']['value']  / 1000  # Distance en kilomètres
+    
+    return initial_distance
+
 
 class TripBO:
     
@@ -85,7 +114,7 @@ class TripBO:
         existing_trip_id = self.trip_exists()
         # Check if the address already exists
         if existing_trip_id :
-            self.id = existing_trip_id[0][0]
+            raise TripAlreadyExistsException()
         else:
                         
             # validate values
@@ -119,58 +148,63 @@ class TripBO:
 
     def validate_total_passenger_count(self):
         if self.total_passenger_count is None:
-            raise MissingInputException("total_passenger_count cannot be null")
+            raise MissingInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NULL")
         if self.total_passenger_count < 0:
-            raise InvalidInputException("total_passenger_count cannot be negative")
+            raise InvalidInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NEGATIVE")
         if self.total_passenger_count > 10: #change with the number of seats in the car DB
-            raise InvalidInputException("total_passenger_count cannot be greater than 10")
+            raise InvalidInputException("TOTAL_PASSENGER_COUNT_TOO_HIGH")
 
     def validate_timestamp_proposed(self):
-        return isinstance(self.timestamp_proposed, datetime)
+        if self.timestamp_proposed is None:
+            raise MissingInputException("TIMESTAMP_PROPOSED_CANNOT_BE_NULL")
+        try:
+            datetime.strptime(self.timestamp_proposed, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            raise InvalidInputException("INVALID_TIMESTAMP_FORMAT")
         
     def validate_status(self):
         if self.status is None:
-            raise MissingInputException("status cannot be null")
+            raise MissingInputException("STATUS_CANNOT_BE_NULL")
         if self.status < 0:
-            raise InvalidInputException("status cannot be negative")
+            raise InvalidInputException("STATUS_CANNOT_BE_NEGATIVE")
         
     def validate_price(self):
         if self.price is None:
-            raise MissingInputException("price cannot be null")
+            raise MissingInputException("PRICE_CANNOT_BE_NULL")
         if self.price < 0:
-            raise InvalidInputException("price cannot be negative")
+            raise InvalidInputException("PRICE_CANNOT_BE_NEGATIVE")
         
     def validate_user_id(self):
         if self.user_id is None:
-            raise MissingInputException("user_id cannot be null")
+            raise MissingInputException("USER_ID_CANNOT_BE_NULL")
         if self.user_id < 0:
-            raise InvalidInputException("user_id cannot be negative")
+            raise InvalidInputException("USER_ID_CANNOT_BE_NEGATIVE")
 
     def validate_address_depart_id(self):
         if self.address_depart_id is None:
-            raise MissingInputException("address_depart_id cannot be null")
+            raise MissingInputException("ADDRESS_DEPART_ID_CANNOT_BE_NULL")
         if self.address_depart_id < 0:
-            raise InvalidInputException("address_depart_id cannot be negative")
+            raise InvalidInputException("ADDRESS_DEPART_ID_CANNOT_BE_NEGATIVE")
         
     def validate_address_arrival_id(self):
         if self.address_arrival_id is None:
-            raise MissingInputException("address_arrival_id cannot be null")
+            raise MissingInputException("ADDRESS_ARRIVAL_ID_CANNOT_BE_NULL")
         if self.address_arrival_id < 0:
-            raise InvalidInputException("address_arrival_id cannot be negative")
+            raise InvalidInputException("ADDRESS_ARRIVAL_ID_CANNOT_BE_NEGATIVE")
         
     def validate_address_depart_id_equals_address_arrival_id(self):
         if self.address_depart_id == self.address_arrival_id:
-            raise InvalidInputException("address_depart_id is equal to address_arrival_id")
+            raise InvalidInputException("ADDRESS_DEPART_ID_CANNOT_BE_EQUALS_TO_ADDRESS_ARRIVAL_ID")
 
         
-    def calculate_price(self, distance, base_rate, total_passenger_count):
+    def calculate_price(self, distance, total_passenger_count):
         load_dotenv()
     
         rate_per_km = Decimal(os.getenv("RATE_PER_KM"))
         cost_per_km  = Decimal(os.getenv("COST_PER_KM"))
-        
-         # Calculating the total cost of the trip
-        total_cost = (Decimal(distance) * cost_per_km ) + (Decimal(distance) * rate_per_km)
+        base_rate = Decimal(os.getenv("BASE_RATE"))
+        # Calculating the total cost of the trip
+        total_cost = (Decimal(distance) * cost_per_km) + (Decimal(distance) * rate_per_km)
         
         # Calculate the recommended fare to be paid by each passenger
         recommended_price = total_cost / Decimal(total_passenger_count)
@@ -178,26 +212,26 @@ class TripBO:
         # The recommended fare is capped at 1.5 times the base fare
         recommended_price = min(recommended_price, base_rate * Decimal("1.5"))
         
-        # Reduce the price by 20%.
+        # Reduce the price by 20%
         final_price = recommended_price * Decimal("0.8")
         
-        # Format price with two decimal places
-        formatted_price = '{:.2f}'.format(final_price)  
-          
+        # Round up the price to the nearest whole number
+        formatted_price = ceil(final_price)
+        print("price", formatted_price)
+
         return formatted_price
-   
 
     def trip_exists(self):
-        """Check if the address already exists in the database"""
+        """Check if the trip with address already exists in the database"""
 
         query = """
         SELECT t_id
         FROM uniride.ur_trip
-        WHERE  t_address_depart_id = %s AND t_address_arrival_id = %s AND t_timestamp_proposed = %s AND t_total_passenger_count = %s
+        WHERE t_user_id = %s AND t_address_depart_id = %s AND t_address_arrival_id = %s AND t_timestamp_proposed = %s AND t_total_passenger_count = %s
         """
     
         conn = connect_pg.connect()
-        trip_id = connect_pg.get_query(conn, query, (self.address_depart_id, self.address_arrival_id, self.timestamp_proposed, self.total_passenger_count))
+        trip_id = connect_pg.get_query(conn, query, (self.user_id ,self.address_depart_id, self.address_arrival_id, self.timestamp_proposed, self.total_passenger_count))
         connect_pg.disconnect(conn)
         
         return trip_id
@@ -248,33 +282,21 @@ class TripBO:
         return trips
     
     def get_trips_for_university_address(self, depart_address_bo, address_arrival_bo,university_address_bo):
-        
-            # Get the intermediate address from the request
-            intermediate_departure_latitude = depart_address_bo.latitude
-            intermediate_departure_longitude = depart_address_bo.longitude
-            intermediate_arrival_latitude = address_arrival_bo.latitude
-            intermediate_arrival_longitude = address_arrival_bo.longitude
-        
-            #We need to round the latitude and longitude to 10 decimal places
-            university_latitude = university_address_bo.latitude
-            university_longitude = university_address_bo.longitude
-                    
-            point_universite = (university_latitude, university_longitude)
-            
-            point_intermediaire_depart = (intermediate_departure_latitude, intermediate_departure_longitude)
-            point_intermediaire_arrivee = (intermediate_arrival_latitude, intermediate_arrival_longitude)
-            
-            if point_intermediaire_depart == point_universite:
+                                   
+            point_intermediaire_departure = (depart_address_bo.latitude, depart_address_bo.longitude)
+            intermediate_point_arrival = (address_arrival_bo.latitude, address_arrival_bo.longitude)
+            university_point = (university_address_bo.latitude, university_address_bo.longitude)
+
+            if point_intermediaire_departure == university_point:
                 condition_where = "(departure_address.a_latitude = %s AND departure_address.a_longitude = %s)"
-                trips = self.get_trips(university_latitude, university_longitude, condition_where)
-            elif point_intermediaire_arrivee == point_universite:
+                trips = self.get_trips(university_address_bo.latitude, university_address_bo.longitude, condition_where)
+            elif intermediate_point_arrival == university_point:
                 condition_where = "(arrival_address.a_latitude = %s AND arrival_address.a_longitude = %s)"
-                trips = self.get_trips(university_latitude, university_longitude, condition_where)
+                trips = self.get_trips(university_address_bo.latitude, university_address_bo.longitude, condition_where)
             else:   
-                # Si l'adresse intermédiaire n'est pas l'université, lever une exception
-                raise Exception("L'adresse intermédiaire ne correspond pas à l'université.")
+                #If an intermediate address is not the university, raise an exception
+                raise InvalidIntermediateAddressException
             
-        
             available_trips = []
 
             for trip in trips:
@@ -285,29 +307,21 @@ class TripBO:
                 point_depart = (departure_latitude, departure_longitude)
                 point_arrivee = (arrival_latitude, arrival_longitude)
                 
-                if point_intermediaire_depart == point_universite:
-                    # Si le point de départ est l'université, alors l'université est l'adresse d'arrivée du trajet
-                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
-                    is_viable = info_route[0]                
-                elif point_intermediaire_arrivee == point_universite:
-                    # Si le point d'arrivée est l'université, alors l'université est l'adresse de départ du trajet
-                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
+                if point_intermediaire_departure == university_point:
+                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
+                    is_viable = info_route[0]      
+                              
+                elif intermediate_point_arrival == university_point:
+                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
                     is_viable = info_route[0]
                     
                 else:
-                    # Sinon, l'université est l'adresse d'arrivée du trajet
-
-                    if((point_intermediaire_depart != point_universite) or (point_intermediaire_arrivee != point_universite)):
-                        # Si l'adresse intermédiaire n'est pas l'université, lever une exception
-                        raise Exception("L'adresse intermédiaire ne correspond pas à l'université.")
-                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_depart)
+                    info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
                     is_viable = info_route[0]
 
                 if is_viable:
-                    price = self.calculate_price(info_route[2], initial_price, total_passenger_count)
-                    self.update_trip_price(trip_id, price)
-                    formatted_price = '{:.2f}'.format(float(price) * self.total_passenger_count)
-
+                    price = trip_price * self.total_passenger_count
+                    
                     address_dtos = {
                         "departure": AddressDto(
                             address_id = departure_address_id,
@@ -326,7 +340,7 @@ class TripBO:
                         trip_id=trip_id,
                         address=address_dtos,
                         driver_id = user_id,
-                        price = formatted_price,
+                        price = price,
                     )
                     trips_get_dto = TripsGetDto(
                         trips=trip_dto
@@ -334,18 +348,48 @@ class TripBO:
                     available_trips.append(trips_get_dto)
 
             return available_trips
+    
         
-    def update_trip_price(self, trip_id, new_price):
-        """Update the price of the trip with the specified ID"""        
+    def get_current_driver_trips(self):
+        """Get the current trips for the driver"""
         
-        conn = connect_pg.connect()
-        
-        update_query = """
-        UPDATE uniride.ur_trip
-        SET t_price = %s
-        WHERE t_id = %s
+        query = """
+            SELECT t_id, t_address_depart_id, t_address_arrival_id,t_price
+            FROM uniride.ur_trip
+            WHERE t_user_id = %s
+            AND t_status = %s
         """
-        
-        connect_pg.execute_command(conn, update_query, (Decimal(new_price), trip_id))
+        values = (self.user_id, TripStatus.PENDING.value)
+        conn = connect_pg.connect()
+        driver_current_trips = connect_pg.get_query(conn, query, values)
         
         connect_pg.disconnect(conn)
+        return driver_current_trips
+    
+    
+    def check_if_trip_exists(self):
+        """Check if the trip exists in the database"""
+
+        query = """
+        SELECT *
+        FROM uniride.ur_trip
+        WHERE t_id = %s
+        """
+    
+        conn = connect_pg.connect()
+        trip = connect_pg.get_query(conn, query, (self.id,))
+        connect_pg.disconnect(conn)
+        
+        if trip :
+            self.id = trip[0][0],
+            self.total_passenger_count = trip[0][1],
+            self.timestamp_creation = trip[0][2],
+            self.timestamp_proposed = trip[0][3],
+            self.status = trip[0][4],
+            self.price = trip[0][5],
+            self.user_id = trip[0][6],
+            self.address_depart_id = trip[0][7],
+            self.address_arrival_id = trip[0][8]
+            return True
+        else:
+            raise TripNotFoundException()
