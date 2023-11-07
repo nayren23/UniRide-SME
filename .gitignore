@@ -767,3 +767,4 @@ certs/
 
 # Config file
 uniride_sme/config.ini
+config.ini

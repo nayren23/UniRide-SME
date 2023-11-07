@@ -49,7 +49,6 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-python_paths = "./"
 testpaths = "tests/"
 addopts = "-vv"
 
