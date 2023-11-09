@@ -18,13 +18,15 @@ class Config:
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     UNIVERSITY_EMAIL_DOMAIN = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
-    
+
     PFP_UPLOAD_FOLDER = os.getenv("PFP_UPLOAD_FOLDER")
     LICENSE_UPLOAD_FOLDER = os.getenv("LICENSE_UPLOAD_FOLDER")
     ID_CARD_UPLOAD_FOLDER = os.getenv("ID_CARD_UPLOAD_FOLDER")
     SCHOOL_CERTIFICATE_UPLOAD_FOLDER = os.getenv("SCHOOL_CERTIFICATE_UPLOAD_FOLDER")
 
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
+    FRONT_END_URL = os.getenv("FRONT_END_URL")
 
 
 def config(filename="config.ini", section="postgresql"):

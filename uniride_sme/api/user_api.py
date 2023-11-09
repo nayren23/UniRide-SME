@@ -148,12 +148,12 @@ def send_verification_email(student_email, firstname):
         "r",
         encoding="UTF-8",
     ) as html:
-        # TODO remplacer l'url par l'url du front
         url = url_for(
             "user.verify_email",
             token=email.generate_token(student_email),
-            _external=True,
+            _external=False,
         )
+        url = app.config["FRONT_END_URL"] + url
         email.send_email(
             student_email,
             "Vérifier votre email",
