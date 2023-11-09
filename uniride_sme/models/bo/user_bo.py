@@ -116,12 +116,27 @@ class UserBO:
             raise InvalidInputException("PASSWORD_OLD_AND_NEW_SAME")
 
         self._validate_password(new_password, new_password_confirmation)
-        self.u_password = self._hash_password(new_password)
+        hashed_password = self._hash_password(new_password)
 
         query = "UPDATE uniride.ur_user SET u_password=%s WHERE u_id=%s"
-        values = (self.u_password, self.u_id)
+        values = (hashed_password, self.u_id)
         conn = connect_pg.connect()
         connect_pg.execute_command(conn, query, values)
+        self.u_password = hashed_password
+
+    def change_login(self, login):
+        if not login:
+            raise MissingInputException("LOGIN_MISSING")
+
+        if self.u_login == login:
+            raise InvalidInputException("LOGIN_OLD_AND_NEW_SAME")
+
+        self._validate_login(login)
+        query = "UPDATE uniride.ur_user SET u_login=%s WHERE u_id=%s"
+        values = (login, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_login = login
 
     def save_pfp(self, files):
         """Save profil picture"""

@@ -68,7 +68,7 @@ def authentificate():
 @user.route("/user/change/password", methods=["POST"])
 @jwt_required()
 def change_password():
-    """Send email verification endpoint"""
+    """Change password endpoint"""
     response = jsonify(message="PASSWORD_CHANGED_SUCCESSFULLY"), 200
     user_id = get_jwt_identity()
     try:
@@ -79,6 +79,21 @@ def change_password():
             json_object.get("new_password", None),
             json_object.get("new_password_confirmation", None),
         )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/user/change/login", methods=["POST"])
+@jwt_required()
+def change_login():
+    """Change login endpoint"""
+    response = jsonify(message="LOGIN_CHANGED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    try:
+        json_object = request.json
+        user_bo = UserBO(user_id=user_id)
+        user_bo.change_login(json_object.get("login", None))
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
