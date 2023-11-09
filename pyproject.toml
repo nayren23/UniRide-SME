@@ -17,8 +17,11 @@ dependencies = [
   "flask",
   "flask_restful",
   "flask_cors",
+  "flask_mail",
+  "flask_jwt_extended",
   "python-dotenv",
-  "psycopg2"]
+  "psycopg2",
+  "bcrypt"]
 
 [project.optional-dependencies]
 dev = [
@@ -49,7 +52,6 @@ build-backend = "setuptools.build_meta"
 packages = ["uniride_sme"]
 
 [tool.pytest.ini_options]
-python_paths = "./"
 testpaths = "tests/"
 addopts = "-vv"
 

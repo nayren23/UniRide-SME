@@ -1,7 +1,10 @@
-#!/usr/bin/python
+"""Postgresql databse interactions"""
+# !/usr/bin/python
 
 import psycopg2
-from config import config
+import psycopg2.extras
+
+from uniride_sme.config import config
 
 
 def connect(filename="config.ini", section="postgresql"):
@@ -32,13 +35,11 @@ def connect(filename="config.ini", section="postgresql"):
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
-    finally:
-        if conn is not None:
-            return conn
+    return conn
 
 
 def disconnect(conn):
-    # close the connexion
+    """Close the connexion"""
     conn.close()
     print("Database connection closed.")
 
@@ -61,11 +62,14 @@ def execute_command(conn, query, params=None):
     return returning_value
 
 
-def get_query(conn, query, params=None):
+def get_query(conn, query, params=None, return_dict=False):
     """Query data from db"""
     try:
         rows = None
-        cur = conn.cursor()
+        if return_dict:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        else:
+            cur = conn.cursor()
         cur.execute(query, params)
         rows = cur.fetchall()
         cur.close()
