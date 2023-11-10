@@ -1,5 +1,8 @@
 """Trip related routes"""
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt_identity
+
 from datetime import datetime
 
 from uniride_sme.models.bo.trip_bo import TripBO
@@ -29,7 +32,6 @@ from uniride_sme.utils.exception.address_exceptions import (
     InvalidIntermediateAddressException
 )
 
-
 import os
 from dotenv import load_dotenv
 
@@ -38,6 +40,7 @@ trip = Blueprint("trip", __name__)
 
 
 @trip.route("/trip/propose", methods=["POST"])
+@jwt_required()
 def propose_trip():
     """Propose a trip endpoint"""
     """We define the  price of the trip and the status of the trip as pending"""
@@ -45,12 +48,13 @@ def propose_trip():
     response = jsonify({"message": "TRIP_CREATED_SUCCESSFULLY"}), 200
     
     try:
+        user_id = get_jwt_identity()
         json_object = request.json
-        if validate_fields(json_object, {"total_passenger_count": int, "timestamp_proposed": str, "user_id": int, "address_depart_id": int, "address_arrival_id": int}):
+        if validate_fields(json_object, {"total_passenger_count": int, "timestamp_proposed": str, "address_depart_id": int, "address_arrival_id": int}):
             trip_bo = TripBO(
                 total_passenger_count = json_object.get("total_passenger_count", None),
                 timestamp_proposed = json_object.get("timestamp_proposed", None).strip(),
-                user_id = json_object.get("user_id", None),
+                user_id = user_id,
                 address_depart_id = json_object.get("address_depart_id", None),
                 address_arrival_id = json_object.get("address_arrival_id", None),
                 
@@ -92,79 +96,75 @@ def get_available_trips():
     """Get all the available trips endpoint"""
     
     try:
-        necessary_fields = ['depart', 'arrival', 'trip']
-        address_fields = ['street_number', 'street_name', 'city', 'postal_code']
         json_object = request.json
-        
-        for field in necessary_fields:
-            if field not in json_object:
-                return jsonify({"error": f"The '{field}' field is required"}), 400
-        
-        for field in address_fields:
-            if field not in json_object['depart'] or field not in json_object['arrival']:
-                return jsonify({"error": f"The '{field}' field is required in 'depart' and 'arrival'"}), 400
 
-        depart_address_bo = AddressBO(
-            street_number = json_object.get("depart").get("street_number", None),
-            street_name =  json_object.get("depart").get("street_name" , None),
-            city = json_object.get("depart").get("city" , None),
-            postal_code = json_object.get("depart").get("postal_code", None),
-        )
-        
-        #We check if the address is valid
-        depart_address_bo.check_address_exigeance()
-        
-        depart_address_bo.get_latitude_longitude_from_address()
+        if(validate_fields(request.json, {'depart': dict, 'arrival': dict, 'trip': dict}) and
+        validate_fields(json_object['depart'], {'street_number': str, 'street_name': str, 'city': str, 'postal_code': str}) and
+        validate_fields(json_object['arrival'], {'street_number': str, 'street_name': str, 'city': str, 'postal_code': str}) and
+        validate_fields(json_object['trip'], {'passenger_count': int, 'departure_date': str})):
 
-        address_arrival_bo = AddressBO(
-            street_number = json_object.get("arrival").get("street_number", None),
-            street_name = json_object.get("arrival").get("street_name", None),
-            city = json_object.get("arrival").get("city", None),
-            postal_code = json_object.get("arrival").get("postal_code", None),
-        )
-                
-        #We check if the address is valid
-        address_arrival_bo.check_address_exigeance()
-        
-        address_arrival_bo.get_latitude_longitude_from_address()
-        
-        #We use the environment variables to get the university address
-        university_address_bo = AddressBO(
-            street_number = str(os.getenv("UNIVERSITY_STREET_NUMBER")),
-            street_name = str(os.getenv("UNIVERSITY_STREET_NAME")),
-            city = str(os.getenv("UNIVERSITY_CITY")),
-            postal_code = str(os.getenv("UNIVERSITY_POSTAL_CODE")),
-        )
-        
-        #We check if the address is valid
-        university_address_bo.check_address_exigeance()
-        
-        university_address_bo.get_latitude_longitude_from_address()
-        
-        trip_bo = TripBO(
-            total_passenger_count = json_object.get("trip").get("passenger_count", None),
-            timestamp_proposed = json_object.get("trip").get("departure_date", None),
-        )
-        
-        trip_bo.validate_total_passenger_count()
-        trip_bo.validate_timestamp_proposed()
-        
-        available_trips = trip_bo.get_trips_for_university_address(depart_address_bo, address_arrival_bo,university_address_bo)
-        
-        response = available_trips
-        return jsonify(response), 200
+            depart_address_bo = AddressBO(
+                street_number = json_object.get("depart").get("street_number", None),
+                street_name =  json_object.get("depart").get("street_name" , None),
+                city = json_object.get("depart").get("city" , None),
+                postal_code = json_object.get("depart").get("postal_code", None),
+            )
+            
+            #We check if the address is valid
+            depart_address_bo.check_address_exigeance()
+            
+            depart_address_bo.get_latitude_longitude_from_address()
 
+            address_arrival_bo = AddressBO(
+                street_number = json_object.get("arrival").get("street_number", None),
+                street_name = json_object.get("arrival").get("street_name", None),
+                city = json_object.get("arrival").get("city", None),
+                postal_code = json_object.get("arrival").get("postal_code", None),
+            )
+                    
+            #We check if the address is valid
+            address_arrival_bo.check_address_exigeance()
+            
+            address_arrival_bo.get_latitude_longitude_from_address()
+            
+            #We use the environment variables to get the university address
+            university_address_bo = AddressBO(
+                street_number = str(os.getenv("UNIVERSITY_STREET_NUMBER")),
+                street_name = str(os.getenv("UNIVERSITY_STREET_NAME")),
+                city = str(os.getenv("UNIVERSITY_CITY")),
+                postal_code = str(os.getenv("UNIVERSITY_POSTAL_CODE")),
+            )
+            
+            #We check if the address is valid
+            university_address_bo.check_address_exigeance()
+            
+            university_address_bo.get_latitude_longitude_from_address()
+            
+            trip_bo = TripBO(
+                total_passenger_count = json_object.get("trip").get("passenger_count", None),
+                timestamp_proposed = json_object.get("trip").get("departure_date", None),
+            )
+            
+            trip_bo.validate_total_passenger_count()
+            trip_bo.validate_timestamp_proposed()
+            
+            available_trips = trip_bo.get_trips_for_university_address(depart_address_bo, address_arrival_bo,university_address_bo)
+            
+            response = available_trips
+            return jsonify(response), 200
 
     except (ApiException, InvalidIntermediateAddressException, InvalidAddressException, InvalidInputException) as e:
         response = jsonify({"message": e.message}), 400
         return response
     
-@trip.route('/trips/driver/current/<userId>', methods=['GET'])
-def get_current_driver_trips(userId):
+@trip.route('/trips/driver/current/', methods=['GET'])
+@jwt_required()
+def get_current_driver_trips():
     """Get all the current trips of a driver"""
     try:
-        
-        trip_bo = TripBO(user_id= userId)
+        user_id = get_jwt_identity()
+
+        trip_bo = TripBO(user_id= user_id)
         driver_current_trips = trip_bo.get_current_driver_trips()
         
         available_trips = []
@@ -191,7 +191,7 @@ def get_current_driver_trips(userId):
             trip_dto = TripDto(
                 trip_id= t_id,
                 address=address_dtos,
-                driver_id = userId,
+                driver_id = user_id,
                 price = price,
             )
             trips_get_dto = TripsGetDto(

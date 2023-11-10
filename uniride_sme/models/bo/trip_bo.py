@@ -217,7 +217,6 @@ class TripBO:
         
         # Round up the price to the nearest whole number
         formatted_price = ceil(final_price)
-        print("price", formatted_price)
 
         return formatted_price
 
