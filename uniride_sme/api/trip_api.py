@@ -11,8 +11,10 @@ from uniride_sme.models.bo.trip_bo import check_if_route_is_viable
 from uniride_sme.models.bo.trip_bo import get_distance
 from uniride_sme.models.dto.address_simple_dto import AddressSimpleDto
 
+
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
+from uniride_sme.utils.field import validate_fields
 
 from uniride_sme.utils.exception.trip_exceptions import (
     InvalidInputException,
@@ -26,6 +28,7 @@ from uniride_sme.utils.exception.address_exceptions import (
     MissingInputException,
     InvalidIntermediateAddressException
 )
+
 
 import os
 from dotenv import load_dotenv
@@ -41,49 +44,42 @@ def propose_trip():
     
     response = jsonify({"message": "TRIP_CREATED_SUCCESSFULLY"}), 200
     
-     #verify the fileds
-    necessary_fields = ['total_passenger_count', 'timestamp_proposed', 'user_id', 'address_depart_id', 'address_arrival_id']
-    json_object = request.json
-    
-    for field in necessary_fields:
-        if field not in json_object:
-            return jsonify({"error": f"The '{field}' field is required"}), 400
-
     try:
         json_object = request.json
-        trip_bo = TripBO(
-            total_passenger_count = json_object.get("total_passenger_count", None),
-            timestamp_proposed = json_object.get("timestamp_proposed", None),
-            user_id = json_object.get("user_id", None),
-            address_depart_id = json_object.get("address_depart_id", None),
-            address_arrival_id = json_object.get("address_arrival_id", None),
+        if validate_fields(json_object, {"total_passenger_count": int, "timestamp_proposed": str, "user_id": int, "address_depart_id": int, "address_arrival_id": int}):
+            trip_bo = TripBO(
+                total_passenger_count = json_object.get("total_passenger_count", None),
+                timestamp_proposed = json_object.get("timestamp_proposed", None).strip(),
+                user_id = json_object.get("user_id", None),
+                address_depart_id = json_object.get("address_depart_id", None),
+                address_arrival_id = json_object.get("address_arrival_id", None),
+                
+                status = TripStatus.PENDING.value, 
+                timestamp_creation = datetime.now(),
+            )
+            #Verify the trip is viable
+            trip_bo.validate_total_passenger_count()
+            trip_bo.validate_timestamp_proposed()
             
-            status = TripStatus.PENDING.value, 
-            timestamp_creation = datetime.now(),
-        )
-        #Verify the trip is viable
-        trip_bo.validate_total_passenger_count()
-        trip_bo.validate_timestamp_proposed()
-        
-        #We need to check if user id is valid
-        
-        departure_address = AddressBO(address_id = trip_bo.address_depart_id)
-        arrival_address = AddressBO(address_id = trip_bo.address_arrival_id)
-        
-        #We check if address is viable
-        departure_address.check_address_existence()
-        arrival_address.check_address_existence()
-        
-        origin = (departure_address.latitude, departure_address.longitude)
-        destination = (arrival_address.latitude, arrival_address.longitude)
-        
-        initial_distance = get_distance(origin, destination)
-        trip_price = trip_bo.calculate_price(initial_distance, 1)
-        
-        trip_bo.price = trip_price
-        trip_bo.add_in_db()
-        
-        response = jsonify({"message": "CREATED_SUCCESSFULLY" , "trip_id": trip_bo.id}), 200
+            #We need to check if user id is valid
+            
+            departure_address = AddressBO(address_id = trip_bo.address_depart_id)
+            arrival_address = AddressBO(address_id = trip_bo.address_arrival_id)
+            
+            #We check if address is viable
+            departure_address.check_address_existence()
+            arrival_address.check_address_existence()
+            
+            origin = (departure_address.latitude, departure_address.longitude)
+            destination = (arrival_address.latitude, arrival_address.longitude)
+            
+            initial_distance = get_distance(origin, destination)
+            trip_price = trip_bo.calculate_price(initial_distance, 1)
+            
+            trip_bo.price = trip_price
+            trip_bo.add_in_db()
+            
+            response = jsonify({"message": "CREATED_SUCCESSFULLY" , "trip_id": trip_bo.id}), 200
 
     except (MissingInputException, InvalidInputException, ApiException, AddressNotFoundException, TripAlreadyExistsException) as e:
         response = jsonify({"message": e.message}), e.status_code
