@@ -99,6 +99,36 @@ def change_login():
     return response
 
 
+@user.route("/user/change/firstname", methods=["POST"])
+@jwt_required()
+def change_firstname():
+    """Change firstname endpoint"""
+    response = jsonify(message="FIRSTNAME_CHANGED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    try:
+        json_object = request.json
+        user_bo = UserBO(user_id=user_id)
+        user_bo.change_firstname(json_object.get("firstname", None))
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/user/change/lastname", methods=["POST"])
+@jwt_required()
+def change_lastname():
+    """Change lastname endpoint"""
+    response = jsonify(message="LASTNAME_CHANGED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    try:
+        json_object = request.json
+        user_bo = UserBO(user_id=user_id)
+        user_bo.change_lastname(json_object.get("lastname", None))
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
 @user.route("/user/save/pfp", methods=["POST"])
 @jwt_required()
 def save_pfp():

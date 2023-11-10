@@ -106,6 +106,7 @@ class UserBO:
             pass
 
     def change_password(self, old_password, new_password, new_password_confirmation):
+        """Change password"""
         if not old_password:
             raise MissingInputException("PASSWORD_MISSING")
 
@@ -125,6 +126,7 @@ class UserBO:
         self.u_password = hashed_password
 
     def change_login(self, login):
+        """Change login"""
         if not login:
             raise MissingInputException("LOGIN_MISSING")
 
@@ -137,6 +139,29 @@ class UserBO:
         conn = connect_pg.connect()
         connect_pg.execute_command(conn, query, values)
         self.u_login = login
+
+    def change_firstname(self, firstname):
+        """Change firstname"""
+        self._change_name(firstname, "FIRSTNAME")
+
+    def change_lastname(self, lastname):
+        """Change lastname"""
+        self._change_name(lastname, "LASTNAME")
+
+    def _change_name(self, name, name_type):
+        """Change name"""
+        if not name:
+            raise MissingInputException(f"{name_type}_MISSING")
+
+        if getattr(self, f"u_{name_type.lower()}") == name:
+            raise InvalidInputException(f"{name_type}_OLD_AND_NEW_SAME")
+
+        self._validate_name(name, name_type)
+        query = f"UPDATE uniride.ur_user SET u_{name_type.lower()}=%s WHERE u_id=%s"
+        values = (name, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        setattr(self, f"u_{name_type.lower()}", name)
 
     def save_pfp(self, files):
         """Save profil picture"""
@@ -226,6 +251,7 @@ class UserBO:
 
     @staticmethod
     def _validate_name(name, name_type):
+        """Check if the name is valid"""
         # check if exist
         if not name:
             raise MissingInputException(f"{name_type}_MISSING")
