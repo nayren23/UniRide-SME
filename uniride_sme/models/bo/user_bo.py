@@ -199,6 +199,19 @@ class UserBO:
         connect_pg.execute_command(conn, query, values)
         self.u_gender = gender
 
+    def change_description(self, description):
+        """Change description"""
+        if self.u_description == description:
+            raise InvalidInputException("DESCRIPTION_OLD_AND_NEW_SAME")
+
+        self._validate_description(description)
+
+        query = "UPDATE uniride.ur_user SET u_description=%s WHERE u_id=%s"
+        values = (description, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_description = description
+
     def save_pfp(self, files):
         """Save profil picture"""
         if "pfp" not in files:

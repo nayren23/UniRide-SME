@@ -173,6 +173,21 @@ def change_gender():
     return response
 
 
+@user.route("/user/change/description", methods=["POST"])
+@jwt_required()
+def change_description():
+    """Change description endpoint"""
+    response = jsonify(message="DESCRIPTION_CHANGED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    json_object = request.json
+    try:
+        user_bo = UserBO(user_id=user_id)
+        user_bo.change_description(json_object.get("description", None))
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
 @user.route("/user/save/pfp", methods=["POST"])
 @jwt_required()
 def save_pfp():
