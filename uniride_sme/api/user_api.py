@@ -142,6 +142,7 @@ def change_student_email():
         response = jsonify(message=e.message), e.status_code
     return response
 
+
 @user.route("/user/change/phone-number", methods=["POST"])
 @jwt_required()
 def change_phone_number():
@@ -155,6 +156,22 @@ def change_phone_number():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+
+@user.route("/user/change/gender", methods=["POST"])
+@jwt_required()
+def change_gender():
+    """Change gender endpoint"""
+    response = jsonify(message="GENDER_CHANGED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    json_object = request.json
+    try:
+        user_bo = UserBO(user_id=user_id)
+        user_bo.change_gender(json_object.get("gender", None))
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
 
 @user.route("/user/save/pfp", methods=["POST"])
 @jwt_required()

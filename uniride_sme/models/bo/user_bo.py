@@ -128,9 +128,6 @@ class UserBO:
 
     def change_login(self, login):
         """Change login"""
-        if not login:
-            raise MissingInputException("LOGIN_MISSING")
-
         if self.u_login == login:
             raise InvalidInputException("LOGIN_OLD_AND_NEW_SAME")
 
@@ -152,9 +149,6 @@ class UserBO:
 
     def _change_name(self, name, name_type):
         """Change name"""
-        if not name:
-            raise MissingInputException(f"{name_type}_MISSING")
-
         if getattr(self, f"u_{name_type.lower()}") == name:
             raise InvalidInputException(f"{name_type}_OLD_AND_NEW_SAME")
 
@@ -168,9 +162,6 @@ class UserBO:
 
     def change_student_email(self, student_email):
         """Change student_email"""
-        if not student_email:
-            raise MissingInputException("STUDENT_EMAIL_MISSING")
-
         if self.u_student_email == student_email:
             raise InvalidInputException("STUDENT_EMAIL_OLD_AND_NEW_SAME")
 
@@ -183,10 +174,7 @@ class UserBO:
         self.u_student_email = student_email
 
     def change_phone_number(self, phone_number):
-        """Change phone_number"""
-        if not phone_number:
-            raise MissingInputException("PHONE_NUMBER_MISSING")
-
+        """Change phone number"""
         if self.u_phone_number == phone_number:
             raise InvalidInputException("PHONE_NUMBER_OLD_AND_NEW_SAME")
 
@@ -197,6 +185,19 @@ class UserBO:
         conn = connect_pg.connect()
         connect_pg.execute_command(conn, query, values)
         self.u_phone_number = phone_number
+
+    def change_gender(self, gender):
+        """Change gender"""
+        if self.u_gender == gender:
+            raise InvalidInputException("GENDER_OLD_AND_NEW_SAME")
+
+        self._validate_gender(gender)
+
+        query = "UPDATE uniride.ur_user SET u_gender=%s WHERE u_id=%s"
+        values = (gender, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_gender = gender
 
     def save_pfp(self, files):
         """Save profil picture"""
