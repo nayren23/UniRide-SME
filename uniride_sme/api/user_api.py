@@ -6,9 +6,8 @@ from flask_jwt_extended import jwt_required
 
 from uniride_sme import app
 from uniride_sme.models.bo.user_bo import UserBO
-from uniride_sme.utils.exception.exceptions import (
-    ApiException,
-)
+from uniride_sme.models.dto.user_dto import UserInfosDTO
+from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
 
@@ -58,6 +57,29 @@ def authentificate():
             jsonify(message="AUTHENTIFIED_SUCCESSFULLY", token=token),
             200,
         )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@user.route("/user/infos", methods=["GET"])
+@jwt_required()
+def get_infos():
+    """Get user infos endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        user_bo = UserBO(user_id=user_id)
+        user_infos_dto = UserInfosDTO(
+            login=user_bo.u_login,
+            student_email=user_bo.u_student_email,
+            firstname=user_bo.u_firstname,
+            lastname=user_bo.u_lastname,
+            gender=user_bo.u_gender,
+            phone_number=user_bo.u_phone_number,
+            description=user_bo.u_description,
+        )
+        response = jsonify(user_infos_dto), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
