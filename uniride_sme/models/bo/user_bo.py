@@ -163,6 +163,21 @@ class UserBO:
         connect_pg.execute_command(conn, query, values)
         setattr(self, f"u_{name_type.lower()}", name)
 
+    def change_student_email(self, student_email):
+        """Change student_email"""
+        if not student_email:
+            raise MissingInputException("STUDENT_EMAIL_MISSING")
+
+        if self.u_student_email == student_email:
+            raise InvalidInputException("STUDENT_EMAIL_OLD_AND_NEW_SAME")
+
+        self._validate_student_email(student_email)
+        query = "UPDATE uniride.ur_user SET u_student_email=%s, u_email_verified=false WHERE u_id=%s"
+        values = (student_email, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_student_email = student_email
+
     def save_pfp(self, files):
         """Save profil picture"""
         if "pfp" not in files:

@@ -20,9 +20,8 @@ user = Blueprint("user", __name__)
 def register():
     """Sign up endpoint"""
     response = jsonify(message="USER_CREATED_SUCCESSFULLY"), 200
-
+    form = request.form
     try:
-        form = request.form
         user_bo = UserBO(
             login=form.get("login", None),
             firstname=form.get("firstname", None),
@@ -44,8 +43,8 @@ def register():
 @user.route("/user/auth", methods=["POST"])
 def authentificate():
     """Authenfication endpoint"""
+    json_object = request.json
     try:
-        json_object = request.json
         user_bo = UserBO(
             login=json_object.get("login", None),
             password=json_object.get("password", None),
@@ -71,8 +70,8 @@ def change_password():
     """Change password endpoint"""
     response = jsonify(message="PASSWORD_CHANGED_SUCCESSFULLY"), 200
     user_id = get_jwt_identity()
+    json_object = request.json
     try:
-        json_object = request.json
         user_bo = UserBO(user_id=user_id)
         user_bo.change_password(
             json_object.get("old_password", None),
@@ -90,8 +89,8 @@ def change_login():
     """Change login endpoint"""
     response = jsonify(message="LOGIN_CHANGED_SUCCESSFULLY"), 200
     user_id = get_jwt_identity()
+    json_object = request.json
     try:
-        json_object = request.json
         user_bo = UserBO(user_id=user_id)
         user_bo.change_login(json_object.get("login", None))
     except ApiException as e:
@@ -105,8 +104,8 @@ def change_firstname():
     """Change firstname endpoint"""
     response = jsonify(message="FIRSTNAME_CHANGED_SUCCESSFULLY"), 200
     user_id = get_jwt_identity()
+    json_object = request.json
     try:
-        json_object = request.json
         user_bo = UserBO(user_id=user_id)
         user_bo.change_firstname(json_object.get("firstname", None))
     except ApiException as e:
@@ -120,10 +119,25 @@ def change_lastname():
     """Change lastname endpoint"""
     response = jsonify(message="LASTNAME_CHANGED_SUCCESSFULLY"), 200
     user_id = get_jwt_identity()
+    json_object = request.json
     try:
-        json_object = request.json
         user_bo = UserBO(user_id=user_id)
         user_bo.change_lastname(json_object.get("lastname", None))
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/user/change/student-email", methods=["POST"])
+@jwt_required()
+def change_student_email():
+    """Change student email endpoint"""
+    response = jsonify(message="STUDENT_EMAIL_CHANGED_SUCCESSFULLY"), 200
+    user_id = get_jwt_identity()
+    json_object = request.json
+    try:
+        user_bo = UserBO(user_id=user_id)
+        user_bo.change_student_email(json_object.get("student_email", None))
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
