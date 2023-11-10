@@ -28,11 +28,11 @@ class Config:
 
     FRONT_END_URL = os.getenv("FRONT_END_URL")
 
-    DB_HOST = os.getenv("DB_HOST")
-    DB_NAME = os.getenv("DB_NAME")
+    DB_HOST = os.getenv("DB_HOST", "5432")
+    DB_NAME = os.getenv("DB_NAME", "uniride")
     DB_USER = os.getenv("DB_USER")
     DB_PWD = os.getenv("DB_PWD")
-    DB_PORT = os.getenv("DB_PORT")
+    DB_PORT = os.getenv("DB_PORT", "127.0.0.1")
 
 
 
@@ -47,4 +47,6 @@ def config(filename="config.ini", section="postgresql"):
             db[param[0]] = param[1]
     else:
         raise Exception(f"Section {section} not found in the {filename} file")
+    if section == 'postgresql':
+        db['database'] = os.getenv("DB_NAME", "uniride")
     return db

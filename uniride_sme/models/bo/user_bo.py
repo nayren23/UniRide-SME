@@ -250,7 +250,7 @@ class UserBO:
         contains_lower_case_letter = re.search(r"[a-z]", self.u_password)
         contains_upper_case_letter = re.search(r"[A-Z]", self.u_password)
         contains_digit = re.search(r"\d", self.u_password)
-        contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", self.u_password)
+        contains_special = re.search(r"[!\"#$%&'\(\)\*\+,-./=:<>^_{}\|€£¥$@~\#°§®™µ×÷]", self.u_password)
         correct_size = 8 <= len(self.u_password) <= 50
 
         if not (
