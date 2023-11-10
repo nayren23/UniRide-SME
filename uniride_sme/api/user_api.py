@@ -52,9 +52,7 @@ def authentificate():
         )
         user_bo.authentificate()
         user_bo.get_from_db()
-        token = create_access_token(
-            user_bo.u_id, expires_delta=app.config["JWT_ACCESS_TOKEN_EXPIRES"]
-        )
+        token = create_access_token(user_bo.u_id, expires_delta=app.config["JWT_ACCESS_TOKEN_EXPIRES"])
         response = (
             jsonify(message="AUTHENTIFIED_SUCCESSFULLY", token=token),
             200,

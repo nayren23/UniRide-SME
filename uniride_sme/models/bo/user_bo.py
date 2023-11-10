@@ -114,9 +114,7 @@ class UserBO:
             raise MissingInputException("MISSING_PFP_FILE")
 
         allowed_extensions = ["png", "jpg", "jpeg"]
-        file_name = save_file(
-            file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, self.u_id
-        )
+        file_name = save_file(file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, self.u_id)
         try:
             if self.u_profile_picture and file_name != self.u_profile_picture:
                 delete_file(self.u_profile_picture, app.config["PFP_UPLOAD_FOLDER"])
@@ -226,9 +224,7 @@ class UserBO:
     def _validate_phone_number(self):
         """Check if the phone number is valid"""
         # check if the format is valid
-        if self.u_phone_number and not (
-            self.u_phone_number.isdigit() and len(self.u_phone_number) == 9
-        ):
+        if self.u_phone_number and not (self.u_phone_number.isdigit() and len(self.u_phone_number) == 9):
             raise InvalidInputException("PHONE_NUMBER_INVALID")
 
     def _validate_description(self):
@@ -253,13 +249,7 @@ class UserBO:
         contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", self.u_password)
         correct_size = 8 <= len(self.u_password) <= 50
 
-        if not (
-            contains_lower_case_letter
-            and contains_upper_case_letter
-            and contains_digit
-            and contains_special
-            and correct_size
-        ):
+        if not (contains_lower_case_letter and contains_upper_case_letter and contains_digit and contains_special and correct_size):
             raise InvalidInputException("PASSWORD_INVALID")
 
         # check if password and password confirmation are equals
@@ -291,9 +281,7 @@ class UserBO:
         if not self.u_student_email:
             raise MissingInputException("EMAIL_MISSING")
 
-        query = (
-            "select u_email_verified from uniride.ur_user where u_student_email = %s"
-        )
+        query = "select u_email_verified from uniride.ur_user where u_student_email = %s"
         conn = connect_pg.connect()
         email_verified = connect_pg.get_query(conn, query, (self.u_student_email,))
         # check if the email belongs to a user

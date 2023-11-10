@@ -9,6 +9,7 @@ from uniride_sme.api.user_api import user
 from uniride_sme.api.trip_api import trip
 from uniride_sme.api.address_api import address
 
+
 @app.after_request
 def after_request(response):
     """Add Headers to response"""
@@ -23,9 +24,7 @@ def reformat_jwt_response(response):
     """Reformat the response for jwt errors"""
     response_json = response.get_json()
     if response_json and "msg" in response_json:
-        message = (
-            "TOKEN_" + response_json["msg"].split(":")[0].replace(" ", "_").upper()
-        )
+        message = "TOKEN_" + response_json["msg"].split(":")[0].replace(" ", "_").upper()
         response_json["message"] = message
         del response_json["msg"]
         response.data = json.dumps(response_json)

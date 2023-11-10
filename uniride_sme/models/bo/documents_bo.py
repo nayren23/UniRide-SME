@@ -62,9 +62,7 @@ class DocumentsBO:
 
     def save_school_certificate(self, files):
         """Save school certificate"""
-        self.d_school_certificate = self._save_document(
-            files, self.d_school_certificate, "school_certificate"
-        )
+        self.d_school_certificate = self._save_document(files, self.d_school_certificate, "school_certificate")
 
     def _save_document(self, files, old_file_name, document_type):
         """Save document"""

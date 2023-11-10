@@ -27,9 +27,7 @@ def confirm_token(token, expiration=600):
     """Verify the token for email verification is valid"""
     serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
     try:
-        email = serializer.loads(
-            token, salt=app.config["SECURITY_PASSWORD_SALT"], max_age=expiration
-        )
+        email = serializer.loads(token, salt=app.config["SECURITY_PASSWORD_SALT"], max_age=expiration)
         return email
     except SignatureExpired as e:
         raise InvalidInputException("LINK_EXPIRED") from e

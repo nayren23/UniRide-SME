@@ -1,7 +1,11 @@
+"""DTO for Trip BO"""
 from typing import TypedDict
 
-class TripDto(TypedDict):
+
+class TripDTO(TypedDict):
+    """Trip DTO (Data Transfer Object)"""
+
     id_trajet: int
     adresse: dict
-    driver_id : int
+    driver_id: int
     price: float
