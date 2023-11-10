@@ -117,6 +117,7 @@ class UserBO:
             raise InvalidInputException("PASSWORD_OLD_AND_NEW_SAME")
 
         self._validate_password(new_password, new_password_confirmation)
+
         hashed_password = self._hash_password(new_password)
 
         query = "UPDATE uniride.ur_user SET u_password=%s WHERE u_id=%s"
@@ -134,6 +135,7 @@ class UserBO:
             raise InvalidInputException("LOGIN_OLD_AND_NEW_SAME")
 
         self._validate_login(login)
+
         query = "UPDATE uniride.ur_user SET u_login=%s WHERE u_id=%s"
         values = (login, self.u_id)
         conn = connect_pg.connect()
@@ -157,6 +159,7 @@ class UserBO:
             raise InvalidInputException(f"{name_type}_OLD_AND_NEW_SAME")
 
         self._validate_name(name, name_type)
+
         query = f"UPDATE uniride.ur_user SET u_{name_type.lower()}=%s WHERE u_id=%s"
         values = (name, self.u_id)
         conn = connect_pg.connect()
@@ -172,11 +175,28 @@ class UserBO:
             raise InvalidInputException("STUDENT_EMAIL_OLD_AND_NEW_SAME")
 
         self._validate_student_email(student_email)
+
         query = "UPDATE uniride.ur_user SET u_student_email=%s, u_email_verified=false WHERE u_id=%s"
         values = (student_email, self.u_id)
         conn = connect_pg.connect()
         connect_pg.execute_command(conn, query, values)
         self.u_student_email = student_email
+
+    def change_phone_number(self, phone_number):
+        """Change phone_number"""
+        if not phone_number:
+            raise MissingInputException("PHONE_NUMBER_MISSING")
+
+        if self.u_phone_number == phone_number:
+            raise InvalidInputException("PHONE_NUMBER_OLD_AND_NEW_SAME")
+
+        self._validate_phone_number(phone_number)
+
+        query = "UPDATE uniride.ur_user SET u_phone_number=%s WHERE u_id=%s"
+        values = (phone_number, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_phone_number = phone_number
 
     def save_pfp(self, files):
         """Save profil picture"""
