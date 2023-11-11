@@ -230,11 +230,16 @@ class TripBO:
 
         query = f"""
             SELECT
-                t.t_id AS trip_id,
+               t.t_id AS trip_id,
+                t.t_total_passenger_count AS total_passenger_count,
+                t.t_timestamp_proposed AS proposed_date,
+                t.t_timestamp_creation AS creation_timestamp,
+                t.t_status AS trip_status,
                 t.t_price AS trip_price,
                 t.t_user_id AS user_id,
                 t.t_address_depart_id AS departure_address_id,
                 t.t_address_arrival_id AS arrival_address_id,
+                t.t_initial_price AS t_initial_price,
                 departure_address.a_latitude AS departure_latitude,
                 departure_address.a_longitude AS departure_longitude,
                 arrival_address.a_latitude AS arrival_latitude,
@@ -245,8 +250,6 @@ class TripBO:
                 uniride.ur_address departure_address ON t.t_address_depart_id = departure_address.a_id
             JOIN
                 uniride.ur_address arrival_address ON t.t_address_arrival_id = arrival_address.a_id
-            LEFT JOIN
-                uniride.ur_join j ON t.t_id = j.j_trip_id
             WHERE
                 {condition_where}
                 AND t.t_timestamp_proposed BETWEEN 
@@ -287,10 +290,15 @@ class TripBO:
         for trip in trips:
             (
                 trip_id,
+                total_passenger_count,
+                proposed_date,
+                creation_timestamp,
+                trip_status,
                 trip_price,
                 user_id,
                 departure_address_id,
                 arrival_address_id,
+                initial_price,
                 departure_latitude,
                 departure_longitude,
                 arrival_latitude,
