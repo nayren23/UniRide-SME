@@ -9,3 +9,5 @@ class TripDTO(TypedDict):
     adresse: dict
     driver_id: int
     price: float
+    proposed_date: str
+    total_passenger_count: int

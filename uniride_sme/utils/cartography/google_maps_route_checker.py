@@ -14,6 +14,8 @@ class GoogleMapsRouteChecker(RouteChecker):
         self.mode = "driving"
 
     def check_if_route_is_viable(self, origin, destination, intermediate_point):
+        """Check if the route is viable"""
+
         accept_time_difference_minutes = app.config["ACCEPT_TIME_DIFFERENCE_MINUTES"]  # TODO:change the time difference
 
         now = datetime.now()
@@ -35,18 +37,15 @@ class GoogleMapsRouteChecker(RouteChecker):
 
         new_duration = intermediate_duration + intermediate_destination_duration
 
-        time_difference = new_duration - initial_duration  # Difference time in seconds
-        time_difference_minutes = time_difference / 60  # Difference time in minutes
+        time_difference_minutes = (new_duration - initial_duration) / 60  # Difference time in seconds
 
-        if time_difference_minutes <= accept_time_difference_minutes:
-            intermediate_destination_distance = route_with_intermediate[0]["legs"][0]["distance"]["value"] / 1000
-            return [True, new_duration, intermediate_destination_distance]
+        if not time_difference_minutes <= accept_time_difference_minutes:
+            return False
 
-        return [False]
+        return True
 
     def get_distance(self, origin, destination):
         """Get the distance between two points"""
-
         now = datetime.now()
 
         gmaps = googlemaps.Client(key=self.google_api_key)
@@ -57,6 +56,3 @@ class GoogleMapsRouteChecker(RouteChecker):
         print("initial_distancetype", type(initial_distance))
 
         return initial_distance
-
-    def test(self):
-        return "test google maps route checker"

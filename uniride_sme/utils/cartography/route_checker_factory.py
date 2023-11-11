@@ -11,13 +11,12 @@ class RouteCheckerFactory:
     @staticmethod
     def create_route_checker(route_checker_choice):
         """Create an instance of RouteChecker"""
-        
         match route_checker_choice:
             case "google":
                 return GoogleMapsRouteChecker()
 
             case "osm":
                 return OpenStreetMapRouteChecker()
-            
+
             case _:
                 raise MissingInputException("INVALID_ROUTE_CHECKER_CHOICE_ENVIRONMENT_VARIABLE")

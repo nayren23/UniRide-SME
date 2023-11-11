@@ -181,13 +181,11 @@ class TripBO:
                t.t_id AS trip_id,
                 t.t_total_passenger_count AS total_passenger_count,
                 t.t_timestamp_proposed AS proposed_date,
-                t.t_timestamp_creation AS creation_timestamp,
                 t.t_status AS trip_status,
                 t.t_price AS trip_price,
                 t.t_user_id AS user_id,
                 t.t_address_depart_id AS departure_address_id,
                 t.t_address_arrival_id AS arrival_address_id,
-                t.t_initial_price AS t_initial_price,
                 departure_address.a_latitude AS departure_latitude,
                 departure_address.a_longitude AS departure_longitude,
                 arrival_address.a_latitude AS arrival_latitude,
@@ -225,13 +223,13 @@ class TripBO:
 
         if point_intermediaire_departure == university_point:
             condition_where = "(departure_address.a_latitude = %s AND departure_address.a_longitude = %s)"
-            trips = self.get_trips(university_address_bo.latitude, university_address_bo.longitude, condition_where)
         elif intermediate_point_arrival == university_point:
             condition_where = "(arrival_address.a_latitude = %s AND arrival_address.a_longitude = %s)"
-            trips = self.get_trips(university_address_bo.latitude, university_address_bo.longitude, condition_where)
         else:
             # If an intermediate address is not the university, raise an exception
             raise InvalidIntermediateAddressException
+        # Get the trips
+        trips = self.get_trips(university_address_bo.latitude, university_address_bo.longitude, condition_where)
 
         available_trips = []
 
@@ -240,13 +238,11 @@ class TripBO:
                 trip_id,
                 total_passenger_count,
                 proposed_date,
-                creation_timestamp,
                 trip_status,
                 trip_price,
                 user_id,
                 departure_address_id,
                 arrival_address_id,
-                initial_price,
                 departure_latitude,
                 departure_longitude,
                 arrival_latitude,
@@ -256,17 +252,7 @@ class TripBO:
             point_depart = (departure_latitude, departure_longitude)
             point_arrivee = (arrival_latitude, arrival_longitude)
 
-            if point_intermediaire_departure == university_point:
-                info_route = self.route_checker.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
-                is_viable = info_route[0]
-
-            elif intermediate_point_arrival == university_point:
-                info_route = self.route_checker.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
-                is_viable = info_route[0]
-
-            else:
-                info_route = self.route_checker.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
-                is_viable = info_route[0]
+            is_viable = self.route_checker.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
 
             if is_viable:
                 price = trip_price * self.total_passenger_count
@@ -280,6 +266,8 @@ class TripBO:
                     address=address_dtos,
                     driver_id=user_id,
                     price=price,
+                    proposed_date=proposed_date,
+                    total_passenger_count=total_passenger_count,
                 )
                 trips_get_dto = TripsGetDto(trips=trip_dto)
                 available_trips.append(trips_get_dto)

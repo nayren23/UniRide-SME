@@ -1,6 +1,5 @@
 """ Field related functions"""
 
-from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.exceptions import InvalidInputException
 
 

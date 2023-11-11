@@ -13,6 +13,7 @@ class OpenStreetMapRouteChecker(RouteChecker):
         self.api_base_url = "http://router.project-osrm.org/route/v1/"
 
     def check_if_route_is_viable(self, origin, destination, intermediate_point):
+        """Check if the route is viable"""
         accept_time_difference_minutes = app.config["ACCEPT_TIME_DIFFERENCE_MINUTES"]
 
         # Format coordinates as required by the OpenStreetMap API
@@ -26,15 +27,15 @@ class OpenStreetMapRouteChecker(RouteChecker):
         api_url_intermediate_destination = f"{self.api_base_url}{self.mode}/{intermediate_point_str};{destination_str}?overview=false&steps=false"
 
         # Make the API requests
-        response_initial = requests.get(api_url_origin_destination)
-        response_intermediate = requests.get(api_url_origin_intermediate)
-        response_destination = requests.get(api_url_intermediate_destination)
+        response_initial = requests.get(api_url_origin_destination, timeout=5)
+        response_intermediate = requests.get(api_url_origin_intermediate, timeout=5)
+        response_destination = requests.get(api_url_intermediate_destination, timeout=5)
 
         data_initial = response_initial.json()
         data_intermediate = response_intermediate.json()
         data_destination = response_destination.json()
 
-        if not (    
+        if not (
             response_initial.status_code == 200
             and response_intermediate.status_code == 200
             and response_destination.status_code == 200
@@ -45,7 +46,7 @@ class OpenStreetMapRouteChecker(RouteChecker):
             and data_intermediate.get("routes")
             and data_destination.get("routes")
         ):
-            return [False]
+            return False
 
         route_initial = data_initial["routes"][0]
         route_intermediate = data_intermediate["routes"][0]
@@ -57,14 +58,14 @@ class OpenStreetMapRouteChecker(RouteChecker):
 
         new_duration = intermediate_duration + intermediate_destination_duration
 
-        time_difference = new_duration - initial_duration
-        time_difference_minutes = time_difference / 60
+        time_difference_minutes = (new_duration - initial_duration) / 60
 
         if time_difference_minutes <= accept_time_difference_minutes:
-            intermediate_destination_distance = route_destination["legs"][0]["distance"] / 1000
-            return [True, new_duration, intermediate_destination_distance]
+            return True
 
     def get_distance(self, origin, destination):
+        """Get the distance between two points"""
+
         origin_str = f"{origin[1]},{origin[0]}"
         destination_str = f"{destination[1]},{destination[0]}"
 
@@ -72,7 +73,7 @@ class OpenStreetMapRouteChecker(RouteChecker):
         api_url = f"{self.api_base_url}{self.mode}/{origin_str};{destination_str}?overview=false&steps=false"
 
         # Make the API request
-        response = requests.get(api_url)
+        response = requests.get(api_url, timeout=5)
         data = response.json()
 
         # Extract relevant information from the API response
