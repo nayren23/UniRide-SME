@@ -40,6 +40,7 @@ class Config:
 
     # Api key for google maps
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    ROUTE_CHECKER = os.getenv("ROUTE_CHECKER")
 
     print("SECRET_KEY", os.getenv("SECRET_KEY"))
     RATE_PER_KM = float(os.getenv("RATE_PER_KM"))

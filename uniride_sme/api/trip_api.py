@@ -6,7 +6,10 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
 
 from uniride_sme import app
-from uniride_sme.models.bo.trip_bo import TripBO, get_distance
+from uniride_sme.models.bo.trip_bo import TripBO
+
+from uniride_sme.utils.cartography.route_checker_factory import RouteCheckerFactory
+
 from uniride_sme.models.bo.address_bo import AddressBO
 from uniride_sme.models.dto.trips_get_dto import TripsGetDto
 from uniride_sme.models.dto.trip_dto import TripDTO
@@ -63,7 +66,10 @@ def propose_trip():
         origin = (departure_address.latitude, departure_address.longitude)
         destination = (arrival_address.latitude, arrival_address.longitude)
 
-        initial_distance = get_distance(origin, destination)
+        route_checker = RouteCheckerFactory.create_route_checker(app.config["ROUTE_CHECKER"])
+
+        initial_distance = route_checker.get_distance(origin, destination)
+
         trip_price = trip_bo.calculate_price(initial_distance)
 
         trip_bo.price = trip_price

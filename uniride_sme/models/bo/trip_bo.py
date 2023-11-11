@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from math import ceil
-import googlemaps
 
 from uniride_sme import connect_pg
 
@@ -10,66 +9,13 @@ from uniride_sme.utils.exception.trip_exceptions import InvalidInputException, M
 
 from uniride_sme.utils.exception.address_exceptions import InvalidIntermediateAddressException
 
+from uniride_sme.utils.cartography.route_checker_factory import RouteCheckerFactory
+
 from uniride_sme.models.dto.trips_get_dto import TripsGetDto
 from uniride_sme.models.dto.trip_dto import TripDTO
 from uniride_sme.models.dto.address_dto import AddressDTO
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme import app
-
-
-def check_if_route_is_viable(origin, destination, intermediate_point):
-    """Check if the route is viable"""
-
-    accept_time_difference_minutes = app.config["ACCEPT_TIME_DIFFERENCE_MINUTES"]  # TODO:change the time difference
-
-    now = datetime.now()
-    google_api_key = app.config["GOOGLE_API_KEY"]
-
-    # Calculate the initial route
-    gmaps = googlemaps.Client(key=google_api_key)
-
-    # Calculate the initial route without the intermediate point
-    mode = "driving"
-
-    initial_route = gmaps.directions(origin, destination, mode, departure_time=now)
-
-    # Calculate the initial route with the intermediate point
-    route_initial_intermediate = gmaps.directions(origin, intermediate_point, mode, departure_time=now)
-
-    route_with_intermediate = gmaps.directions(intermediate_point, destination, mode, departure_time=now)
-
-    # Check if the route is viable
-    initial_duration = initial_route[0]["legs"][0]["duration"]["value"]  # Seconds
-    intermediate_duration = route_initial_intermediate[0]["legs"][0]["duration"]["value"]  # Seconds
-    intermediate_destination_duration = route_with_intermediate[0]["legs"][0]["duration"]["value"]  # Seconds
-
-    new_duration = intermediate_duration + intermediate_destination_duration
-
-    time_difference = new_duration - initial_duration  # Difference time in seconds
-    time_difference_minutes = time_difference / 60  # Difference time in minutes
-
-    if time_difference_minutes <= accept_time_difference_minutes:
-        intermediate_destination_distance = route_with_intermediate[0]["legs"][0]["distance"]["value"] / 1000
-        return [True, new_duration, intermediate_destination_distance]
-
-    return [False]
-
-
-def get_distance(origin, destination):
-    """Get the distance between two points"""
-
-    now = datetime.now()
-    google_api_key = app.config["GOOGLE_API_KEY"]
-
-    gmaps = googlemaps.Client(key=google_api_key)
-
-    mode = "driving"
-
-    initial_route = gmaps.directions(origin, destination, mode, departure_time=now)
-
-    initial_distance = float(initial_route[0]["legs"][0]["distance"]["value"] / 1000)  # Distance en kilomètres
-
-    return initial_distance
 
 
 class TripBO:
@@ -96,6 +42,8 @@ class TripBO:
         self.user_id = user_id
         self.address_depart_id = address_depart_id
         self.address_arrival_id = address_arrival_id
+        self.choice_route_checker = app.config["ROUTE_CHECKER"]
+        self.route_checker = RouteCheckerFactory.create_route_checker(self.choice_route_checker)
 
     def add_in_db(self):
         """Insert the trip in the database"""
@@ -118,7 +66,7 @@ class TripBO:
         # retrieve not None values
         attr_dict = {}
         for attr, value in self.__dict__.items():
-            if value:
+            if value and not attr.startswith(("choice_", "route_")):  # we don't want to insert the choice of the route checker in the database
                 attr_dict["t_" + attr] = value
 
         # format for sql query
@@ -309,15 +257,15 @@ class TripBO:
             point_arrivee = (arrival_latitude, arrival_longitude)
 
             if point_intermediaire_departure == university_point:
-                info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
+                info_route = self.route_checker.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
                 is_viable = info_route[0]
 
             elif intermediate_point_arrival == university_point:
-                info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
+                info_route = self.route_checker.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
                 is_viable = info_route[0]
 
             else:
-                info_route = check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
+                info_route = self.route_checker.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
                 is_viable = info_route[0]
 
             if is_viable:
