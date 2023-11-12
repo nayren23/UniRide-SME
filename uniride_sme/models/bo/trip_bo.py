@@ -75,7 +75,7 @@ class TripBO:
         placeholders = ", ".join(["%s"] * len(attr_dict))
         values = tuple(attr_dict.values())
 
-        query = f"INSERT INTO uniride.ur_trip ({fields}) VALUES ({placeholders}) RETURNING t_id"
+        query = f"INSERT INTO {app.config['DB_NAME']}.ur_trip ({fields}) VALUES ({placeholders}) RETURNING t_id"
         # changer le nom de la table dans la BDD
 
         conn = connect_pg.connect()
@@ -161,9 +161,9 @@ class TripBO:
     def trip_exists(self):
         """Check if the trip with address already exists in the database"""
 
-        query = """
+        query = f"""
         SELECT t_id
-        FROM uniride.ur_trip
+        FROM {app.config['DB_NAME']}.ur_trip
         WHERE t_user_id = %s AND t_address_depart_id = %s AND t_address_arrival_id = %s AND t_timestamp_proposed = %s AND t_total_passenger_count = %s
         """
 
@@ -191,11 +191,11 @@ class TripBO:
                 arrival_address.a_latitude AS arrival_latitude,
                 arrival_address.a_longitude AS arrival_longitude
             FROM
-                uniride.ur_trip t
+                {app.config['DB_NAME']}.ur_trip t
             JOIN
-                uniride.ur_address departure_address ON t.t_address_depart_id = departure_address.a_id
+                {app.config['DB_NAME']}.ur_address departure_address ON t.t_address_depart_id = departure_address.a_id
             JOIN
-                uniride.ur_address arrival_address ON t.t_address_arrival_id = arrival_address.a_id
+                {app.config['DB_NAME']}.ur_address arrival_address ON t.t_address_arrival_id = arrival_address.a_id
             WHERE
                 {condition_where}
                 AND t.t_timestamp_proposed BETWEEN 
@@ -277,9 +277,9 @@ class TripBO:
     def get_current_driver_trips(self):
         """Get the current trips for the driver"""
 
-        query = """
+        query = f"""
             SELECT t_id, t_address_depart_id, t_address_arrival_id,t_price
-            FROM uniride.ur_trip
+            FROM {app.config['DB_NAME']}.ur_trip
             WHERE t_user_id = %s
             AND t_status = %s
         """
@@ -293,9 +293,9 @@ class TripBO:
     def check_if_trip_exists(self):
         """Check if the trip exists in the database"""
 
-        query = """
+        query = f"""
         SELECT *
-        FROM uniride.ur_trip
+        FROM {app.config['DB_NAME']}.ur_trip
         WHERE t_id = %s
         """
 

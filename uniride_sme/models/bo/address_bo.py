@@ -7,6 +7,8 @@ from uniride_sme import connect_pg
 
 from uniride_sme.utils.exception.address_exceptions import AddressNotFoundException, InvalidAddressException, MissingInputException, InvalidInputException
 
+from uniride_sme import app
+
 
 class AddressBO:
     """Address business object"""
@@ -63,7 +65,7 @@ class AddressBO:
             placeholders = ", ".join(["%s"] * len(attr_dict))
             values = tuple(attr_dict.values())
 
-            query = f"INSERT INTO uniride.ur_address ({fields}) VALUES ({placeholders}) RETURNING a_id"
+            query = f"INSERT INTO {app.config['DB_NAME']}.ur_address ({fields}) VALUES ({placeholders}) RETURNING a_id"
 
             conn = connect_pg.connect()
             address_id = connect_pg.execute_command(conn, query, values)
@@ -126,11 +128,9 @@ class AddressBO:
     def address_exists(self):
         """Check if the address already exists in the database"""
 
-        query = """
-        SELECT a_id
-        FROM uniride.ur_address
-        WHERE a_street_number = %s AND a_street_name = %s AND a_city = %s
-        """
+        query = f"""SELECT a_id
+        FROM {app.config['DB_NAME']}.ur_address
+        WHERE a_street_number = %s AND a_street_name = %s AND a_city = %s"""
 
         conn = connect_pg.connect()
         address_id = connect_pg.get_query(conn, query, (self.street_number, self.street_name, self.city))
@@ -168,9 +168,9 @@ class AddressBO:
 
     def check_address_existence(self):
         """Get the address from the id"""
-        query = """
+        query = f"""
         SELECT a_street_number, a_street_name, a_city, a_postal_code, a_latitude, a_longitude
-        FROM uniride.ur_address
+        FROM {app.config['DB_NAME']}.ur_address
         WHERE a_id = %s
         """
 

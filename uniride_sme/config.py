@@ -47,6 +47,9 @@ class Config:
     COST_PER_KM = float(os.getenv("COST_PER_KM"))
     BASE_RATE = float(os.getenv("BASE_RATE"))
 
+    # DB config
+    DB_NAME = os.getenv("DB_NAME")
+
     ACCEPT_TIME_DIFFERENCE_MINUTES = int(os.getenv("ACCEPT_TIME_DIFFERENCE_MINUTES"))
 
 
