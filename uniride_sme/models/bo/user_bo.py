@@ -78,7 +78,7 @@ class UserBO:
         self._validate_description(self.u_description)
         self._validate_password(self.u_password, password_confirmation)
 
-        self._hash_password(self.u_password)
+        self.u_password = self._hash_password(self.u_password)
 
         # retrieve not None values
         self.u_id = None
@@ -221,9 +221,7 @@ class UserBO:
             raise MissingInputException("MISSING_PFP_FILE")
 
         allowed_extensions = ["png", "jpg", "jpeg"]
-        file_name = save_file(
-            file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, self.u_id
-        )
+        file_name = save_file(file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, self.u_id)
         try:
             if self.u_profile_picture and file_name != self.u_profile_picture:
                 delete_file(self.u_profile_picture, app.config["PFP_UPLOAD_FOLDER"])
@@ -367,13 +365,7 @@ class UserBO:
         contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", password)
         correct_size = 8 <= len(password) <= 50
 
-        if not (
-            contains_lower_case_letter
-            and contains_upper_case_letter
-            and contains_digit
-            and contains_special
-            and correct_size
-        ):
+        if not (contains_lower_case_letter and contains_upper_case_letter and contains_digit and contains_special and correct_size):
             raise InvalidInputException("PASSWORD_INVALID")
 
         # check if password and password confirmation are equals
@@ -406,9 +398,7 @@ class UserBO:
         if not student_email:
             raise MissingInputException("EMAIL_MISSING")
 
-        query = (
-            "select u_email_verified from uniride.ur_user where u_student_email = %s"
-        )
+        query = "select u_email_verified from uniride.ur_user where u_student_email = %s"
         conn = connect_pg.connect()
         email_verified = connect_pg.get_query(conn, query, (student_email,))
         # check if the email belongs to a user
