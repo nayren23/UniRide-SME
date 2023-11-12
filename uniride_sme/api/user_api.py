@@ -6,9 +6,8 @@ from flask_jwt_extended import jwt_required
 
 from uniride_sme import app
 from uniride_sme.models.bo.user_bo import UserBO
-from uniride_sme.utils.exception.exceptions import (
-    ApiException,
-)
+from uniride_sme.models.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO
+from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
 
@@ -52,11 +51,15 @@ def authentificate():
         )
         user_bo.authentificate()
         user_bo.get_from_db()
-        token = create_access_token(
-            user_bo.u_id, expires_delta=app.config["JWT_ACCESS_TOKEN_EXPIRES"]
+        token = create_access_token(user_bo.u_id, expires_delta=app.config["JWT_ACCESS_TOKEN_EXPIRES"])
+        informations_verified_dto = InformationsVerifiedDTO(
+            email_verified=user_bo.u_email_verified,
+            license_verified=user_bo.documents_bo.v_license_verified,
+            id_card_verified=user_bo.documents_bo.v_id_card_verified,
+            school_certificate_verified=user_bo.documents_bo.v_school_certificate_verified,
         )
         response = (
-            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", token=token),
+            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", token=token, informations_verified=informations_verified_dto),
             200,
         )
     except ApiException as e:
