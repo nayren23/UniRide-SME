@@ -86,4 +86,9 @@ class DocumentsBO:
         values = (file_name, self.u_id)
         conn = connect_pg.connect()
         connect_pg.execute_command(conn, query, values)
+
+        query = f"UPDATE uniride.ur_document_verification SET v_{document_type}_verified=false, v_timestamp_modification=CURRENT_TIMESTAMP WHERE u_id=%s"
+        values = (self.u_id,)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
         return file_name

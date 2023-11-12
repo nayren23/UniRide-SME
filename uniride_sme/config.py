@@ -2,10 +2,13 @@
 # !/usr/bin/python
 from configparser import ConfigParser
 import os
+from datetime import timedelta
 
 
 class Config:
     """Config variables"""
+
+    PATH = os.path.dirname(__file__)
 
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
@@ -19,12 +22,14 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     UNIVERSITY_EMAIL_DOMAIN = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
 
+    MAX_CONTENT_LENGTH = 5 * 1000 * 1000
     PFP_UPLOAD_FOLDER = os.getenv("PFP_UPLOAD_FOLDER")
     LICENSE_UPLOAD_FOLDER = os.getenv("LICENSE_UPLOAD_FOLDER")
     ID_CARD_UPLOAD_FOLDER = os.getenv("ID_CARD_UPLOAD_FOLDER")
     SCHOOL_CERTIFICATE_UPLOAD_FOLDER = os.getenv("SCHOOL_CERTIFICATE_UPLOAD_FOLDER")
 
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
     FRONT_END_URL = os.getenv("FRONT_END_URL")
 
