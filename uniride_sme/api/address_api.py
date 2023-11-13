@@ -26,6 +26,6 @@ def add_address():
         )
         address_bo.add_in_db()
         response = jsonify({"message": "ADDRESS_CREATED_SUCCESSFULLY", "id_address": address_bo.id}), 200
-    except (ApiException, InvalidInputException) as e:
+    except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
     return response

@@ -22,6 +22,8 @@ from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.exception.trip_exceptions import InvalidInputException, MissingInputException, TripAlreadyExistsException
 
 from uniride_sme.utils.exception.address_exceptions import AddressNotFoundException, InvalidAddressException, InvalidIntermediateAddressException
+from uniride_sme.utils.pagination import create_pagination
+
 
 trip = Blueprint("trip", __name__)
 
@@ -77,7 +79,7 @@ def propose_trip():
 
         response = jsonify({"message": "CREATED_SUCCESSFULLY", "trip_id": trip_bo.id}), 200
 
-    except (MissingInputException, InvalidInputException, ApiException, AddressNotFoundException, TripAlreadyExistsException) as e:
+    except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 
     return response
@@ -147,9 +149,13 @@ def get_available_trips():
 
         available_trips = trip_bo.get_trips_for_university_address(depart_address_bo, address_arrival_bo, university_address_bo)
 
-        response = jsonify(available_trips), 200
+         # We need to paginate the data
+         
+        meta, paginated_data = create_pagination(request, available_trips)
+        
+        response = jsonify({"trips" : paginated_data, "meta" : meta}), 200
 
-    except (ApiException, InvalidIntermediateAddressException, InvalidAddressException, InvalidInputException) as e:
+    except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
     return response
 
@@ -185,10 +191,13 @@ def get_current_driver_trips():
                 driver_id=user_id,
                 price=price,
             )
-            trips_get_dto = TripsGetDto(trips=trip_dto)
+            trips_get_dto = TripsGetDto(trip_dto)
             available_trips.append(trips_get_dto)
-
-        response = jsonify(available_trips), 200
+            
+            # We need to paginate the data
+            meta, paginated_data = create_pagination(request, available_trips)
+            
+        response = jsonify({"trips" : paginated_data, "meta" : meta}), 200
 
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
