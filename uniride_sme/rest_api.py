@@ -34,7 +34,7 @@ def reformat_jwt_response(response):
 
 
 @app.errorhandler(413)
-def file_too_large(e):
+def file_too_large(e):  # pylint: disable=unused-argument
     """Return a custom response when a file is too large"""
     return jsonify(message="FILE_TOO_LARGE"), 413
 

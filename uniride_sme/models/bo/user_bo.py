@@ -16,10 +16,10 @@ from uniride_sme.utils.exception.user_exceptions import (
 )
 
 
-class UserBO:
+class UserBO:  # pylint: disable=too-many-instance-attributes
     """User business owner class"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         user_id: int = None,
         login: str = None,
@@ -40,6 +40,14 @@ class UserBO:
         self.u_gender = gender
         self.u_phone_number = phone_number
         self.u_description = description
+        self.documents_bo = None
+        self.u_profile_picture = None
+        self.u_timestamp_creation = None
+        self.u_timestamp_modification = None
+        self.u_email_verified = None
+        self.u_status = None
+        self.u_home_adress_id = None
+        self.u_work_adress_id = None
 
         if self.u_id:
             self.get_from_db()
@@ -65,6 +73,7 @@ class UserBO:
 
         self.documents_bo = DocumentsBO(self.u_id)
         self.documents_bo.get_from_db()
+        print(self.__dict__.items())
 
     def add_in_db(self, password_confirmation, files):
         """Insert the user in the database"""
