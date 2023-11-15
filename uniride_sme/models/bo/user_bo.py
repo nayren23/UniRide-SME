@@ -16,10 +16,10 @@ from uniride_sme.utils.exception.user_exceptions import (
 )
 
 
-class UserBO:
+class UserBO:  # pylint: disable=too-many-instance-attributes
     """User business owner class"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         user_id: int = None,
         login: str = None,
@@ -40,6 +40,14 @@ class UserBO:
         self.u_gender = gender
         self.u_phone_number = phone_number
         self.u_description = description
+        self.documents_bo = None
+        self.u_profile_picture = None
+        self.u_timestamp_creation = None
+        self.u_timestamp_modification = None
+        self.u_email_verified = None
+        self.u_status = None
+        self.u_home_adress_id = None
+        self.u_work_adress_id = None
 
         if self.u_id:
             self.get_from_db()
@@ -65,20 +73,21 @@ class UserBO:
 
         self.documents_bo = DocumentsBO(self.u_id)
         self.documents_bo.get_from_db()
+        print(self.__dict__.items())
 
     def add_in_db(self, password_confirmation, files):
         """Insert the user in the database"""
         # _validate values
-        self._validate_login()
-        self._validate_student_email()
-        self._validate_firstname()
-        self._validate_lastname()
-        self._validate_gender()
-        self._validate_phone_number()
-        self._validate_description()
-        self._validate_password(password_confirmation)
+        self._validate_login(self.u_login)
+        self._validate_student_email(self.u_student_email)
+        self._validate_firstname(self.u_firstname)
+        self._validate_lastname(self.u_lastname)
+        self._validate_gender(self.u_gender)
+        self._validate_phone_number(self.u_phone_number)
+        self._validate_description(self.u_description)
+        self._validate_password(self.u_password, password_confirmation)
 
-        self._hash_password()
+        self.u_password = self._hash_password(self.u_password)
 
         # retrieve not None values
         self.u_id = None
@@ -104,6 +113,113 @@ class UserBO:
             self.save_pfp(files)
         except MissingInputException:
             pass
+
+    def change_password(self, old_password, new_password, new_password_confirmation):
+        """Change password"""
+        if not old_password:
+            raise MissingInputException("PASSWORD_MISSING")
+
+        if not self._verify_password(old_password, self.u_password):
+            raise PasswordIncorrectException()
+
+        if old_password == new_password:
+            raise InvalidInputException("PASSWORD_OLD_AND_NEW_SAME")
+
+        self._validate_password(new_password, new_password_confirmation)
+
+        hashed_password = self._hash_password(new_password)
+
+        query = "UPDATE uniride.ur_user SET u_password=%s WHERE u_id=%s"
+        values = (hashed_password, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_password = hashed_password
+
+    def change_login(self, login):
+        """Change login"""
+        if self.u_login == login:
+            raise InvalidInputException("LOGIN_OLD_AND_NEW_SAME")
+
+        self._validate_login(login)
+
+        query = "UPDATE uniride.ur_user SET u_login=%s WHERE u_id=%s"
+        values = (login, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_login = login
+
+    def change_firstname(self, firstname):
+        """Change firstname"""
+        self._change_name(firstname, "FIRSTNAME")
+
+    def change_lastname(self, lastname):
+        """Change lastname"""
+        self._change_name(lastname, "LASTNAME")
+
+    def _change_name(self, name, name_type):
+        """Change name"""
+        if getattr(self, f"u_{name_type.lower()}") == name:
+            raise InvalidInputException(f"{name_type}_OLD_AND_NEW_SAME")
+
+        self._validate_name(name, name_type)
+
+        query = f"UPDATE uniride.ur_user SET u_{name_type.lower()}=%s WHERE u_id=%s"
+        values = (name, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        setattr(self, f"u_{name_type.lower()}", name)
+
+    def change_student_email(self, student_email):
+        """Change student_email"""
+        if self.u_student_email == student_email:
+            raise InvalidInputException("STUDENT_EMAIL_OLD_AND_NEW_SAME")
+
+        self._validate_student_email(student_email)
+
+        query = "UPDATE uniride.ur_user SET u_student_email=%s, u_email_verified=false WHERE u_id=%s"
+        values = (student_email, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_student_email = student_email
+
+    def change_phone_number(self, phone_number):
+        """Change phone number"""
+        if self.u_phone_number == phone_number:
+            raise InvalidInputException("PHONE_NUMBER_OLD_AND_NEW_SAME")
+
+        self._validate_phone_number(phone_number)
+
+        query = "UPDATE uniride.ur_user SET u_phone_number=%s WHERE u_id=%s"
+        values = (phone_number, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_phone_number = phone_number
+
+    def change_gender(self, gender):
+        """Change gender"""
+        if self.u_gender == gender:
+            raise InvalidInputException("GENDER_OLD_AND_NEW_SAME")
+
+        self._validate_gender(gender)
+
+        query = "UPDATE uniride.ur_user SET u_gender=%s WHERE u_id=%s"
+        values = (gender, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_gender = gender
+
+    def change_description(self, description):
+        """Change description"""
+        if self.u_description == description:
+            raise InvalidInputException("DESCRIPTION_OLD_AND_NEW_SAME")
+
+        self._validate_description(description)
+
+        query = "UPDATE uniride.ur_user SET u_description=%s WHERE u_id=%s"
+        values = (description, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        self.u_description = description
 
     def save_pfp(self, files):
         """Save profil picture"""
@@ -137,45 +253,47 @@ class UserBO:
         """Save school certificate"""
         self.documents_bo.save_school_certificate(files)
 
-    def _validate_login(self):
+    @staticmethod
+    def _validate_login(login):
         """Check if the login is valid"""
 
         # check if exist
-        if not self.u_login:
+        if not login:
             raise MissingInputException("LOGIN_MISSING")
 
         # check if the format is valid
-        if len(self.u_login) > 50:
+        if len(login) > 50:
             raise InvalidInputException("LOGIN_TOO_LONG")
 
         regex = r"[A-Za-z0-9._-]+"
-        if not re.fullmatch(regex, self.u_login):
+        if not re.fullmatch(regex, login):
             raise InvalidInputException("LOGIN_INVALID_CHARACTERS")
 
         # check if the login is already taken
         query = "select count(*) from uniride.ur_user where u_login = %s"
         conn = connect_pg.connect()
-        count = connect_pg.get_query(conn, query, (self.u_login,))[0][0]
+        count = connect_pg.get_query(conn, query, (login,))[0][0]
         if count:
             raise InvalidInputException("LOGIN_TAKEN")
 
-    def _validate_student_email(self):
+    @staticmethod
+    def _validate_student_email(studen_email):
         """Check if the email is valid"""
 
         # check if exist
-        if not self.u_student_email:
+        if not studen_email:
             raise MissingInputException("EMAIL_MISSING")
 
         # check if the format is valid
         regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
-        if not re.fullmatch(regex, self.u_student_email):
+        if not re.fullmatch(regex, studen_email):
             raise InvalidInputException("EMAIL_INVALID_FORMAT")
 
-        if len(self.u_student_email) > 254:
+        if len(studen_email) > 254:
             raise InvalidInputException("EMAIL_TOO_LONG")
 
         # check if the domain is valid
-        email_domain = self.u_student_email.split("@")[1]
+        email_domain = studen_email.split("@")[1]
         valid_domain = app.config["UNIVERSITY_EMAIL_DOMAIN"]
         if email_domain != valid_domain:
             raise InvalidInputException("EMAIL_INVALID_DOMAIN")
@@ -183,11 +301,13 @@ class UserBO:
         # check if the email is already taken
         query = "select count(*) from uniride.ur_user where u_student_email = %s"
         conn = connect_pg.connect()
-        count = connect_pg.get_query(conn, query, (self.u_student_email,))[0][0]
+        count = connect_pg.get_query(conn, query, (studen_email,))[0][0]
         if count:
             raise InvalidInputException("EMAIL_TAKEN")
 
-    def _validate_name(self, name, name_type):
+    @staticmethod
+    def _validate_name(name, name_type):
+        """Check if the name is valid"""
         # check if exist
         if not name:
             raise MissingInputException(f"{name_type}_MISSING")
@@ -200,90 +320,96 @@ class UserBO:
         if not re.fullmatch(regex, name):
             raise InvalidInputException(f"{name_type}_INVALID_CHARACTERS")
 
-    def _validate_firstname(self):
+    @staticmethod
+    def _validate_firstname(firstname):
         """Check if the firstname is valid"""
 
-        self._validate_name(self.u_firstname, "FIRSTNAME")
+        UserBO._validate_name(firstname, "FIRSTNAME")
 
-    def _validate_lastname(self):
+    @staticmethod
+    def _validate_lastname(lastname):
         """Check if the lastname is valid"""
+        UserBO._validate_name(lastname, "LASTNAME")
 
-        self._validate_name(self.u_lastname, "LASTNAME")
-
-    def _validate_gender(self):
+    @staticmethod
+    def _validate_gender(gender):
         """Check if the gender is valid"""
 
         # check if exist
-        if not self.u_gender:
+        if not gender:
             raise MissingInputException("GENDER_MISSING")
 
         # check if the format is valid
-        if self.u_gender not in ("N", "H", "F"):
+        if gender not in ("N", "H", "F"):
             raise InvalidInputException("GENDER_INVALID")
 
-    def _validate_phone_number(self):
+    @staticmethod
+    def _validate_phone_number(phone_number):
         """Check if the phone number is valid"""
         # check if the format is valid
-        if self.u_phone_number and not (self.u_phone_number.isdigit() and len(self.u_phone_number) == 9):
+        if phone_number and not (phone_number.isdigit() and len(phone_number) == 9):
             raise InvalidInputException("PHONE_NUMBER_INVALID")
 
-    def _validate_description(self):
+    @staticmethod
+    def _validate_description(description):
         """Check if the description is valid"""
         # check if description not too long
-        if self.u_description and len(self.u_description) > 500:
+        if description and len(description) > 500:
             raise InvalidInputException("DESCRIPTION_TOO_LONG")
 
-    def _validate_password(self, password_confirmation):
+    @staticmethod
+    def _validate_password(password, password_confirmation):
         """Check if the password is valid"""
 
         # check if exist
-        if not self.u_password:
+        if not password:
             raise MissingInputException("PASSWORD_MISSING")
         if not password_confirmation:
             raise MissingInputException("PASSWORD_CONFIRMATION_MISSING")
 
         # check if the format is valid
-        contains_lower_case_letter = re.search(r"[a-z]", self.u_password)
-        contains_upper_case_letter = re.search(r"[A-Z]", self.u_password)
-        contains_digit = re.search(r"\d", self.u_password)
-        contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", self.u_password)
-        correct_size = 8 <= len(self.u_password) <= 50
+        contains_lower_case_letter = re.search(r"[a-z]", password)
+        contains_upper_case_letter = re.search(r"[A-Z]", password)
+        contains_digit = re.search(r"\d", password)
+        contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", password)
+        correct_size = 8 <= len(password) <= 50
 
         if not (contains_lower_case_letter and contains_upper_case_letter and contains_digit and contains_special and correct_size):
             raise InvalidInputException("PASSWORD_INVALID")
 
         # check if password and password confirmation are equals
-        if self.u_password != password_confirmation:
+        if password != password_confirmation:
             raise InvalidInputException("PASSWORD_NOT_MATCHING")
 
-    def _hash_password(self):
+    @staticmethod
+    def _hash_password(password) -> str:
         """Hash the password"""
         salt = app.config["SECURITY_PASSWORD_SALT"]
         # convert to bytes
         salt = salt.encode("utf8")
-        self.u_password = self.u_password.encode("utf8")
-        self.u_password = bcrypt.hashpw(self.u_password, salt)
+        password = password.encode("utf8")
+        password = bcrypt.hashpw(password, salt)
         # convert back to string
-        self.u_password = str(self.u_password, "utf8")
+        return str(password, "utf8")
 
-    def _verify_password(self, hashed_password):
+    @staticmethod
+    def _verify_password(password, hashed_password) -> bool:
         """Verify the password is correct"""
         return bcrypt.checkpw(
-            self.u_password.encode("utf8"),
+            password.encode("utf8"),
             hashed_password.encode("utf8"),
         )
 
-    def verify_student_email(
-        self,
-    ):
+    @staticmethod
+    def verify_student_email(student_email):
         """Verify the student email"""
         # check if exist
-        if not self.u_student_email:
+        if not student_email:
             raise MissingInputException("EMAIL_MISSING")
 
         query = "select u_email_verified from uniride.ur_user where u_student_email = %s"
         conn = connect_pg.connect()
-        email_verified = connect_pg.get_query(conn, query, (self.u_student_email,))
+        email_verified = connect_pg.get_query(conn, query, (student_email,))
         # check if the email belongs to a user
         if not email_verified:
             raise InvalidInputException("EMAIL_NOT_OWNED")
@@ -293,7 +419,7 @@ class UserBO:
 
         query = "update uniride.ur_user set u_email_verified=True where u_student_email = %s"
         conn = connect_pg.connect()
-        connect_pg.execute_command(conn, query, (self.u_student_email,))
+        connect_pg.execute_command(conn, query, (student_email,))
 
     def authentificate(self):
         """Verify the login and password"""
@@ -310,5 +436,5 @@ class UserBO:
         if not password:
             raise UserNotFoundException()
 
-        if not self._verify_password(password[0][0]):
+        if not self._verify_password(self.u_password, password[0][0]):
             raise PasswordIncorrectException()
