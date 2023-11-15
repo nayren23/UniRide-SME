@@ -13,6 +13,14 @@ class DocumentsBO:
     def __init__(self, u_id: int):
         self.u_id = u_id
 
+        self.d_license = None
+        self.d_id_card = None
+        self.d_school_certificate = None
+
+        self.v_license_verified = False
+        self.v_id_card_verified = False
+        self.v_school_certificate_verified = False
+
     def get_from_db(self):
         """Get user infos from db"""
         if not self.u_id:
@@ -62,9 +70,7 @@ class DocumentsBO:
 
     def save_school_certificate(self, files):
         """Save school certificate"""
-        self.d_school_certificate = self._save_document(
-            files, self.d_school_certificate, "school_certificate"
-        )
+        self.d_school_certificate = self._save_document(files, self.d_school_certificate, "school_certificate")
 
     def _save_document(self, files, old_file_name, document_type):
         """Save document"""
@@ -84,6 +90,11 @@ class DocumentsBO:
             pass
         query = f"UPDATE uniride.ur_documents SET d_{document_type}=%s, d_timestamp_modification=CURRENT_TIMESTAMP WHERE u_id=%s"
         values = (file_name, self.u_id)
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+
+        query = f"UPDATE uniride.ur_document_verification SET v_{document_type}_verified=false, v_timestamp_modification=CURRENT_TIMESTAMP WHERE u_id=%s"
+        values = (self.u_id,)
         conn = connect_pg.connect()
         connect_pg.execute_command(conn, query, values)
         return file_name

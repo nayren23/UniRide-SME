@@ -1,6 +1,7 @@
 """Postgresql databse interactions"""
 # !/usr/bin/python
 
+from configparser import NoSectionError
 import psycopg2
 import psycopg2.extras
 
@@ -33,7 +34,7 @@ def connect(filename="config.ini", section="postgresql"):
 
         # close the communication with the PostgreSQL
         cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (FileNotFoundError, NoSectionError, psycopg2.DatabaseError) as error:
         print(error)
     return conn
 
@@ -73,7 +74,7 @@ def get_query(conn, query, params=None, return_dict=False):
         cur.execute(query, params)
         rows = cur.fetchall()
         cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except psycopg2.DatabaseError as error:
         print(error)
     return rows
 
