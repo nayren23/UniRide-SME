@@ -21,7 +21,9 @@ dependencies = [
   "flask_jwt_extended",
   "python-dotenv",
   "psycopg2",
-  "bcrypt"]
+  "bcrypt",
+  "googlemaps",
+  "requests"]
 
 [project.optional-dependencies]
 dev = [
@@ -52,7 +54,7 @@ build-backend = "setuptools.build_meta"
 packages = ["uniride_sme"]
 
 [tool.pytest.ini_options]
-testpaths = "tests/"
+testpaths = "test/"
 addopts = "-vv"
 
 [pycodestyle]
