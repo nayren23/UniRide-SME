@@ -16,7 +16,7 @@ from uniride_sme.models.dto.trip_dto import TripDTO
 from uniride_sme.models.dto.address_dto import AddressDTO
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme import app
-
+from uniride_sme.models.bo.address_bo import AddressBO
 
 class TripBO:
     """Business object of the trip"""
@@ -44,25 +44,33 @@ class TripBO:
         self.address_arrival_id = address_arrival_id
         self.choice_route_checker = app.config["ROUTE_CHECKER"]
         self.route_checker = RouteCheckerFactory.create_route_checker(self.choice_route_checker)
+        self.departure_address = None
+        self.arrival_address = None
+
 
     def add_in_db(self):
         """Insert the trip in the database"""
 
-        existing_trip_id = self.trip_exists()
         # Check if the address already exists
-        if existing_trip_id:
-            raise TripAlreadyExistsException()
+        self.trip_exists()
 
+        self.departure_address = AddressBO(address_id = self.address_depart_id)
+        self.arrival_address = AddressBO(address_id = self.address_arrival_id)
+        
+        self.departure_address.check_address_existence()
+        self.arrival_address.check_address_existence()
+        
+        self.calculate_price()
+        
         # validate values
         self.validate_total_passenger_count()
         self.validate_timestamp_proposed()
         self.validate_status()
         self.validate_price()
         self.validate_user_id()
-        self.validate_address_depart_id()
-        self.validate_address_arrival_id()
         self.validate_address_depart_id_equals_address_arrival_id()  # i need this function to check if the trip is viable
 
+        
         # retrieve not None values
         attr_dict = {}
         for attr, value in self.__dict__.items():
@@ -121,27 +129,18 @@ class TripBO:
         if self.user_id < 0:
             raise InvalidInputException("USER_ID_CANNOT_BE_NEGATIVE")
 
-    def validate_address_depart_id(self):
-        """Check if the address depart id is valid"""
-        if self.address_depart_id is None:
-            raise MissingInputException("ADDRESS_DEPART_ID_CANNOT_BE_NULL")
-        if self.address_depart_id < 0:
-            raise InvalidInputException("ADDRESS_DEPART_ID_CANNOT_BE_NEGATIVE")
-
-    def validate_address_arrival_id(self):
-        """Check if the address arrival id is valid"""
-        if self.address_arrival_id is None:
-            raise MissingInputException("ADDRESS_ARRIVAL_ID_CANNOT_BE_NULL")
-        if self.address_arrival_id < 0:
-            raise InvalidInputException("ADDRESS_ARRIVAL_ID_CANNOT_BE_NEGATIVE")
 
     def validate_address_depart_id_equals_address_arrival_id(self):
         """Check if the address depart id is not equal to the address arrival id"""
         if self.address_depart_id == self.address_arrival_id:
             raise InvalidInputException("ADDRESS_DEPART_ID_CANNOT_BE_EQUALS_TO_ADDRESS_ARRIVAL_ID")
 
-    def calculate_price(self, distance):
+    def calculate_price(self):
         """Calculate the price of the trip"""
+
+        origin = (self.departure_address.latitude, self.departure_address.longitude)
+        destination = (self.arrival_address.latitude, self.arrival_address.longitude)
+        distance = self.route_checker.get_distance(origin, destination)
 
         rate_per_km = app.config["RATE_PER_KM"]
         cost_per_km = app.config["COST_PER_KM"]
@@ -156,7 +155,7 @@ class TripBO:
         # Reduce the price by 20%
         final_price = ceil(recommended_price * 0.8)
 
-        return final_price
+        self.price = final_price
 
     def trip_exists(self):
         """Check if the trip with address already exists in the database"""
@@ -170,9 +169,10 @@ class TripBO:
         conn = connect_pg.connect()
         trip_id = connect_pg.get_query(conn, query, (self.user_id, self.address_depart_id, self.address_arrival_id, self.timestamp_proposed, self.total_passenger_count))
         connect_pg.disconnect(conn)
-
-        return trip_id
-
+        
+        if trip_id:
+            raise TripAlreadyExistsException()
+        
     def get_trips(self, departure_or_arrived_latitude, departure__or_arrived_longitude, condition_where):
         """Get the trips from the database"""
 

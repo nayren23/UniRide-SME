@@ -11,7 +11,7 @@ from uniride_sme.models.bo.trip_bo import TripBO
 from uniride_sme.utils.cartography.route_checker_factory import RouteCheckerFactory
 
 from uniride_sme.models.bo.address_bo import AddressBO
-from uniride_sme.models.dto.trips_get_dto import TripsGetDto
+from uniride_sme.models.dto.trips_get_dto import TripsGetDTO
 from uniride_sme.models.dto.trip_dto import TripDTO
 from uniride_sme.models.dto.address_simple_dto import AddressSimpleDTO
 
@@ -19,9 +19,6 @@ from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
 
-from uniride_sme.utils.exception.trip_exceptions import InvalidInputException, MissingInputException, TripAlreadyExistsException
-
-from uniride_sme.utils.exception.address_exceptions import AddressNotFoundException, InvalidAddressException, InvalidIntermediateAddressException
 from uniride_sme.utils.pagination import create_pagination
 
 
@@ -52,31 +49,9 @@ def propose_trip():
             status=TripStatus.PENDING.value,
             timestamp_creation=datetime.now(),
         )
-        # Verify the trip is viable
-        trip_bo.validate_total_passenger_count()
-        trip_bo.validate_timestamp_proposed()
-
-        # We need to check if user id is valid
-
-        departure_address = AddressBO(address_id=trip_bo.address_depart_id)
-        arrival_address = AddressBO(address_id=trip_bo.address_arrival_id)
-
-        # We check if address is viable
-        departure_address.check_address_existence()
-        arrival_address.check_address_existence()
-
-        origin = (departure_address.latitude, departure_address.longitude)
-        destination = (arrival_address.latitude, arrival_address.longitude)
-
-        route_checker = RouteCheckerFactory.create_route_checker(app.config["ROUTE_CHECKER"])
-
-        initial_distance = route_checker.get_distance(origin, destination)
-
-        trip_price = trip_bo.calculate_price(initial_distance)
-
-        trip_bo.price = trip_price
+        
         trip_bo.add_in_db()
-
+        
         response = jsonify({"message": "CREATED_SUCCESSFULLY", "trip_id": trip_bo.id}), 200
 
     except ApiException as e:
@@ -191,7 +166,7 @@ def get_current_driver_trips():
                 driver_id=user_id,
                 price=price,
             )
-            trips_get_dto = TripsGetDto(trip_dto)
+            trips_get_dto = TripsGetDTO(trip_dto)
             available_trips.append(trips_get_dto)
             
             # We need to paginate the data

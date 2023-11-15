@@ -5,7 +5,7 @@ from typing import TypedDict
 from uniride_sme.models.dto.trip_dto import TripDTO
 
 
-class TripsGetDto(TypedDict):
+class TripsGetDTO(TypedDict):
     """TripsGetDto"""
 
     trip: TripDTO

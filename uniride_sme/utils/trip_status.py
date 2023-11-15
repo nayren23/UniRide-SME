@@ -5,7 +5,7 @@ from enum import Enum
 class TripStatus(Enum):
     """TripStatus Enum"""
 
-    PENDING = 1  # En attente
-    CANCELED = 2  # Annulé
-    COMPLETED = 3  # Terminé
-    ONCOURSE = 4  # En cours
+    PENDING = 1
+    CANCELED = 2
+    COMPLETED = 3
+    ONCOURSE = 4
