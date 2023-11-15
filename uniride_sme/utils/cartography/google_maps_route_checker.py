@@ -53,6 +53,5 @@ class GoogleMapsRouteChecker(RouteChecker):
         initial_route = gmaps.directions(origin, destination, self.mode, departure_time=now)
 
         initial_distance = float(initial_route[0]["legs"][0]["distance"]["value"] / 1000)  # Distance en kilomètres
-        print("initial_distancetype", type(initial_distance))
 
         return initial_distance

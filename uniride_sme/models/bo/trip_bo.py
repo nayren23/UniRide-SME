@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from math import ceil
+from typing import List
 
 from uniride_sme import connect_pg
 
@@ -11,12 +12,13 @@ from uniride_sme.utils.exception.address_exceptions import InvalidIntermediateAd
 
 from uniride_sme.utils.cartography.route_checker_factory import RouteCheckerFactory
 
-from uniride_sme.models.dto.trips_get_dto import TripsGetDto
 from uniride_sme.models.dto.trip_dto import TripDTO
 from uniride_sme.models.dto.address_dto import AddressDTO
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme import app
 from uniride_sme.models.bo.address_bo import AddressBO
+from uniride_sme.models.dto.address_dto import AddressSimpleDTO
+
 
 class TripBO:
     """Business object of the trip"""
@@ -30,8 +32,8 @@ class TripBO:
         status: int = None,  # En cours, en attente, annulé, terminé
         price: float = None,
         user_id: int = None,
-        address_depart_id: int = None,
-        address_arrival_id: int = None,
+        depart_address_bo: AddressBO = None,
+        arrival_address_bo: AddressBO = None,
     ):
         self.id = trip_id
         self.total_passenger_count = total_passenger_count
@@ -40,28 +42,21 @@ class TripBO:
         self.status = status
         self.price = price
         self.user_id = user_id
-        self.address_depart_id = address_depart_id
-        self.address_arrival_id = address_arrival_id
         self.choice_route_checker = app.config["ROUTE_CHECKER"]
         self.route_checker = RouteCheckerFactory.create_route_checker(self.choice_route_checker)
-        self.departure_address = None
-        self.arrival_address = None
 
+        self.departure_address = depart_address_bo
+        self.arrival_address = arrival_address_bo
 
     def add_in_db(self):
         """Insert the trip in the database"""
 
         # Check if the address already exists
         self.trip_exists()
-
-        self.departure_address = AddressBO(address_id = self.address_depart_id)
-        self.arrival_address = AddressBO(address_id = self.address_arrival_id)
-        
         self.departure_address.check_address_existence()
         self.arrival_address.check_address_existence()
-        
         self.calculate_price()
-        
+
         # validate values
         self.validate_total_passenger_count()
         self.validate_timestamp_proposed()
@@ -70,24 +65,17 @@ class TripBO:
         self.validate_user_id()
         self.validate_address_depart_id_equals_address_arrival_id()  # i need this function to check if the trip is viable
 
-        
-        # retrieve not None values
-        attr_dict = {}
-        for attr, value in self.__dict__.items():
-            if value and not attr.startswith(("choice_", "route_")):  # we don't want to insert the choice of the route checker in the database
-                attr_dict["t_" + attr] = value
+        query = (
+            f"INSERT INTO {app.config['DB_NAME']}.ur_trip (t_total_passenger_count,"
+            "t_timestamp_proposed, t_status, t_price, t_user_id, t_address_depart_id, t_address_arrival_id) "
+            " VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING t_id"
+        )
 
-        # format for sql query
-        fields = ", ".join(attr_dict.keys())
-
-        placeholders = ", ".join(["%s"] * len(attr_dict))
-        values = tuple(attr_dict.values())
-
-        query = f"INSERT INTO {app.config['DB_NAME']}.ur_trip ({fields}) VALUES ({placeholders}) RETURNING t_id"
-        # changer le nom de la table dans la BDD
+        values = (self.total_passenger_count, self.timestamp_proposed, self.status, self.price, self.user_id, self.departure_address.id, self.arrival_address.id)
 
         conn = connect_pg.connect()
         trip_id = connect_pg.execute_command(conn, query, values)
+
         self.id = trip_id
 
     def validate_total_passenger_count(self):
@@ -129,10 +117,9 @@ class TripBO:
         if self.user_id < 0:
             raise InvalidInputException("USER_ID_CANNOT_BE_NEGATIVE")
 
-
     def validate_address_depart_id_equals_address_arrival_id(self):
         """Check if the address depart id is not equal to the address arrival id"""
-        if self.address_depart_id == self.address_arrival_id:
+        if self.departure_address.id == self.arrival_address.id:
             raise InvalidInputException("ADDRESS_DEPART_ID_CANNOT_BE_EQUALS_TO_ADDRESS_ARRIVAL_ID")
 
     def calculate_price(self):
@@ -167,12 +154,12 @@ class TripBO:
         """
 
         conn = connect_pg.connect()
-        trip_id = connect_pg.get_query(conn, query, (self.user_id, self.address_depart_id, self.address_arrival_id, self.timestamp_proposed, self.total_passenger_count))
+        trip_id = connect_pg.get_query(conn, query, (self.user_id, self.departure_address.id, self.arrival_address.id, self.timestamp_proposed, self.total_passenger_count))
         connect_pg.disconnect(conn)
-        
+
         if trip_id:
             raise TripAlreadyExistsException()
-        
+
     def get_trips(self, departure_or_arrived_latitude, departure__or_arrived_longitude, condition_where):
         """Get the trips from the database"""
 
@@ -231,7 +218,7 @@ class TripBO:
         # Get the trips
         trips = self.get_trips(university_address_bo.latitude, university_address_bo.longitude, condition_where)
 
-        available_trips = []
+        available_trips: List[TripDTO] = []
 
         for trip in trips:
             (
@@ -258,19 +245,18 @@ class TripBO:
                 price = trip_price * self.total_passenger_count
 
                 address_dtos = {
-                    "departure": AddressDTO(address_id=departure_address_id, latitude=departure_latitude, longitude=departure_longitude, nom_complet=depart_address_bo.concatene_address()),
-                    "arrival": AddressDTO(address_id=arrival_address_id, latitude=arrival_latitude, longitude=arrival_longitude, nom_complet=address_arrival_bo.concatene_address()),
+                    "departure": AddressDTO(id=departure_address_id, latitude=departure_latitude, longitude=departure_longitude, nom_complet=depart_address_bo.concatene_address()),
+                    "arrival": AddressDTO(id=arrival_address_id, latitude=arrival_latitude, longitude=arrival_longitude, nom_complet=address_arrival_bo.concatene_address()),
                 }
                 trip_dto = TripDTO(
                     trip_id=trip_id,
                     address=address_dtos,
                     driver_id=user_id,
                     price=price,
-                    proposed_date=proposed_date,
+                    proposed_date=str(proposed_date),
                     total_passenger_count=total_passenger_count,
                 )
-                trips_get_dto = TripsGetDto(trips=trip_dto)
-                available_trips.append(trips_get_dto)
+                available_trips.append(trip_dto)
 
         return available_trips
 
@@ -288,7 +274,34 @@ class TripBO:
         driver_current_trips = connect_pg.get_query(conn, query, values)
 
         connect_pg.disconnect(conn)
+
         return driver_current_trips
+
+    def format_get_current_driver_trips(self, driver_current_trips, user_id):
+        available_trips = []
+
+        for current_trip in driver_current_trips:
+            t_id, t_address_depart_id, t_address_arrival_id, price = current_trip
+
+            self.departure_address = AddressBO(address_id=t_address_depart_id)
+            self.arrival_address = AddressBO(address_id=t_address_arrival_id)
+
+            self.departure_address.check_address_existence()
+            self.arrival_address.check_address_existence()
+
+            address_dtos = {
+                "departure": AddressSimpleDTO(id=self.departure_address.id, name=self.departure_address.concatene_address()),
+                "arrival": AddressSimpleDTO(id=self.arrival_address.id, name=self.arrival_address.concatene_address()),
+            }
+            trip_dto = TripDTO(
+                trip_id=t_id,
+                address=address_dtos,
+                driver_id=user_id,
+                price=price,
+            )
+            available_trips.append(trip_dto)
+
+        return available_trips
 
     def check_if_trip_exists(self):
         """Check if the trip exists in the database"""
@@ -311,7 +324,40 @@ class TripBO:
             self.status = (trip[0][4],)
             self.price = (trip[0][5],)
             self.user_id = (trip[0][6],)
-            self.address_depart_id = (trip[0][7],)
-            self.address_arrival_id = trip[0][8]
+            self.departure_address.id = (trip[0][7],)
+            self.arrival_address.id = trip[0][8]
             return True
         raise TripNotFoundException()
+
+    def get_available_trips(self):
+        # We check if the address is valid
+        self.departure_address.check_address_exigeance()
+        self.arrival_address.check_address_exigeance()
+
+        self.departure_address.get_latitude_longitude_from_address()
+        self.arrival_address.get_latitude_longitude_from_address()
+
+        # We use the environment variables to get the university address
+        university_street_number = app.config["UNIVERSITY_STREET_NUMBER"]
+        university_street_name = app.config["UNIVERSITY_STREET_NAME"]
+        university_city = app.config["UNIVERSITY_CITY"]
+        university_postal_code = app.config["UNIVERSITY_POSTAL_CODE"]
+
+        university_address_bo = AddressBO(
+            street_number=university_street_number,
+            street_name=university_street_name,
+            city=university_city,
+            postal_code=university_postal_code,
+        )
+
+        # We check if the address is valid
+        university_address_bo.check_address_exigeance()
+
+        university_address_bo.get_latitude_longitude_from_address()
+
+        self.validate_total_passenger_count()
+        self.validate_timestamp_proposed()
+
+        available_trips = self.get_trips_for_university_address(self.departure_address, self.arrival_address, university_address_bo)
+
+        return available_trips

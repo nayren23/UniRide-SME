@@ -1,5 +1,5 @@
-
 import uniride_sme.utils.exception.exceptions as InvalidInputException
+
 
 def generate_pagination_metadata(page, page_size, total_count):
     """
@@ -13,33 +13,30 @@ def generate_pagination_metadata(page, page_size, total_count):
     Returns:
         dict: Metadata for pagination.
     """
-    
+
     pages = (total_count + page_size - 1) // page_size
-    
-    if page > pages:
-        raise InvalidInputException("PAGE_OUT_OF_RANGE")
-    
+
     has_next = page < pages
     has_prev = page > 1
 
     return {
-            "page": page,
-            "pages": pages,
-            "total_count": total_count,
-            "prev_page": page - 1 if has_prev else None,
-            "next_page": page + 1 if has_next else None,
-            "has_next": has_next,
-            "has_prev": has_prev,
+        "page": page,
+        "pages": pages,
+        "total_count": total_count,
+        "prev_page": page - 1 if has_prev else None,
+        "next_page": page + 1 if has_next else None,
+        "has_next": has_next,
+        "has_prev": has_prev,
     }
 
-def create_pagination(request, data):
-        
-        page = int(request.args.get("page", 1))
-        page_size = int(request.args.get("limit", 10))
-        
-        start_index = (page - 1) * page_size
-        end_index = start_index + page_size
 
-        paginated_data = data[start_index:end_index]
-        meta = generate_pagination_metadata(page, page_size, len(data))
-        return meta, paginated_data
+def create_pagination(request, data):
+    page = int(request.args.get("page", 1))
+    page_size = int(request.args.get("limit", 10))
+
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+
+    paginated_data = data[start_index:end_index]
+    meta = generate_pagination_metadata(page, page_size, len(data))
+    return meta, paginated_data

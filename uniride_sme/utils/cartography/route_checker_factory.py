@@ -14,6 +14,6 @@ class RouteCheckerFactory:
         if route_checker_choice == "google":
             return GoogleMapsRouteChecker()
         elif route_checker_choice == "osm":
-                return OpenStreetMapRouteChecker()
+            return OpenStreetMapRouteChecker()
         else:
             raise MissingInputException("INVALID_ROUTE_CHECKER_CHOICE_ENVIRONMENT_VARIABLE")
