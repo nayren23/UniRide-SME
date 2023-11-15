@@ -55,7 +55,7 @@ END $$;"""
 
 
 # Do rollback for each test
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def db_transaction(connect_mock):
     cursor = connect_mock.cursor()
     cursor.execute("BEGIN;")

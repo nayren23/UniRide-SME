@@ -45,7 +45,7 @@ def test_validate_login_missing_input(get_default_user):
     user = get_default_user
     user.u_login = None
     with pytest.raises(MissingInputException) as exc_info:
-        user._validate_login()
+        user._validate_login(user.u_login)
 
     assert str(exc_info.value) == "LOGIN_MISSING"
 
@@ -55,7 +55,7 @@ def test_validate_login_too_long(get_default_user):
     user.u_login = "a" * 51
 
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_login()
+        user._validate_login(user.u_login)
 
     assert str(exc_info.value) == "LOGIN_TOO_LONG"
 
@@ -65,7 +65,7 @@ def test_validate_login_taken(get_default_user, get_duplicated_user):
     second_user = get_duplicated_user
 
     with pytest.raises(InvalidInputException) as exc_info:
-        second_user._validate_login()
+        second_user._validate_login(second_user.u_login)
     assert str(exc_info.value) == "LOGIN_TAKEN"
 
 
@@ -74,7 +74,7 @@ def test_validate_login_invalid_characters(get_default_user):
     user.u_login = "user@name"
 
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_login()
+        user._validate_login(user.u_login)
 
     assert str(exc_info.value) == "LOGIN_INVALID_CHARACTERS"
 
@@ -84,7 +84,7 @@ def test_validate_student_email_missing_input(get_default_user):
     user.u_student_email = None
 
     with pytest.raises(MissingInputException) as exc_info:
-        user._validate_student_email()
+        user._validate_student_email(user.u_student_email)
 
     assert str(exc_info.value) == "EMAIL_MISSING"
 
@@ -94,7 +94,7 @@ def test_validate_student_email_invalid_format(get_default_user):
     user.u_student_email = "invalid_email"
 
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_student_email()
+        user._validate_student_email(user.u_student_email)
 
     # Vérifier le message d'exception
     assert str(exc_info.value) == "EMAIL_INVALID_FORMAT"
@@ -105,7 +105,7 @@ def test_validate_student_email_too_long(get_default_user):
     user.u_student_email = "a" * 255 + "@example.com"
 
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_student_email()
+        user._validate_student_email(user.u_student_email)
 
     assert str(exc_info.value) == "EMAIL_TOO_LONG"
 
@@ -151,7 +151,7 @@ def test_validate_gender_missing_input(get_default_user):
     user.u_gender = ""
 
     with pytest.raises(MissingInputException) as exc_info:
-        user._validate_gender()
+        user._validate_gender(user.u_gender)
 
     assert str(exc_info.value) == "GENDER_MISSING"
 
@@ -161,7 +161,7 @@ def test_validate_gender_invalid(get_default_user):
 
     user.u_gender = "Invalid"
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_gender()
+        user._validate_gender(user.u_gender)
 
     assert str(exc_info.value) == "GENDER_INVALID"
 
@@ -170,20 +170,20 @@ def test_validate_gender_valid(get_default_user):
     user = get_default_user
 
     user.u_gender = "N"
-    user._validate_gender()
+    user._validate_gender(user.u_gender)
 
     user.u_gender = "F"
-    user._validate_gender()
+    user._validate_gender(user.u_gender)
 
     user.u_gender = "H"
-    user._validate_gender()
+    user._validate_gender(user.u_gender)
 
 
 def test_validate_phone_number_valid(get_default_user):
     user = get_default_user
 
     user.u_phone_number = "123456789"
-    user._validate_phone_number()
+    user._validate_phone_number(user.u_phone_number)
 
 
 def test_validate_phone_number_invalid(get_default_user):
@@ -191,7 +191,7 @@ def test_validate_phone_number_invalid(get_default_user):
 
     user.u_phone_number = "invalid"
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_phone_number()
+        user._validate_phone_number(user.u_phone_number)
 
     assert str(exc_info.value) == "PHONE_NUMBER_INVALID"
 
@@ -200,21 +200,21 @@ def test_validate_phone_number_empty(get_default_user):
     user = get_default_user
 
     user.u_phone_number = ""
-    user._validate_phone_number()
+    user._validate_phone_number(user.u_phone_number)
 
 
 def test_validate_phone_number_none(get_default_user):
     user = get_default_user
 
     user.u_phone_number = None
-    user._validate_phone_number()
+    user._validate_phone_number(user.u_phone_number)
 
 
 def test_validate_description_valid(get_default_user):
     user = get_default_user
 
     user.u_description = "This is a valid description."
-    user._validate_description()
+    user._validate_description(user.u_description)
 
 
 def test_validate_description_too_long(get_default_user):
@@ -222,7 +222,7 @@ def test_validate_description_too_long(get_default_user):
 
     user.u_description = "A" * 501
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_description()
+        user._validate_description(user.u_description)
 
     assert str(exc_info.value) == "DESCRIPTION_TOO_LONG"
 
@@ -231,14 +231,14 @@ def test_validate_description_empty(get_default_user):
     user = get_default_user
 
     user.u_description = ""
-    user._validate_description()
+    user._validate_description(user.u_description)
 
 
 def test_validate_description_none(get_default_user):
     user = get_default_user
 
     user.u_description = None
-    user._validate_description()
+    user._validate_description(user.u_description)
 
 
 def test_validate_password_valid(get_default_user):
@@ -246,7 +246,7 @@ def test_validate_password_valid(get_default_user):
     print("__dict__: ", user.__dict__)
 
     password_confirmation = "111AAaa@"
-    user._validate_password(password_confirmation)
+    user._validate_password("111AAaa@", password_confirmation)
 
 
 def test_validate_password_missing_input(get_default_user):
@@ -255,7 +255,7 @@ def test_validate_password_missing_input(get_default_user):
     password_confirmation = "111AAaa@"
     user.u_password = None
     with pytest.raises(MissingInputException) as exc_info:
-        user._validate_password(password_confirmation)
+        user._validate_password(user.u_password, password_confirmation)
 
     assert str(exc_info.value) == "PASSWORD_MISSING"
 
@@ -264,7 +264,7 @@ def test_validate_password_confirmation_missing_input(get_default_user):
     user = get_default_user
     password_confirmation = None
     with pytest.raises(MissingInputException) as exc_info:
-        user._validate_password(password_confirmation)
+        user._validate_password(user.u_password, password_confirmation)
 
     assert str(exc_info.value) == "PASSWORD_CONFIRMATION_MISSING"
 
@@ -275,7 +275,7 @@ def test_validate_password_invalid(get_default_user):
     password_confirmation = "invalid_password"
     user.u_password = "invalid_password"
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_password(password_confirmation)
+        user._validate_password(user.u_password, password_confirmation)
 
     assert str(exc_info.value) == "PASSWORD_INVALID"
 
@@ -285,7 +285,7 @@ def test_validate_password_not_matching(get_default_user):
 
     password_confirmation = "mismatched_password"
     with pytest.raises(InvalidInputException) as exc_info:
-        user._validate_password(password_confirmation)
+        user._validate_password("111AAaa@", password_confirmation)
 
     assert str(exc_info.value) == "PASSWORD_NOT_MATCHING"
 
@@ -295,7 +295,7 @@ def test_verify_student_email_missing_input(get_default_user):
 
     user.u_student_email = None
     with pytest.raises(MissingInputException) as exc_info:
-        user.verify_student_email()
+        user.verify_student_email(user.u_student_email)
 
     assert str(exc_info.value) == "EMAIL_MISSING"
 
@@ -309,7 +309,7 @@ def test_verify_student_email_not_owned(get_default_user, monkeypatch):
     monkeypatch.setattr(connect_pg, "get_query", mock_get_query_not_owned)
 
     with pytest.raises(InvalidInputException) as exc_info:
-        user.verify_student_email()
+        user.verify_student_email(user.u_student_email)
 
     assert str(exc_info.value) == "EMAIL_NOT_OWNED"
 
@@ -320,10 +320,11 @@ def test_verify_student_email_already_verified(get_default_user, monkeypatch):
     def mock_get_query_already_verified(conn, query, params):
         return [(True,)]
 
+    # Mock 'get_query' from connect_pg
     monkeypatch.setattr(connect_pg, "get_query", mock_get_query_already_verified)
 
     with pytest.raises(InvalidInputException) as exc_info:
-        user.verify_student_email()
+        user.verify_student_email(user.u_student_email)
 
     assert str(exc_info.value) == "EMAIL_ALREADY_VERIFIED"
 

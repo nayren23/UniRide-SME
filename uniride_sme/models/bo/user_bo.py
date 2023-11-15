@@ -368,11 +368,11 @@ class UserBO:  # pylint: disable=too-many-instance-attributes
             raise MissingInputException("PASSWORD_CONFIRMATION_MISSING")
 
         # check if the format is valid
-        contains_lower_case_letter = re.search(r"[a-z]", self.u_password)
-        contains_upper_case_letter = re.search(r"[A-Z]", self.u_password)
-        contains_digit = re.search(r"\d", self.u_password)
-        contains_special = re.search(r"[!\"#$%&'\(\)\*\+,-./=:<>^_{}\|€£¥$@~\#°§®™µ×÷]", self.u_password)
-        correct_size = 8 <= len(self.u_password) <= 50
+        contains_lower_case_letter = re.search(r"[a-z]", password)
+        contains_upper_case_letter = re.search(r"[A-Z]", password)
+        contains_digit = re.search(r"\d", password)
+        contains_special = re.search(r"[!\"#$%&'\(\)\*\+,-./=:<>^_{}\|€£¥$@~\#°§®™µ×÷]", password)
+        correct_size = 8 <= len(password) <= 50
 
         if not (contains_lower_case_letter and contains_upper_case_letter and contains_digit and contains_special and correct_size):
             raise InvalidInputException("PASSWORD_INVALID")
