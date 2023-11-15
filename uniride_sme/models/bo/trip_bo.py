@@ -278,6 +278,8 @@ class TripBO:
         return driver_current_trips
 
     def format_get_current_driver_trips(self, driver_current_trips, user_id):
+        """Format the current trips for the driver"""
+
         available_trips = []
 
         for current_trip in driver_current_trips:
@@ -330,6 +332,8 @@ class TripBO:
         raise TripNotFoundException()
 
     def get_available_trips(self):
+        """Get the available trips"""
+
         # We check if the address is valid
         self.departure_address.check_address_exigeance()
         self.arrival_address.check_address_exigeance()

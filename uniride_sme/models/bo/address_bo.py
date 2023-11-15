@@ -168,9 +168,9 @@ class AddressBO:
 
     def check_address_existence(self):
         """Get the address from the id"""
-        
+
         self.validate_address_depart_id()
-        
+
         query = f"""
         SELECT a_street_number, a_street_name, a_city, a_postal_code, a_latitude, a_longitude
         FROM {app.config['DB_NAME']}.ur_address
@@ -197,7 +197,6 @@ class AddressBO:
         self.valid_street_name()
         self.valid_city()
         self.valid_postal_code()
-
 
     def validate_address_depart_id(self):
         """Check if the address depart id is valid"""

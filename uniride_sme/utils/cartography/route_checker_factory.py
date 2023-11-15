@@ -13,7 +13,8 @@ class RouteCheckerFactory:
         """Create an instance of RouteChecker"""
         if route_checker_choice == "google":
             return GoogleMapsRouteChecker()
-        elif route_checker_choice == "osm":
+
+        if route_checker_choice == "osm":
             return OpenStreetMapRouteChecker()
-        else:
-            raise MissingInputException("INVALID_ROUTE_CHECKER_CHOICE_ENVIRONMENT_VARIABLE")
+
+        raise MissingInputException("INVALID_ROUTE_CHECKER_CHOICE_ENVIRONMENT_VARIABLE")

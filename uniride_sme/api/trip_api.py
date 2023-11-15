@@ -4,17 +4,12 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
 
-from uniride_sme import app
 from uniride_sme.models.bo.trip_bo import TripBO
-
-from uniride_sme.utils.cartography.route_checker_factory import RouteCheckerFactory
-
 from uniride_sme.models.bo.address_bo import AddressBO
 
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
-
 from uniride_sme.utils.pagination import create_pagination
 
 

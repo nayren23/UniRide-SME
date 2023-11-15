@@ -1,9 +1,10 @@
 """Configure database connection"""
 # !/usr/bin/python
-from dotenv import load_dotenv
 from configparser import ConfigParser, NoSectionError
 import os
 from datetime import timedelta
+
+from dotenv import load_dotenv
 
 
 class Config:  # pylint: disable=too-few-public-methods
@@ -11,7 +12,7 @@ class Config:  # pylint: disable=too-few-public-methods
 
     PATH = os.path.dirname(__file__)
     load_dotenv()
-    
+
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
 
@@ -45,7 +46,6 @@ class Config:  # pylint: disable=too-few-public-methods
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     ROUTE_CHECKER = os.getenv("ROUTE_CHECKER")
 
-    print("SECRET_KEY", os.getenv("SECRET_KEY"))
     RATE_PER_KM = float(os.getenv("RATE_PER_KM"))
     COST_PER_KM = float(os.getenv("COST_PER_KM"))
     BASE_RATE = float(os.getenv("BASE_RATE"))
