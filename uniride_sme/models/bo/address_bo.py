@@ -5,7 +5,15 @@ import requests
 
 from uniride_sme import connect_pg
 
-from uniride_sme.utils.exception.exceptions import ApiException
+from uniride_sme.utils.exception.exceptions import (
+    InvalidInputException,
+    MissingInputException,
+)
+
+from uniride_sme.utils.exception.address_exceptions import (
+    AddressNotFoundException,
+    InvalidAddressException,
+)
 
 from uniride_sme import app
 
