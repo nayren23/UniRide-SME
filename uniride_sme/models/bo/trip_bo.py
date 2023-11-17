@@ -96,6 +96,9 @@ class TripBO:
         except ValueError as e:
             raise InvalidInputException("INVALID_TIMESTAMP_FORMAT") from e
 
+        if datetime.strptime(self.timestamp_proposed, "%Y-%m-%d %H:%M:%S") < datetime.now():
+            raise InvalidInputException("INVALID_TIMESTAMP_PROPOSED")
+
     def validate_status(self):
         """Check if the status is valid"""
         if self.status is None:
