@@ -39,7 +39,7 @@ class AddressBO:
 
         # Check if the address already exists
         if existing_address_id:
-            self.id = existing_address_id[0][0]
+            self.id = existing_address_id
         else:
             # validate values
             self.valid_street_number()
@@ -126,7 +126,7 @@ class AddressBO:
         address_id = connect_pg.get_query(conn, query, (self.street_number, self.street_name, self.city))
         connect_pg.disconnect(conn)
 
-        return address_id
+        return address_id[0][0]
 
     def get_latitude_longitude_from_address(self):
         """Get the latitude and longitude of the address, use the API Adresse GOUV"""

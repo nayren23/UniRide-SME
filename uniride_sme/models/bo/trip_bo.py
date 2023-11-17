@@ -125,6 +125,20 @@ class TripBO:
         if self.departure_address.id == self.arrival_address.id:
             raise InvalidInputException("ADDRESS_DEPART_ID_CANNOT_BE_EQUALS_TO_ADDRESS_ARRIVAL_ID")
 
+        university_address_bo = AddressBO(
+            street_number=app.config["UNIVERSITY_STREET_NUMBER"],
+            street_name=app.config["UNIVERSITY_STREET_NAME"],
+            city=app.config["UNIVERSITY_CITY"],
+            postal_code=app.config["UNIVERSITY_POSTAL_CODE"],
+        )
+
+        id_departure = self.departure_address.address_exists()
+        id_arrival = self.arrival_address.address_exists()
+        id_university = university_address_bo.address_exists()
+
+        if id_departure != id_university and id_arrival != id_university:
+            raise InvalidInputException("ADDRESS_DEPART_OR_ADDRESS_ARRIVAL_MUST_BE_EQUALS_TO_UNIVERSITY_ADDRESS")
+
     def calculate_price(self):
         """Calculate the price of the trip"""
 
@@ -351,17 +365,11 @@ class TripBO:
         self.departure_address.get_latitude_longitude_from_address()
         self.arrival_address.get_latitude_longitude_from_address()
 
-        # We use the environment variables to get the university address
-        university_street_number = app.config["UNIVERSITY_STREET_NUMBER"]
-        university_street_name = app.config["UNIVERSITY_STREET_NAME"]
-        university_city = app.config["UNIVERSITY_CITY"]
-        university_postal_code = app.config["UNIVERSITY_POSTAL_CODE"]
-
         university_address_bo = AddressBO(
-            street_number=university_street_number,
-            street_name=university_street_name,
-            city=university_city,
-            postal_code=university_postal_code,
+            street_number=app.config["UNIVERSITY_STREET_NUMBER"],
+            street_name=app.config["UNIVERSITY_STREET_NAME"],
+            city=app.config["UNIVERSITY_CITY"],
+            postal_code=app.config["UNIVERSITY_POSTAL_CODE"],
         )
 
         # We check if the address is valid
