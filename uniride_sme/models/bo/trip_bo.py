@@ -236,18 +236,25 @@ class TripBO:
                 arrival_longitude,
             ) = trip
 
-            point_depart = (departure_latitude, departure_longitude)
-            point_arrivee = (arrival_latitude, arrival_longitude)
+            departure_point = (departure_latitude, departure_longitude)
+            arrival_point = (arrival_latitude, arrival_longitude)
 
-            is_viable = self.route_checker.check_if_route_is_viable(point_depart, point_arrivee, point_intermediaire_departure)
+            is_viable = self.route_checker.check_if_route_is_viable(departure_point, arrival_point, point_intermediaire_departure)
 
             if is_viable:
                 price = trip_price * self.total_passenger_count
 
+                departure_address = AddressBO(address_id=departure_address_id)
+                arrival_address = AddressBO(address_id=arrival_address_id)
+
+                departure_address.check_address_existence()
+                arrival_address.check_address_existence()
+
                 address_dtos = {
-                    "departure": AddressDTO(id=departure_address_id, latitude=departure_latitude, longitude=departure_longitude, nom_complet=depart_address_bo.concatene_address()),
-                    "arrival": AddressDTO(id=arrival_address_id, latitude=arrival_latitude, longitude=arrival_longitude, nom_complet=address_arrival_bo.concatene_address()),
+                    "departure": AddressDTO(id=departure_address_id, latitude=departure_latitude, longitude=departure_longitude, address_name=departure_address.concatene_address()),
+                    "arrival": AddressDTO(id=arrival_address_id, latitude=arrival_latitude, longitude=arrival_longitude, address_name=arrival_address.concatene_address()),
                 }
+
                 trip_dto = TripDTO(
                     trip_id=trip_id,
                     address=address_dtos,

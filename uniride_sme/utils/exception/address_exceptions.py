@@ -17,13 +17,6 @@ class InvalidAddressException(ApiException):
         super().__init__("INVALID_ADDRESS", 422)
 
 
-class MissingInputException(ApiException):
-    """Exception for missing input"""
-
-    def __init__(self, message):
-        super().__init__(message, 400)
-
-
 # If an intermediate address is not the university, raise an exception
 class InvalidIntermediateAddressException(ApiException):
     """Exception for when an invalid intermediate address is encountered"""
@@ -32,8 +25,8 @@ class InvalidIntermediateAddressException(ApiException):
         super().__init__("INVALID_INTERMEDIATE_ADDRESS", 422)
 
 
-class InvalidInputException(ApiException):
-    """Exception for invalid input"""
+class AddressAlreadyExist(ApiException):
+    """Exception for when an invalid intermediate address is encountered"""
 
-    def __init__(self, message):
-        super().__init__(message, 422)
+    def __init__(self):
+        super().__init__("ADDRESS_ALREADY_EXIST", 422)
