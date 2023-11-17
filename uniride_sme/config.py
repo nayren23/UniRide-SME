@@ -3,10 +3,13 @@
 from configparser import ConfigParser, NoSectionError
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
 
 
 class Config:  # pylint: disable=too-few-public-methods
     """Config variables"""
+
+    load_dotenv()
 
     PATH = os.path.dirname(__file__)
 
@@ -42,10 +45,10 @@ class Config:  # pylint: disable=too-few-public-methods
     TESTING = False
     DEBUG = False
 
+
 class TestingConfig(Config):
     TESTING = True
     DB_NAME = os.getenv("DB_NAME", "uniride") + "_test"
-
 
 
 def config(filename="config.ini", section="postgresql"):
