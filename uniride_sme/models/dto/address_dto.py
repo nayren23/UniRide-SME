@@ -9,7 +9,7 @@ class AddressDTO(TypedDict):
     id: int
     latitude: float
     longitude: float
-    nom_complet: str
+    address_name: str
 
 
 class AddressSimpleDTO(TypedDict):

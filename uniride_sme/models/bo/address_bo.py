@@ -5,7 +5,7 @@ import requests
 
 from uniride_sme import connect_pg
 
-from uniride_sme.utils.exception.address_exceptions import AddressNotFoundException, InvalidAddressException, MissingInputException, InvalidInputException
+from uniride_sme.utils.exception.exceptions import ApiException
 
 from uniride_sme import app
 
@@ -136,7 +136,10 @@ class AddressBO:
         address_id = connect_pg.get_query(conn, query, (self.street_number, self.street_name, self.city))
         connect_pg.disconnect(conn)
 
-        return address_id
+        if address_id:
+            self.id = address_id[0][0]
+
+        raise AddressAlreadyExist()
 
     def get_latitude_longitude_from_address(self):
         """Get the latitude and longitude of the address, use the API Adresse GOUV"""
