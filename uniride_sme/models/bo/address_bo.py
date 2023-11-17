@@ -5,7 +5,15 @@ import requests
 
 from uniride_sme import connect_pg
 
-from uniride_sme.utils.exception.exceptions import ApiException
+from uniride_sme.utils.exception.exceptions import (
+    InvalidInputException,
+    MissingInputException,
+)
+
+from uniride_sme.utils.exception.address_exceptions import (
+    AddressNotFoundException,
+    InvalidAddressException,
+)
 
 from uniride_sme import app
 
@@ -22,7 +30,6 @@ class AddressBO:
         postal_code: str = None,
         latitude: float = None,
         longitude: float = None,
-        description: str = "",
         timestamp_modification=None,
     ):
         self.id = address_id
@@ -32,7 +39,6 @@ class AddressBO:
         self.postal_code = postal_code
         self.latitude = latitude
         self.longitude = longitude
-        self.description = description
         self.timestamp_modification = timestamp_modification
 
     def add_in_db(self):
@@ -41,7 +47,7 @@ class AddressBO:
 
         # Check if the address already exists
         if existing_address_id:
-            self.id = existing_address_id[0][0]
+            self.id = existing_address_id
         else:
             # validate values
             self.valid_street_number()
@@ -51,7 +57,6 @@ class AddressBO:
             self.get_latitude_longitude_from_address()
             self.valid_latitude()
             self.valid_longitude()
-            self.valid_description()
             # Add more validation methods as needed
 
             # retrieve not None values
@@ -109,13 +114,6 @@ class AddressBO:
         if self.longitude > 180 or self.longitude < -180:
             raise InvalidInputException("LONGITUDE_CANNOT_BE_GREATER_THAN_180_OR_LESS_THAN_-180")
 
-    def valid_description(self):
-        """Check if the description is valid"""
-        if self.description is None:
-            raise InvalidInputException("DESCRIPTION_CANNOT_BE_NULL")
-        if len(self.description) > 50:
-            raise InvalidInputException("DESCRIPTION_CANNOT_BE_GREATER_THAN_50")
-
     def valid_timestamp_modification(self):
         """Check if the timestamp modification is valid"""
         if self.timestamp_modification is None:
@@ -136,10 +134,7 @@ class AddressBO:
         address_id = connect_pg.get_query(conn, query, (self.street_number, self.street_name, self.city))
         connect_pg.disconnect(conn)
 
-        if address_id:
-            self.id = address_id[0][0]
-
-        raise AddressAlreadyExist()
+        return address_id[0][0]
 
     def get_latitude_longitude_from_address(self):
         """Get the latitude and longitude of the address, use the API Adresse GOUV"""
