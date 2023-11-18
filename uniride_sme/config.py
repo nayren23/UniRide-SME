@@ -4,7 +4,11 @@ import os
 
 def config(filename='config.ini', section='postgresql'):
     parser = ConfigParser() # create a parser
-    parser.read(filename) # read config file
+    filePath = os.path.join(os.path.dirname(__file__), filename)
+    readFiles = parser.read(filePath) # read config file
+    if len(readFiles) == 0:
+        raise Exception('Could not read config file {0}'.format(filename))
+    
     db = {} # get section, default to postgresql
     if section == 'postgresql':
         db['dbname'] = os.getenv("DBNAME")

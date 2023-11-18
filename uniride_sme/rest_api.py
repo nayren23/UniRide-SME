@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 from flask_restful import Api
 from flask_cors import CORS
 from config import config
-
+import os
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -22,7 +22,10 @@ def after_request(response):
 if __name__ == "__main__":
     # read server parameters
     params = config("config.ini", "server")
-    context = (params["cert"], params["key"])  # certificate and key files
+    currentPath = os.path.dirname(__file__)
+    cert = os.path.join(currentPath, params["cert"])
+    key = os.path.join(currentPath, params["key"])
+    context = (cert, key)  # certificate and key files
     # Launch Flask server0
     app.run(
         debug=params["debug"],
