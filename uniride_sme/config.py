@@ -32,7 +32,7 @@ class Config:  # pylint: disable=too-few-public-methods
     SCHOOL_CERTIFICATE_UPLOAD_FOLDER = os.getenv("SCHOOL_CERTIFICATE_UPLOAD_FOLDER")
 
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_ACCESS_TOKEN_EXPIRES = False
 
     FRONT_END_URL = os.getenv("FRONT_END_URL")
 
