@@ -64,6 +64,7 @@ statistics = true
 
 [tool.pylint.main]
 ignore-paths = []
+disable = ["R0902", "R0903", "R0913", "R0914", ]
 
 [tool.pylint.format]
 max-line-length=200

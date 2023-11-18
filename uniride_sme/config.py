@@ -7,7 +7,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 
 
-class Config:  # pylint: disable=too-few-public-methods
+class Config:
     """Config variables"""
 
     load_dotenv()
