@@ -156,9 +156,7 @@ def _validate_student_email(studen_email):
 
 def _hash_password(password) -> str:
     """Hash the password"""
-    salt = app.config["SECURITY_PASSWORD_SALT"]
-    # convert to bytes
-    salt = salt.encode("utf8")
+    salt = app.config["JWT_SALT"]
     password = password.encode("utf8")
     password = bcrypt.hashpw(password, salt)
     # convert back to string

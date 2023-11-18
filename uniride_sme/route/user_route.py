@@ -54,7 +54,7 @@ def authentificate():
             id_card_verified=documents_bo.v_id_card_verified,
             school_certificate_verified=documents_bo.v_school_certificate_verified,
         )
-        token = create_access_token(user_bo.u_id, expires_delta=app.config["JWT_ACCESS_TOKEN_EXPIRES"])
+        token = create_access_token(user_bo.u_id)
         response = (
             jsonify(message="AUTHENTIFIED_SUCCESSFULLY", token=token, informations_verified=informations_verified_dto),
             200,

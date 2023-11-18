@@ -10,8 +10,9 @@ from dotenv import load_dotenv
 class Config:  # pylint: disable=too-few-public-methods
     """Config variables"""
 
-    PATH = os.path.dirname(__file__)
     load_dotenv()
+
+    PATH = os.path.dirname(__file__)
 
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
@@ -23,16 +24,18 @@ class Config:  # pylint: disable=too-few-public-methods
     MAIL_DEBUG = False
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_EXPIRATION = int(os.getenv("MAIL_EXPIRATION"))
     UNIVERSITY_EMAIL_DOMAIN = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
 
-    MAX_CONTENT_LENGTH = 5 * 1000 * 1000
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH"))
     PFP_UPLOAD_FOLDER = os.getenv("PFP_UPLOAD_FOLDER")
     LICENSE_UPLOAD_FOLDER = os.getenv("LICENSE_UPLOAD_FOLDER")
     ID_CARD_UPLOAD_FOLDER = os.getenv("ID_CARD_UPLOAD_FOLDER")
     SCHOOL_CERTIFICATE_UPLOAD_FOLDER = os.getenv("SCHOOL_CERTIFICATE_UPLOAD_FOLDER")
 
+    JWT_SALT = os.getenv("JWT_SALT").encode("utf8")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = False
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES")))
 
     FRONT_END_URL = os.getenv("FRONT_END_URL")
 
