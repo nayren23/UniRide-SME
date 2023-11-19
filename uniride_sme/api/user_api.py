@@ -2,17 +2,14 @@
 import os
 
 from flask import Blueprint, request, jsonify, url_for
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from pathlib import Path
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from uniride_sme import app
 from uniride_sme.models.bo.user_bo import UserBO
 from uniride_sme.models.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
-
+from uniride_sme.utils.jwt_token import revoke_token
 
 user = Blueprint("user", __name__)
 
@@ -52,7 +49,7 @@ def authentificate():
         )
         user_bo.authentificate()
         user_bo.get_from_db()
-        token = create_access_token(user_bo.u_id, expires_delta=app.config["JWT_ACCESS_TOKEN_EXPIRES"])
+        token = create_access_token(user_bo.u_id)
         informations_verified_dto = InformationsVerifiedDTO(
             email_verified=user_bo.u_email_verified,
             license_verified=user_bo.documents_bo.v_license_verified,
@@ -67,6 +64,14 @@ def authentificate():
         response = jsonify(message=e.message), e.status_code
 
     return response
+
+
+@app.route("/user/logout", methods=["DELETE"])
+@jwt_required()
+def logout():
+    """Logout endpoint"""
+    revoke_token()
+    return jsonify(message="ACCESS_TOKEN_REVOKED"), 200
 
 
 @user.route("/user/infos", methods=["GET"])
@@ -305,7 +310,7 @@ def send_verification_email(student_email, firstname):
             _external=False,
         )
         url = app.config["FRONT_END_URL"] + url
-        email.send_email(
+        email.send_email.queue(
             student_email,
             "Vérifier votre email",
             html.read().replace("{firstname}", firstname).replace("{link}", url),
