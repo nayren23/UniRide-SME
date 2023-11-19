@@ -350,12 +350,7 @@ pyrightconfig.json
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
-
+**/.vscode/
 # Local History for Visual Studio Code
 .history/
 
@@ -761,3 +756,10 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/python,flask,pycharm+all,visualstudio,visualstudiocode
+
+# Certificats
+certs/
+
+# Config file
+uniride_sme/config.ini
+config.ini

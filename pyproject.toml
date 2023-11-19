@@ -1,0 +1,80 @@
+[project]
+name = "uniride-sme"
+version = "1.0.0"
+description = "Backend of UniRide"
+authors = [
+    {name = "Gregoire FAURE"},
+    {name = "Yassine HAMIDI"},
+    {name = "Steven YANG"},
+    {name = "Rayan CHOUCHANE"},
+    {name = "Ayoub BOUAZIZ"}]
+
+readme = "README.md"
+
+requires-python = ">3.7"
+
+dependencies = [
+  "flask",
+  "flask_restful",
+  "flask_cors",
+  "flask_mail",
+  "flask_jwt_extended",
+  "python-dotenv",
+  "psycopg2",
+  "bcrypt",
+  "googlemaps",
+  "requests"]
+
+[project.optional-dependencies]
+dev = [
+    "bandit[toml]==1.7.4",
+    "black==22.10.0",
+    "coverage[toml]==7.2.6",
+    "pycodestyle==2.10.0",
+    "pylint>=2.15.16",]
+
+tests = [
+    "bandit[toml]==1.7.4",
+    "black==22.10.0",
+    "coverage[toml]==7.2.6",
+    "pycodestyle==2.10.0",
+    "pylint>=2.15.16",]
+
+[tool.black]
+line-length = 200
+target-version = ['py37']
+include = '\.pyi?$'
+exclude = ''
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["uniride_sme"]
+
+[tool.pytest.ini_options]
+testpaths = "test/"
+addopts = "-vv"
+
+[pycodestyle]
+count = true
+max-line-length = 200
+statistics = true
+
+[tool.pylint.main]
+ignore-paths = []
+
+[tool.pylint.format]
+max-line-length=200
+
+[tool.pylint.reports]
+msg-template="{path}:{line}: [{msg_id}, {obj}] {msg} ({symbol})"
+output-format="parseable"
+
+[tool.pylint.'messages control']
+disable=[]
+
+[tool.bandit]
+targets = ["app"]
+exclude_dirs = []
