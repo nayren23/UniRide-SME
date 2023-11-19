@@ -16,6 +16,7 @@ class Config:  # pylint: disable=too-few-public-methods
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
 
+    # Mail config
     MAIL_SERVER = os.getenv("MAIL_SERVER")
     MAIL_PORT = 465
     MAIL_USE_TLS = False
@@ -25,14 +26,26 @@ class Config:  # pylint: disable=too-few-public-methods
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     UNIVERSITY_EMAIL_DOMAIN = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
 
+    # Upload config
     MAX_CONTENT_LENGTH = 5 * 1000 * 1000
     PFP_UPLOAD_FOLDER = os.getenv("PFP_UPLOAD_FOLDER")
     LICENSE_UPLOAD_FOLDER = os.getenv("LICENSE_UPLOAD_FOLDER")
     ID_CARD_UPLOAD_FOLDER = os.getenv("ID_CARD_UPLOAD_FOLDER")
     SCHOOL_CERTIFICATE_UPLOAD_FOLDER = os.getenv("SCHOOL_CERTIFICATE_UPLOAD_FOLDER")
 
+    # JWT config
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
+
+    # RQ config
+    CACHE_TYPE = os.getenv("CACHE_TYPE")
+    RQ_REDIS_URL = os.getenv("RQ_REDIS_URL")
+
+    # Cache config
+    CACHE_REDIS_HOST = os.getenv("CACHE_REDIS_HOST")
+    CACHE_REDIS_PORT = os.getenv("CACHE_REDIS_PORT")
+    CACHE_REDIS_PASSWORD = os.getenv("CACHE_REDIS_PASSWORD")
+    CACHE_REDIS_DB = os.getenv("CACHE_REDIS_DB")
 
     FRONT_END_URL = os.getenv("FRONT_END_URL")
 
