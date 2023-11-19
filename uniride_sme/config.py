@@ -3,12 +3,13 @@
 from configparser import ConfigParser, NoSectionError
 import os
 from datetime import timedelta
-
 from dotenv import load_dotenv
 
 
 class Config:  # pylint: disable=too-few-public-methods
     """Config variables"""
+
+    load_dotenv()
 
     PATH = os.path.dirname(__file__)
     load_dotenv()
@@ -49,6 +50,16 @@ class Config:  # pylint: disable=too-few-public-methods
 
     FRONT_END_URL = os.getenv("FRONT_END_URL")
 
+    # DB config
+    DB_HOST = os.getenv("DB_HOST")
+    DB_NAME = os.getenv("DB_NAME")
+    DB_USER = os.getenv("DB_USER")
+    DB_PWD = os.getenv("DB_PWD")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+
+    TESTING = False
+    DEBUG = False
+
     # University address
     UNIVERSITY_STREET_NUMBER = str(os.getenv("UNIVERSITY_STREET_NUMBER"))
     UNIVERSITY_STREET_NAME = str(os.getenv("UNIVERSITY_STREET_NAME"))
@@ -63,10 +74,13 @@ class Config:  # pylint: disable=too-few-public-methods
     COST_PER_KM = float(os.getenv("COST_PER_KM"))
     BASE_RATE = float(os.getenv("BASE_RATE"))
 
-    # DB config
-    DB_NAME = os.getenv("DB_NAME")
-
     ACCEPT_TIME_DIFFERENCE_MINUTES = int(os.getenv("ACCEPT_TIME_DIFFERENCE_MINUTES"))
+
+
+class TestingConfig(Config):
+    """Testing Config variables"""
+    TESTING = True
+    DB_NAME = os.getenv("DB_NAME", "uniride") + "_test"
 
 
 def config(filename="config.ini", section="postgresql"):

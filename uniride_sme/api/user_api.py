@@ -1,4 +1,6 @@
 """User related endpoints"""
+import os
+
 from flask import Blueprint, request, jsonify, url_for
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from uniride_sme import app
@@ -298,7 +300,7 @@ def send_email_confirmation():
 def send_verification_email(student_email, firstname):
     """Send verification email"""
     with open(
-        f"{app.config['PATH']}/resource/email/email_verification_template.html",
+        os.path.join(app.config['PATH'], "resource", "email", "email_verification_template.html"),
         "r",
         encoding="UTF-8",
     ) as html:
