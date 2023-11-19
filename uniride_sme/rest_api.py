@@ -2,6 +2,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+import os
 from flask import jsonify
 from uniride_sme import app
 from uniride_sme.config import config
@@ -43,8 +44,12 @@ def file_too_large(e):  # pylint: disable=unused-argument
 
 if __name__ == "__main__":
     # read server parameters
+
     params = config("config.ini", "server")
-    context = (params["cert"], params["key"])  # certificate and key files
+    currentPath = os.path.dirname(__file__)
+    cert = os.path.join(currentPath, params["cert"])
+    key = os.path.join(currentPath, params["key"])
+    context = (cert, key)  # certificate and key files
 
     app.register_blueprint(user)
     app.register_blueprint(trip)

@@ -59,7 +59,9 @@ class Config:  # pylint: disable=too-few-public-methods
 def config(filename="config.ini", section="postgresql"):
     """Configure database connection"""
     parser = ConfigParser()
-    if not parser.read(filename):
+    file_path = os.path.join(os.path.dirname(__file__), filename)
+
+    if not parser.read(file_path):
         raise FileNotFoundError(f"Configuration file '{filename}' not found.")
 
     if not parser.has_section(section):
