@@ -1,6 +1,6 @@
 [project]
 name = "uniride-sme"
-version = "0.0.0"
+version = "1.0.0"
 description = "Backend of UniRide"
 authors = [
     {name = "Gregoire FAURE"},
