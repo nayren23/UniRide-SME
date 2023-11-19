@@ -19,11 +19,14 @@ dependencies = [
   "flask_cors",
   "flask_mail",
   "flask_jwt_extended",
+  "flask_rq2",
+  "flask_caching",
   "python-dotenv",
   "psycopg2",
   "bcrypt",
   "googlemaps",
-  "requests"]
+  "requests",
+  "setuptools",]
 
 [project.optional-dependencies]
 dev = [
