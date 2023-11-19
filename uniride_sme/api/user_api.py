@@ -293,7 +293,7 @@ def send_email_confirmation():
 def send_verification_email(student_email, firstname):
     """Send verification email"""
     with open(
-        f"{app.config['PATH']}\\resource\\email\\email_verification_template.html",
+        f"{app.config['PATH']}/resource/email/email_verification_template.html",
         "r",
         encoding="UTF-8",
     ) as html:
@@ -303,7 +303,7 @@ def send_verification_email(student_email, firstname):
             _external=False,
         )
         url = app.config["FRONT_END_URL"] + url
-        email.send_email(
+        email.send_email.queue(
             student_email,
             "Vérifier votre email",
             html.read().replace("{firstname}", firstname).replace("{link}", url),
