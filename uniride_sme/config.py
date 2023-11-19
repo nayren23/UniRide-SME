@@ -12,6 +12,7 @@ class Config:  # pylint: disable=too-few-public-methods
     load_dotenv()
 
     PATH = os.path.dirname(__file__)
+    load_dotenv()
 
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
@@ -36,6 +37,7 @@ class Config:  # pylint: disable=too-few-public-methods
 
     FRONT_END_URL = os.getenv("FRONT_END_URL")
 
+    # DB config
     DB_HOST = os.getenv("DB_HOST")
     DB_NAME = os.getenv("DB_NAME")
     DB_USER = os.getenv("DB_USER")
@@ -45,8 +47,25 @@ class Config:  # pylint: disable=too-few-public-methods
     TESTING = False
     DEBUG = False
 
+    # University address
+    UNIVERSITY_STREET_NUMBER = str(os.getenv("UNIVERSITY_STREET_NUMBER"))
+    UNIVERSITY_STREET_NAME = str(os.getenv("UNIVERSITY_STREET_NAME"))
+    UNIVERSITY_CITY = str(os.getenv("UNIVERSITY_CITY"))
+    UNIVERSITY_POSTAL_CODE = str(os.getenv("UNIVERSITY_POSTAL_CODE"))
+
+    # Api key for google maps
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    ROUTE_CHECKER = os.getenv("ROUTE_CHECKER")
+
+    RATE_PER_KM = float(os.getenv("RATE_PER_KM"))
+    COST_PER_KM = float(os.getenv("COST_PER_KM"))
+    BASE_RATE = float(os.getenv("BASE_RATE"))
+
+    ACCEPT_TIME_DIFFERENCE_MINUTES = int(os.getenv("ACCEPT_TIME_DIFFERENCE_MINUTES"))
+
 
 class TestingConfig(Config):
+    """Testing Config variables"""
     TESTING = True
     DB_NAME = os.getenv("DB_NAME", "uniride") + "_test"
 

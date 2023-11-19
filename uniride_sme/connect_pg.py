@@ -52,6 +52,7 @@ def execute_command(conn, query, params=None):
     returning_value = None
 
     print(query)
+    print("params", params)
     cur.execute(query, params)
     if "returning" in query.lower():
         returning_value = cur.fetchone()[0]

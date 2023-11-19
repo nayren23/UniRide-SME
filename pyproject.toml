@@ -21,7 +21,9 @@ dependencies = [
   "flask_jwt_extended",
   "python-dotenv",
   "psycopg2",
-  "bcrypt"]
+  "bcrypt",
+  "googlemaps",
+  "requests"]
 
 [project.optional-dependencies]
 dev = [

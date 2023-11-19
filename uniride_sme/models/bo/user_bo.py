@@ -73,7 +73,6 @@ class UserBO:  # pylint: disable=too-many-instance-attributes
 
         self.documents_bo = DocumentsBO(self.u_id)
         self.documents_bo.get_from_db()
-        print(self.__dict__.items())
 
     def add_in_db(self, password_confirmation, files):
         """Insert the user in the database"""
