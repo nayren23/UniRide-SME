@@ -11,7 +11,12 @@ from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.pagination import create_pagination
-
+from uniride_sme.service.trip_service import (
+    add_in_db,
+    get_driver_trips,
+    get_available_trips_to,
+    format_get_current_driver_trips,
+)
 
 trip = Blueprint("trip", __name__)
 
@@ -28,7 +33,15 @@ def propose_trip():
         user_id = get_jwt_identity()
         json_object = request.json
 
-        validate_fields(json_object, {"total_passenger_count": int, "timestamp_proposed": str, "address_depart_id": int, "address_arrival_id": int})
+        validate_fields(
+            json_object,
+            {
+                "total_passenger_count": int,
+                "timestamp_proposed": str,
+                "address_depart_id": int,
+                "address_arrival_id": int,
+            },
+        )
 
         trip_bo = TripBO(
             total_passenger_count=json_object.get("total_passenger_count", None),
@@ -38,7 +51,7 @@ def propose_trip():
             arrival_address_bo=AddressBO(address_id=json_object.get("address_arrival_id", None)),
             status=TripStatus.PENDING.value,
         )
-        trip_bo.add_in_db()
+        add_in_db(trip_bo)
         response = jsonify({"message": "CREATED_SUCCESSFULLY", "trip_id": trip_bo.id}), 200
 
     except ApiException as e:
@@ -55,8 +68,12 @@ def get_available_trips():
         json_object = request.json
 
         validate_fields(request.json, {"depart": dict, "arrival": dict, "trip": dict})
-        validate_fields(json_object["depart"], {"street_number": str, "street_name": str, "city": str, "postal_code": str})
-        validate_fields(json_object["arrival"], {"street_number": str, "street_name": str, "city": str, "postal_code": str})
+        validate_fields(
+            json_object["depart"], {"street_number": str, "street_name": str, "city": str, "postal_code": str}
+        )
+        validate_fields(
+            json_object["arrival"], {"street_number": str, "street_name": str, "city": str, "postal_code": str}
+        )
         validate_fields(json_object["trip"], {"passenger_count": int, "departure_date": str})
 
         depart_address_bo = AddressBO(
@@ -80,7 +97,7 @@ def get_available_trips():
         trip_bo.departure_address = depart_address_bo
         trip_bo.arrival_address = address_arrival_bo
 
-        available_trips = trip_bo.get_available_trips()
+        available_trips = get_available_trips_to(trip_bo)
 
         # We need to paginate the data
         meta, paginated_data = create_pagination(request, available_trips)
@@ -99,9 +116,9 @@ def get_current_driver_trips():
         user_id = get_jwt_identity()
 
         trip_bo = TripBO(user_id=user_id)
-        driver_current_trips = trip_bo.get_current_driver_trips()
+        driver_current_trips = get_driver_trips(user_id)
 
-        available_trips = trip_bo.format_get_current_driver_trips(driver_current_trips, user_id)
+        available_trips = format_get_current_driver_trips(trip_bo, driver_current_trips, user_id)
 
         # We need to paginate the data
         meta, paginated_data = create_pagination(request, available_trips)

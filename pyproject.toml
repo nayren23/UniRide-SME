@@ -41,7 +41,7 @@ tests = [
     "pylint>=2.15.16",]
 
 [tool.black]
-line-length = 200
+line-length = 120
 target-version = ['py37']
 include = '\.pyi?$'
 exclude = ''
@@ -59,21 +59,21 @@ addopts = "-vv"
 
 [pycodestyle]
 count = true
-max-line-length = 200
+max-line-length = 120
 statistics = true
+
+[tool.pylint.format]
+max-line-length=120
 
 [tool.pylint.main]
 ignore-paths = []
-disable = ["R0902", "R0903", "R0913", "R0914", ]
-
-[tool.pylint.format]
-max-line-length=200
 
 [tool.pylint.reports]
 msg-template="{path}:{line}: [{msg_id}, {obj}] {msg} ({symbol})"
 output-format="parseable"
 
 [tool.pylint.'messages control']
+max-line-length = 120
 disable=[]
 
 [tool.bandit]

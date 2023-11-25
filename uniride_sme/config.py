@@ -1,12 +1,14 @@
 """Configure database connection"""
 # !/usr/bin/python
 from configparser import ConfigParser, NoSectionError
+import dataclasses
 import os
 from datetime import timedelta
 
 from dotenv import load_dotenv
 
 
+@dataclasses.dataclass
 class Config:
     """Config variables"""
 

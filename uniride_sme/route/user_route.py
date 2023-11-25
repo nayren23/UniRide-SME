@@ -189,7 +189,9 @@ def save_document(document_type):
     document_file = request.files.get(document_type, None)
     try:
         document_bo = documents_service.get_documents_by_user_id(user_id)
-        getattr(documents_service, f"save_{document_type}")(user_id, document_file, getattr(document_bo, f"d_{document_type}"))
+        getattr(documents_service, f"save_{document_type}")(
+            user_id, document_file, getattr(document_bo, f"d_{document_type}")
+        )
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

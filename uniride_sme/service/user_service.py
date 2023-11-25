@@ -60,7 +60,18 @@ def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
     return user_bo
 
 
-def add_user(login, lastname, firstname, student_email, password, password_confirmation, gender, phone_number, description, pfp_file):
+def add_user(
+    login,
+    lastname,
+    firstname,
+    student_email,
+    password,
+    password_confirmation,
+    gender,
+    phone_number,
+    description,
+    pfp_file,
+):
     """Insert the user in the database"""
 
     _validate_login(login)
@@ -280,7 +291,13 @@ def _validate_password(password, password_confirmation):
     contains_special = re.search(r"[!@#$%^&*(),.?\":{}|<>]", password)
     correct_size = 8 <= len(password) <= 50
 
-    if not (contains_lower_case_letter and contains_upper_case_letter and contains_digit and contains_special and correct_size):
+    if not (
+        contains_lower_case_letter
+        and contains_upper_case_letter
+        and contains_digit
+        and contains_special
+        and correct_size
+    ):
         raise InvalidInputException("PASSWORD_INVALID")
 
     # check if password and password confirmation are equals
