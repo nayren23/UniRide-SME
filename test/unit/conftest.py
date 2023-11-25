@@ -2,16 +2,13 @@
 import json
 from unittest.mock import patch
 
-import mock
 import psycopg2
 import pytest
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 import uniride_sme
 from uniride_sme import app
 from uniride_sme.api import user_api
 from uniride_sme.config import TestingConfig
-from uniride_sme.connect_pg import connect
 from uniride_sme.models.bo.user_bo import UserBO
 from uniride_sme.utils.exception.exceptions import InvalidInputException
 
@@ -39,12 +36,12 @@ def pytest_sessionfinish(session):
 
     # Delete all contents from tables in the testing database
     with main_conn.cursor() as cursor:
-        cursor.execute(f"set search_path to uniride;")
+        cursor.execute("set search_path to uniride;")
         cursor.execute(
             f"""DO $$ DECLARE
 t_name text;
 BEGIN
-FOR t_name IN (SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema()) 
+FOR t_name IN (SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema())
 LOOP
     EXECUTE 'TRUNCATE TABLE ' || t_name || ' RESTART IDENTITY CASCADE;';
 END LOOP;
@@ -93,7 +90,7 @@ def connect_mock(mock_connect):
 def add_default_user(connect_mock):
     # Create default user for testing
     try:
-        user = UserBO(
+        UserBO(
             login="user123",
             firstname="User",
             lastname="Default",
