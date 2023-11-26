@@ -5,9 +5,9 @@ import json
 from flask import jsonify
 from uniride_sme import app
 from uniride_sme.config import config
-from uniride_sme.api.user_api import user
-from uniride_sme.api.trip_api import trip
-from uniride_sme.api.address_api import address
+from uniride_sme.route.user_route import user
+from uniride_sme.route.trip_route import trip
+from uniride_sme.route.address_route import address
 
 
 @app.after_request
