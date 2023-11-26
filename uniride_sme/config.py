@@ -14,7 +14,6 @@ class Config:
     PATH = os.path.dirname(__file__)
     load_dotenv()
 
-
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
 
@@ -38,7 +37,7 @@ class Config:
     # JWT config
     JWT_SALT = os.getenv("JWT_SALT").encode("utf8")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES")))
 
     # RQ config
     CACHE_TYPE = os.getenv("CACHE_TYPE")
@@ -81,6 +80,7 @@ class Config:
 
 class TestingConfig(Config):
     """Testing Config variables"""
+
     TESTING = True
     DB_NAME = os.getenv("DB_NAME", "uniride") + "_test"
 

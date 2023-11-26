@@ -108,7 +108,7 @@ def get_available_trips():
     return response
 
 
-@trip.route("/trips/driver/current/", methods=["GET"])
+@trip.route("/trips/driver/current", methods=["GET"])
 @jwt_required()
 def get_current_driver_trips():
     """Get all the current trips of a driver"""
