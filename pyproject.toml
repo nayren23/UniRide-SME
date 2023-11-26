@@ -1,6 +1,6 @@
 [project]
 name = "uniride-sme"
-version = "0.0.0"
+version = "1.0.0"
 description = "Backend of UniRide"
 authors = [
     {name = "Gregoire FAURE"},
@@ -19,11 +19,14 @@ dependencies = [
   "flask_cors",
   "flask_mail",
   "flask_jwt_extended",
+  "flask_rq2",
+  "flask_caching",
   "python-dotenv",
   "psycopg2",
   "bcrypt",
   "googlemaps",
-  "requests"]
+  "requests",
+  "setuptools",]
 
 [project.optional-dependencies]
 dev = [
@@ -34,6 +37,7 @@ dev = [
     "pylint>=2.15.16",]
 
 tests = [
+    "pytest==7.4.3",
     "bandit[toml]==1.7.4",
     "black==22.10.0",
     "coverage[toml]==7.2.6",

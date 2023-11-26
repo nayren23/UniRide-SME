@@ -4,7 +4,6 @@ from configparser import ConfigParser, NoSectionError
 import dataclasses
 import os
 from datetime import timedelta
-
 from dotenv import load_dotenv
 
 
@@ -12,13 +11,14 @@ from dotenv import load_dotenv
 class Config:
     """Config variables"""
 
+    PATH = os.path.dirname(__file__)
     load_dotenv()
 
-    PATH = os.path.dirname(__file__)
 
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
 
+    # Mail config
     MAIL_SERVER = os.getenv("MAIL_SERVER")
     MAIL_PORT = 465
     MAIL_USE_TLS = False
@@ -35,11 +35,32 @@ class Config:
     ID_CARD_UPLOAD_FOLDER = os.getenv("ID_CARD_UPLOAD_FOLDER")
     SCHOOL_CERTIFICATE_UPLOAD_FOLDER = os.getenv("SCHOOL_CERTIFICATE_UPLOAD_FOLDER")
 
+    # JWT config
     JWT_SALT = os.getenv("JWT_SALT").encode("utf8")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES")))
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=1)
+
+    # RQ config
+    CACHE_TYPE = os.getenv("CACHE_TYPE")
+    RQ_REDIS_URL = os.getenv("RQ_REDIS_URL")
+
+    # Cache config
+    CACHE_REDIS_HOST = os.getenv("CACHE_REDIS_HOST")
+    CACHE_REDIS_PORT = os.getenv("CACHE_REDIS_PORT")
+    CACHE_REDIS_PASSWORD = os.getenv("CACHE_REDIS_PASSWORD")
+    CACHE_REDIS_DB = os.getenv("CACHE_REDIS_DB")
 
     FRONT_END_URL = os.getenv("FRONT_END_URL")
+
+    # DB config
+    DB_HOST = os.getenv("DB_HOST")
+    DB_NAME = os.getenv("DB_NAME")
+    DB_USER = os.getenv("DB_USER")
+    DB_PWD = os.getenv("DB_PWD")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+
+    TESTING = False
+    DEBUG = False
 
     # University address
     UNIVERSITY_STREET_NUMBER = str(os.getenv("UNIVERSITY_STREET_NUMBER"))
@@ -55,10 +76,13 @@ class Config:
     COST_PER_KM = float(os.getenv("COST_PER_KM"))
     BASE_RATE = float(os.getenv("BASE_RATE"))
 
-    # DB config
-    DB_NAME = os.getenv("DB_NAME")
-
     ACCEPT_TIME_DIFFERENCE_MINUTES = int(os.getenv("ACCEPT_TIME_DIFFERENCE_MINUTES"))
+
+
+class TestingConfig(Config):
+    """Testing Config variables"""
+    TESTING = True
+    DB_NAME = os.getenv("DB_NAME", "uniride") + "_test"
 
 
 def config(filename="config.ini", section="postgresql"):
