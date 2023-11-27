@@ -5,7 +5,7 @@ import math
 def haversine(lat1, lon1, lat2, lon2):
     """
     Harvesine formula.
-    Returns the distance between the 2 coordinate in kilometers.
+    Returns the distance between the 2 coordinate in meters.
     """
     lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
 
@@ -19,4 +19,4 @@ def haversine(lat1, lon1, lat2, lon2):
 
     distance = R * c
 
-    return distance
+    return distance * 1000
