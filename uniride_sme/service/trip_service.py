@@ -330,7 +330,7 @@ def get_driver_trips(user_id):
     """Get the current trips for the driver"""
 
     query = """
-        SELECT t_id, t_address_depart_id, t_address_arrival_id,t_price
+        SELECT t_id, t_address_depart_id, t_address_arrival_id, t_price, t_timestamp_proposed
         FROM uniride.ur_trip
         WHERE t_user_id = %s
         AND t_status = %s
@@ -350,7 +350,7 @@ def format_get_current_driver_trips(trip: TripBO, driver_current_trips, user_id)
     available_trips = []
 
     for current_trip in driver_current_trips:
-        t_id, t_address_depart_id, t_address_arrival_id, price = current_trip
+        t_id, t_address_depart_id, t_address_arrival_id, price, proposed_date = current_trip
 
         trip.departure_address = AddressBO(address_id=t_address_depart_id)
         trip.arrival_address = AddressBO(address_id=t_address_arrival_id)
@@ -382,6 +382,7 @@ def format_get_current_driver_trips(trip: TripBO, driver_current_trips, user_id)
             trip_id=t_id,
             address=address_dtos,
             driver_id=user_id,
+            proposed_date=proposed_date,
             price=price,
         )
         available_trips.append(trip_dto)
