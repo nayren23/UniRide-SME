@@ -26,9 +26,10 @@ from uniride_sme.utils.exception.trip_exceptions import (
     TripNotFoundException,
 )
 from uniride_sme.utils.trip_status import TripStatus
+from uniride_sme.utils.maths_formulas import haversine 
 
 
-def add_in_db(trip: TripBO):
+def add_trip_in_db(trip: TripBO):
     """Insert the trip in the database"""
 
     # Check if the address already exists
@@ -275,55 +276,52 @@ def get_trips_for_university_address(trip_bo: TripBO, depart_address_bo, address
             arrival_latitude,
             arrival_longitude,
         ) = trip
-        departure_point = (departure_latitude, departure_longitude)
-        arrival_point = (arrival_latitude, arrival_longitude)
+        price = trip_price * trip_bo.total_passenger_count
 
-        is_viable = trip_bo.route_checker.check_if_route_is_viable(
-            departure_point, arrival_point, point_intermediaire_departure
+        departure_address = AddressBO(address_id=departure_address_id)
+        arrival_address = AddressBO(address_id=arrival_address_id)
+
+        check_address_existence(departure_address)
+        check_address_existence(arrival_address)
+        if point_intermediaire_departure == university_point:
+            distance = haversine(address_arrival_bo.latitude, address_arrival_bo.longitude, arrival_latitude, arrival_longitude)
+        else:
+            distance = haversine(depart_address_bo.latitude, depart_address_bo.longitude, departure_latitude, departure_longitude)
+        address_dtos = {
+            "departure": AddressDTO(
+                id=departure_address_id,
+                latitude=departure_latitude,
+                longitude=departure_longitude,
+                address_name=concatene_address(
+                    departure_address.street_number,
+                    departure_address.street_name,
+                    departure_address.city,
+                    departure_address.postal_code,
+                ),
+            ),
+            "arrival": AddressDTO(
+                id=arrival_address_id,
+                latitude=arrival_latitude,
+                longitude=arrival_longitude,
+                address_name=concatene_address(
+                    arrival_address.street_number,
+                    arrival_address.street_name,
+                    arrival_address.city,
+                    arrival_address.postal_code,
+                ),
+            ),
+            "distance": distance,
+        }
+
+        trip_dto = TripDTO(
+            trip_id=trip_id,
+            address=address_dtos,
+            driver_id=user_id,
+            price=price,
+            proposed_date=str(proposed_date),
+            total_passenger_count=total_passenger_count,
         )
-        if is_viable:
-            price = trip_price * trip_bo.total_passenger_count
-
-            departure_address = AddressBO(address_id=departure_address_id)
-            arrival_address = AddressBO(address_id=arrival_address_id)
-
-            check_address_existence(departure_address)
-            check_address_existence(arrival_address)
-
-            address_dtos = {
-                "departure": AddressDTO(
-                    id=departure_address_id,
-                    latitude=departure_latitude,
-                    longitude=departure_longitude,
-                    address_name=concatene_address(
-                        departure_address.street_number,
-                        departure_address.street_name,
-                        departure_address.city,
-                        departure_address.postal_code,
-                    ),
-                ),
-                "arrival": AddressDTO(
-                    id=arrival_address_id,
-                    latitude=arrival_latitude,
-                    longitude=arrival_longitude,
-                    address_name=concatene_address(
-                        arrival_address.street_number,
-                        arrival_address.street_name,
-                        arrival_address.city,
-                        arrival_address.postal_code,
-                    ),
-                ),
-            }
-
-            trip_dto = TripDTO(
-                trip_id=trip_id,
-                address=address_dtos,
-                driver_id=user_id,
-                price=price,
-                proposed_date=str(proposed_date),
-                total_passenger_count=total_passenger_count,
-            )
-            available_trips.append(trip_dto)
+        available_trips.append(trip_dto)
 
     return available_trips
 
