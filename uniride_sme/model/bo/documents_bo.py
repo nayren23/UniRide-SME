@@ -1,7 +1,8 @@
 """User business owner"""
 from datetime import datetime
+import dataclasses
 
-
+@dataclasses.dataclass
 class DocumentsBO:
     """Documents business owner class"""
 
