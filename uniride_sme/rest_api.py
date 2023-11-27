@@ -8,6 +8,7 @@ from uniride_sme.config import config
 from uniride_sme.route.user_route import user
 from uniride_sme.route.trip_route import trip
 from uniride_sme.route.address_route import address
+from uniride_sme.route.car_route import car
 
 
 @app.after_request
@@ -49,6 +50,7 @@ if __name__ == "__main__":
     app.register_blueprint(user)
     app.register_blueprint(trip)
     app.register_blueprint(address)
+    app.register_blueprint(car)
     # Launch Flask server0
     app.run(
         debug=params["debug"],

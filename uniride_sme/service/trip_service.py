@@ -75,7 +75,7 @@ def validate_total_passenger_count(total_passenger_count):
         raise MissingInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NULL")
     if total_passenger_count < 0:
         raise InvalidInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NEGATIVE")
-    if total_passenger_count > 10:  # TODO: change the number of seats in the car DB
+    if total_passenger_count > 4:  # TODO: change the number of seats in the car DB
         raise InvalidInputException("TOTAL_PASSENGER_COUNT_TOO_HIGH")
 
 
