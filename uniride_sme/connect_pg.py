@@ -66,6 +66,8 @@ def execute_command(conn, query, params=None):
 
 def get_query(conn, query, params=None, return_dict=False):
     """Query data from db"""
+    print(query)
+    print("params", params)
     try:
         rows = None
         if return_dict:

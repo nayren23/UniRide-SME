@@ -22,3 +22,10 @@ class PasswordIncorrectException(ApiException):
 
     def __init__(self):
         super().__init__("PASSWORD_INCORRECT", 422)
+
+
+class AttributeUnchangedException(ApiException):
+    """Exception for when the new attribut is the same os the old one"""
+
+    def __init__(self, message):
+        super().__init__(message + "_NEW_OLD_SAME", 422)

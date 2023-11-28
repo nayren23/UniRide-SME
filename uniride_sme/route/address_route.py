@@ -1,7 +1,9 @@
 """Adress related routes"""
-from flask import Blueprint, request, jsonify
 
-from uniride_sme.models.bo.address_bo import AddressBO
+from flask import Blueprint, request, jsonify
+from uniride_sme import app
+from uniride_sme.model.bo.address_bo import AddressBO
+from uniride_sme.service.address_service import add_address_in_db
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.field import validate_fields
 
@@ -20,8 +22,18 @@ def add_address():
             city=json_object.get("city").strip(),
             postal_code=json_object.get("postal_code").strip(),
         )
-        address_bo.add_in_db()
+        add_address_in_db(address_bo)
         response = jsonify({"message": "ADDRESS_CREATED_SUCCESSFULLY", "id_address": address_bo.id}), 200
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
+    return response
+
+@address.route("/address/university", methods=["GET"])
+def get_university_address():
+    """Returns the university address"""
+    street_number = app.config["UNIVERSITY_STREET_NUMBER"]
+    street_name = app.config["UNIVERSITY_STREET_NAME"]
+    city = app.config["UNIVERSITY_CITY"]
+    postal_code  =app.config["UNIVERSITY_POSTAL_CODE"]
+    response = jsonify({"address": f"{street_number} {street_name} {city} {postal_code}"})
     return response
