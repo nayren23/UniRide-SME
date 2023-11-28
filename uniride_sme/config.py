@@ -77,6 +77,11 @@ class Config:
 
     ACCEPT_TIME_DIFFERENCE_MINUTES = int(os.getenv("ACCEPT_TIME_DIFFERENCE_MINUTES"))
 
+    # FLask configuration
+    FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+    FLASK_HOST = os.getenv("FLASK_HOST")
+    FLASK_PORT = os.getenv("FLASK_PORT")
+
 
 class TestingConfig(Config):
     """Testing Config variables"""
