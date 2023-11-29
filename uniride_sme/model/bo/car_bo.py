@@ -17,7 +17,8 @@ class CarBO:
         brand: str = None,
         timestamp_addition = None,
         timestamp_modification=None,
-        user_id: int = None
+        user_id: int = None,
+        total_places: int = None
 
     ):
         self.id = car_id
@@ -29,3 +30,6 @@ class CarBO:
         self.timestamp_addition = timestamp_addition
         self.timestamp_modification = timestamp_modification
         self.user_id = user_id
+        self.total_places = total_places
+        
+    

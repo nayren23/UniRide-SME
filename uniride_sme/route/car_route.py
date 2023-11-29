@@ -9,7 +9,8 @@ from uniride_sme.model.bo.car_bo import CarBO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.service.car_service import add_in_db
-
+from uniride_sme.service.car_service import get_car_info_by_user_id
+from uniride_sme.service.car_service import format_get_information_car
 car = Blueprint("car", __name__)
 
 @car.route("/car/add", methods=["POST"])
@@ -18,17 +19,36 @@ def information_car():
     """Add information car endpoint"""
     try:
         json_object = request.json
-        validate_fields(json_object, {"model": str, "license_plate": str, "country_license_plate": str, "color": str, "brand": str})
+        validate_fields(json_object, {"model": str, "license_plate": str, "country_license_plate": str, "color": str, "brand": str, "total_places": int})
         car_bo = CarBO(
             model=json_object.get("model").strip(),
             license_plate=json_object.get("license_plate").strip(),
             country_license_plate=json_object.get("country_license_plate").strip(),
             color=json_object.get("color").strip(),
             brand=json_object.get("brand").strip(),
+            total_places=json_object.get("total_places"),
             user_id = get_jwt_identity()
         )
         add_in_db(car_bo)
         response = jsonify({"message": "CAR_CREATED_SUCCESSFULLY", "id_car": car_bo.id}), 200
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+    return response
+
+@car.route("/car/info", methods=["GET"])
+@jwt_required()
+def get_car_information():
+    """Get information about the user's car endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        car_info = get_car_info_by_user_id(user_id)  
+        
+        available_car = format_get_information_car(car_info)
+
+        if car_info:
+            response = jsonify(available_car), 200
+        else:
+            response = jsonify({"message": "CAR_NOT_FOUND"}), 404
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
     return response
