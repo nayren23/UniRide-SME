@@ -11,8 +11,8 @@ class CarBO:
         self,
         car_id: int = None,
         model: str = None,
-        licence_plate: str = None,
-        country_licence_plate: str = None,
+        license_plate: str = None,
+        country_license_plate: str = None,
         color: str = None,
         brand: str = None,
         timestamp_addition = None,
@@ -22,8 +22,8 @@ class CarBO:
     ):
         self.id = car_id
         self.model = model
-        self.licence_plate = licence_plate
-        self.country_licence_plate = country_licence_plate
+        self.license_plate = license_plate
+        self.country_license_plate = country_license_plate
         self.color = color
         self.brand = brand
         self.timestamp_addition = timestamp_addition
