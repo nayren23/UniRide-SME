@@ -14,7 +14,7 @@ def connect(filename="config.ini", section="postgresql"):
     try:
         # read connection parameters
         params = config(filename, section)
-        params['database'] = os.getenv("DB_NAME", "uniride") # TODO: Load database parameters only from env variables
+        params["database"] = os.getenv("DB_NAME", "uniride")  # TODO: Load database parameters only from env variables
         # connect to the PostgreSQL server
         print("Connecting to the PostgreSQL database...")
         conn = psycopg2.connect(**params)

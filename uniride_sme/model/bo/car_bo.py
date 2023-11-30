@@ -3,6 +3,7 @@
 
 import dataclasses
 
+
 @dataclasses.dataclass
 class CarBO:
     """Car business object"""
@@ -15,11 +16,10 @@ class CarBO:
         country_license_plate: str = None,
         color: str = None,
         brand: str = None,
-        timestamp_addition = None,
+        timestamp_addition=None,
         timestamp_modification=None,
         user_id: int = None,
-        total_places: int = None
-
+        total_places: int = None,
     ):
         self.id = car_id
         self.model = model
@@ -31,5 +31,3 @@ class CarBO:
         self.timestamp_modification = timestamp_modification
         self.user_id = user_id
         self.total_places = total_places
-        
-    

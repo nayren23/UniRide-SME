@@ -113,6 +113,7 @@ def get_available_trips():
 def get_current_driver_trips():
     """Get all the current trips of a driver"""
     try:
+
         user_id = get_jwt_identity()
 
         trip_bo = TripBO(user_id=user_id)
@@ -127,4 +128,5 @@ def get_current_driver_trips():
 
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
+
     return response

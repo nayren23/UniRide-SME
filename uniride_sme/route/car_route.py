@@ -15,13 +15,24 @@ from uniride_sme.service.car_service import update_car_information_in_db
 
 car = Blueprint("car", __name__)
 
+
 @car.route("/car/add", methods=["POST"])
 @jwt_required()
 def car_information():
     """Add information car endpoint"""
     try:
         json_object = request.json
-        validate_fields(json_object, {"model": str, "license_plate": str, "country_license_plate": str, "color": str, "brand": str, "total_places": int})
+        validate_fields(
+            json_object,
+            {
+                "model": str,
+                "license_plate": str,
+                "country_license_plate": str,
+                "color": str,
+                "brand": str,
+                "total_places": int,
+            },
+        )
         car_bo = CarBO(
             model=json_object.get("model").strip(),
             license_plate=json_object.get("license_plate").strip(),
@@ -29,7 +40,7 @@ def car_information():
             color=json_object.get("color").strip(),
             brand=json_object.get("brand").strip(),
             total_places=json_object.get("total_places"),
-            user_id = get_jwt_identity()
+            user_id=get_jwt_identity(),
         )
         add_in_db(car_bo)
         response = jsonify({"message": "CAR_CREATED_SUCCESSFULLY", "id_car": car_bo.id}), 200
@@ -37,14 +48,15 @@ def car_information():
         response = jsonify({"message": e.message}), e.status_code
     return response
 
+
 @car.route("/car/info", methods=["GET"])
 @jwt_required()
 def get_car_information():
     """Get information about the user's car endpoint"""
     try:
         user_id = get_jwt_identity()
-        car_info = get_car_info_by_user_id(user_id)  
-        
+        car_info = get_car_info_by_user_id(user_id)
+
         available_car = format_get_information_car(car_info)
 
         if car_info:
@@ -55,6 +67,7 @@ def get_car_information():
         response = jsonify({"message": e.message}), e.status_code
     return response
 
+
 @car.route("/car/update", methods=["PUT"])
 @jwt_required()
 def update_car_information():
@@ -64,13 +77,13 @@ def update_car_information():
         json_object = request.json
 
         # Valider les champs JSON
-        validate_fields(json_object, {"model": str, "license_plate": str, "country_license_plate": str, "color": str, "brand": str})
+        validate_fields(
+            json_object, {"model": str, "license_plate": str, "country_license_plate": str, "color": str, "brand": str}
+        )
 
         # Récupérer l'objet CarBO existant depuis la base de données
         existing_car_data_list = get_car_info_by_user_id(user_id)
-        print("existing_car_data_list")
-        print(existing_car_data_list)
-        
+
         if existing_car_data_list:
             existing_car_data = existing_car_data_list[0]
             existing_car_model = existing_car_data.get("v_model", "").strip()
@@ -88,20 +101,18 @@ def update_car_information():
                 color=existing_car_color,
                 brand=existing_car_brand,
                 user_id=existing_car_data.get("u_id"),
-                total_places=existing_car_total_places
+                total_places=existing_car_total_places,
             )
 
             # Mettre à jour les propriétés modifiables
             existing_car.model = json_object.get("model", existing_car.model).strip()
             existing_car.license_plate = json_object.get("license_plate", existing_car.license_plate).strip()
-            existing_car.country_license_plate = json_object.get("country_license_plate", existing_car.country_license_plate).strip()
+            existing_car.country_license_plate = json_object.get(
+                "country_license_plate", existing_car.country_license_plate
+            ).strip()
             existing_car.color = json_object.get("color", existing_car.color).strip()
             existing_car.brand = json_object.get("brand", existing_car.brand).strip()
             existing_car.total_places = json_object.get("total_places", existing_car.total_places)
-            
-            print("existing_car 2 ")
-            print(existing_car)
-
             # Mettre à jour la base de données
             update_car_information_in_db(existing_car)
 

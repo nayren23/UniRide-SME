@@ -14,7 +14,6 @@ class Config:
     PATH = os.path.dirname(__file__)
     load_dotenv()
 
-
     SECRET_KEY = os.getenv("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
 
@@ -81,6 +80,7 @@ class Config:
 
 class TestingConfig(Config):
     """Testing Config variables"""
+
     TESTING = True
     DB_NAME = os.getenv("DB_NAME", "uniride") + "_test"
 
