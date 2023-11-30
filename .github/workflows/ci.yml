@@ -81,3 +81,7 @@ jobs:
             FLASK_HOST=${{ secrets.FLASK_HOST }}
             FLASK_PORT=${{ secrets.FLASK_PORT }}
             FLASK_DEBUG=${{ secrets.FLASK_DEBUG }}
+            PFP_UPLOAD_FOLDER=${{ secrets.PFP_UPLOAD_FOLDER }}
+            LICENSE_UPLOAD_FOLDER=${{ secrets.LICENSE_UPLOAD_FOLDER }}
+            ID_CARD_UPLOAD_FOLDER=${{ secrets.ID_CARD_UPLOAD_FOLDER }}
+            SCHOOL_CERTIFICATE_UPLOAD_FOLDER=${{ secrets.SCHOOL_CERTIFICATE_UPLOAD_FOLDER }}

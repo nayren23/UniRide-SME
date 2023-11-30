@@ -82,6 +82,10 @@ class Config:
     FLASK_HOST = os.getenv("FLASK_HOST")
     FLASK_PORT = os.getenv("FLASK_PORT")
 
+    # CERTS
+    CERTIFICATE_CRT_FOLDER = os.getenv("CERTIFICATE_CRT_FOLDER")
+    CERTIFICATE_KEY_FOLDER = os.getenv("CERTIFICATE_KEY_FOLDER")
+
 
 class TestingConfig(Config):
     """Testing Config variables"""

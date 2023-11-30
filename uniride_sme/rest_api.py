@@ -44,8 +44,8 @@ def file_too_large(e):  # pylint: disable=unused-argument
 
 if __name__ == "__main__":
     currentPath = os.path.dirname(__file__)
-    cert = os.path.join(currentPath, "certs/flask-selfsigned.crt")
-    key = os.path.join(currentPath, "certs/flask-selfsigned.key")
+    cert = os.path.join(currentPath, app.config["CERTIFICATE_CRT_FOLDER"])
+    key = os.path.join(currentPath, app.config["CERTIFICATE_KEY_FOLDER"])
     context = (cert, key)  # certificate and key files
 
     app.register_blueprint(user)
