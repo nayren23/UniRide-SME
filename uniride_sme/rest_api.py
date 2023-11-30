@@ -5,7 +5,6 @@ import json
 import os
 from flask import jsonify
 from uniride_sme import app
-from uniride_sme.config import config
 from uniride_sme.route.user_route import user
 from uniride_sme.route.trip_route import trip
 from uniride_sme.route.address_route import address

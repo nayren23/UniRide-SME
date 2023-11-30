@@ -25,7 +25,9 @@ class Config:
     MAIL_DEBUG = False
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+
     MAIL_EXPIRATION = int(os.getenv("MAIL_EXPIRATION"))
+
     UNIVERSITY_EMAIL_DOMAIN = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
 
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH"))

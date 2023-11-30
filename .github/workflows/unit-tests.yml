@@ -81,4 +81,4 @@ jobs:
 
     - name: Analysing the code with pylint
       run: |
-        pylint uniride_sme  --fail-under=9.80
+        pylint uniride_sme  --fail-under=${{ secrets.PYLINT_FAIL_UNDER }}
