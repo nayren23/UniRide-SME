@@ -14,4 +14,3 @@ class CarDTO(TypedDict):
     brand: str
     id_user: int
     total_places: int
-
