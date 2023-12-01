@@ -91,7 +91,6 @@ def test_validate_student_email_invalid_format():
     invalid_emails = ["invalidemail", "invalid@university", "invalid@university.c"]
     for email in invalid_emails:
         with pytest.raises(InvalidInputException) as excinfo:
-            print(email)
             _validate_student_email(email)
         assert "EMAIL_INVALID_FORMAT" in str(excinfo.value)
 

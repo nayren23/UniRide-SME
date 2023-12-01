@@ -25,7 +25,9 @@ class Config:
     MAIL_DEBUG = False
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+
     MAIL_EXPIRATION = int(os.getenv("MAIL_EXPIRATION"))
+
     UNIVERSITY_EMAIL_DOMAIN = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
 
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH"))
@@ -76,6 +78,15 @@ class Config:
     BASE_RATE = float(os.getenv("BASE_RATE"))
 
     ACCEPT_TIME_DIFFERENCE_MINUTES = int(os.getenv("ACCEPT_TIME_DIFFERENCE_MINUTES"))
+
+    # FLask configuration
+    FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+    FLASK_HOST = os.getenv("FLASK_HOST")
+    FLASK_PORT = os.getenv("FLASK_PORT")
+
+    # CERTS
+    CERTIFICATE_CRT_FOLDER = os.getenv("CERTIFICATE_CRT_FOLDER")
+    CERTIFICATE_KEY_FOLDER = os.getenv("CERTIFICATE_KEY_FOLDER")
 
 
 class TestingConfig(Config):
