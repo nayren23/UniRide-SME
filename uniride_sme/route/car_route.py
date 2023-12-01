@@ -56,10 +56,8 @@ def get_car_information():
     try:
         user_id = get_jwt_identity()
         car_info = get_car_info_by_user_id(user_id)
-
-        available_car = format_get_information_car(car_info)
-
         if car_info:
+            available_car = format_get_information_car(car_info)
             response = jsonify(available_car), 200
         else:
             response = jsonify({"message": "CAR_NOT_FOUND"}), 404
