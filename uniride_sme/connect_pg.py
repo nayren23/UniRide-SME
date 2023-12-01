@@ -5,6 +5,7 @@ from configparser import NoSectionError
 import psycopg2
 import psycopg2.extras
 import os
+from uniride_sme import app
 from uniride_sme.config import config
 
 
@@ -13,8 +14,13 @@ def connect(filename="config.ini", section="postgresql"):
     conn = None
     try:
         # read connection parameters
-        params = config(filename, section)
-        params["database"] = os.getenv("DB_NAME", "uniride")  # TODO: Load database parameters only from env variables
+        params = {}
+        params["dbname"] = app.config["DB_NAME"]
+        params["user"] = app.config["DB_USER"]
+        params["password"] = app.config["DB_PWD"]
+        params["host"] = app.config["DB_HOST"]
+        params["port"] = app.config["DB_PORT"]
+
         # connect to the PostgreSQL server
         print("Connecting to the PostgreSQL database...")
         conn = psycopg2.connect(**params)

@@ -17,8 +17,8 @@ from uniride_sme.utils.exception.user_exceptions import (
 )
 
 
-def authentificate(login, password) -> UserBO:
-    """Authentificate the user"""
+def authenticate(login, password) -> UserBO:
+    """authenticate the user"""
     # check if exist
     if not login:
         raise MissingInputException("LOGIN_MISSING")

@@ -12,7 +12,7 @@ from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.pagination import create_pagination
 from uniride_sme.service.trip_service import (
-    add_in_db,
+    add_trip_in_db,
     get_driver_trips,
     get_available_trips_to,
     format_get_current_driver_trips,
@@ -51,7 +51,7 @@ def propose_trip():
             arrival_address_bo=AddressBO(address_id=json_object.get("address_arrival_id", None)),
             status=TripStatus.PENDING.value,
         )
-        add_in_db(trip_bo)
+        add_trip_in_db(trip_bo)
         response = jsonify({"message": "CREATED_SUCCESSFULLY", "trip_id": trip_bo.id}), 200
 
     except ApiException as e:
@@ -108,7 +108,7 @@ def get_available_trips():
     return response
 
 
-@trip.route("/trips/driver/current/", methods=["GET"])
+@trip.route("/trips/driver/current", methods=["GET"])
 @jwt_required()
 def get_current_driver_trips():
     """Get all the current trips of a driver"""

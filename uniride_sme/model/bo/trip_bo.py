@@ -1,10 +1,11 @@
 """Contains the business object of the trip"""
+import dataclasses
 
 from uniride_sme import app
 from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.utils.cartography.route_checker_factory import RouteCheckerFactory
 
-
+@dataclasses.dataclass
 class TripBO:
     """Business object of the trip"""
 

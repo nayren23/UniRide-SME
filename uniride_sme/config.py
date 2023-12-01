@@ -25,7 +25,9 @@ class Config:
     MAIL_DEBUG = False
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+
     MAIL_EXPIRATION = int(os.getenv("MAIL_EXPIRATION"))
+
     UNIVERSITY_EMAIL_DOMAIN = os.getenv("UNIVERSITY_EMAIL_DOMAIN")
 
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH"))
@@ -37,7 +39,7 @@ class Config:
     # JWT config
     JWT_SALT = os.getenv("JWT_SALT").encode("utf8")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=60)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES")))
 
     # RQ config
     CACHE_TYPE = os.getenv("CACHE_TYPE")
@@ -77,18 +79,30 @@ class Config:
 
     ACCEPT_TIME_DIFFERENCE_MINUTES = int(os.getenv("ACCEPT_TIME_DIFFERENCE_MINUTES"))
 
+    # FLask configuration
+    FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+    FLASK_HOST = os.getenv("FLASK_HOST")
+    FLASK_PORT = os.getenv("FLASK_PORT")
+
+    # CERTS
+    CERTIFICATE_CRT_FOLDER = os.getenv("CERTIFICATE_CRT_FOLDER")
+    CERTIFICATE_KEY_FOLDER = os.getenv("CERTIFICATE_KEY_FOLDER")
+
 
 class TestingConfig(Config):
     """Testing Config variables"""
 
+    UNIVERSITY_EMAIL_DOMAIN = "university.com"
     TESTING = True
-    DB_NAME = os.getenv("DB_NAME", "uniride") + "_test"
+    DB_HOST = ""
 
 
 def config(filename="config.ini", section="postgresql"):
     """Configure database connection"""
     parser = ConfigParser()
-    if not parser.read(filename):
+    file_path = os.path.join(os.path.dirname(__file__), filename)
+
+    if not parser.read(file_path):
         raise FileNotFoundError(f"Configuration file '{filename}' not found.")
 
     if not parser.has_section(section):

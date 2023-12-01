@@ -15,7 +15,7 @@ from uniride_sme.utils.exception.exceptions import (
 )
 
 
-def add_in_db(address: AddressBO):
+def add_address_in_db(address: AddressBO):
     """Insert the address in the database"""
     existing_address_id = address_exists(address.street_number, address.street_name, address.city)
 
