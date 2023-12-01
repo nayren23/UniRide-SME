@@ -441,7 +441,6 @@ def get_available_trips_to(trip: TripBO):
 
     set_latitude_longitude_from_address(university_address_bo)
 
-    validate_total_passenger_count(trip.total_passenger_count)
     validate_timestamp_proposed(trip.timestamp_proposed)
 
     available_trips = get_trips_for_university_address(
