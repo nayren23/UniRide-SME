@@ -81,8 +81,9 @@ class Config:
 class TestingConfig(Config):
     """Testing Config variables"""
 
+    UNIVERSITY_EMAIL_DOMAIN = "university.com"
     TESTING = True
-    DB_NAME = os.getenv("DB_NAME", "uniride") + "_test"
+    DB_HOST = ""
 
 
 def config(filename="config.ini", section="postgresql"):

@@ -42,11 +42,11 @@ def register():
 
 
 @user.route("/auth", methods=["POST"])
-def authentificate():
+def authenticate():
     """Authenfication endpoint"""
     json_object = request.json
     try:
-        user_bo = user_service.authentificate(json_object.get("login", None), json_object.get("password", None))
+        user_bo = user_service.authenticate(json_object.get("login", None), json_object.get("password", None))
         documents_bo = documents_service.get_documents_by_user_id(user_bo.u_id)
         informations_verified_dto = InformationsVerifiedDTO(
             email_verified=user_bo.u_email_verified,
