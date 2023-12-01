@@ -18,7 +18,7 @@ car = Blueprint("car", __name__)
 
 @car.route("/car/add", methods=["POST"])
 @jwt_required()
-def car_information():
+def add_car_information():
     """Add information car endpoint"""
     try:
         json_object = request.json

@@ -4,6 +4,7 @@ from uniride_sme import connect_pg
 from uniride_sme.model.bo.car_bo import CarBO
 from uniride_sme.model.dto.car_dto import CarDTO
 from uniride_sme.utils.exception.exceptions import InvalidInputException, MissingInputException
+from uniride_sme.utils.exception.car_execeptions import CarAlreadyExist
 
 
 def add_in_db(car: CarBO):
@@ -34,13 +35,12 @@ def add_in_db(car: CarBO):
     )
     try:
         conn = connect_pg.connect()
-        car_id = connect_pg.execute_command(conn, query, values)
-
-        car.id = car_id
+        connect_pg.execute_command(conn, query, values)
+        
         connect_pg.disconnect(conn)
     except psy.Error as e:
         if "ur_vehicle_u_id_key" in str(e):
-            raise InvalidInputException("USER_ID_ALREADY_USED")
+            raise CarAlreadyExist()
         else:
             raise InvalidInputException("INVALID_INPUT")
 
