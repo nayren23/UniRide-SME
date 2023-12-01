@@ -22,9 +22,15 @@ class OpenStreetMapRouteChecker(RouteChecker):
         destination_str = f"{destination[1]},{destination[0]}"
 
         # Construct the URL for the OpenStreetMap API
-        api_url_origin_destination = f"{self.api_base_url}{self.mode}/{origin_str};{destination_str}?overview=false&steps=false"
-        api_url_origin_intermediate = f"{self.api_base_url}{self.mode}/{origin_str};{intermediate_point_str}?overview=false&steps=false"
-        api_url_intermediate_destination = f"{self.api_base_url}{self.mode}/{intermediate_point_str};{destination_str}?overview=false&steps=false"
+        api_url_origin_destination = (
+            f"{self.api_base_url}{self.mode}/{origin_str};{destination_str}?overview=false&steps=false"
+        )
+        api_url_origin_intermediate = (
+            f"{self.api_base_url}{self.mode}/{origin_str};{intermediate_point_str}?overview=false&steps=false"
+        )
+        api_url_intermediate_destination = (
+            f"{self.api_base_url}{self.mode}/{intermediate_point_str};{destination_str}?overview=false&steps=false"
+        )
 
         # Make the API requests
         response_initial = requests.get(api_url_origin_destination, timeout=5)
@@ -62,6 +68,7 @@ class OpenStreetMapRouteChecker(RouteChecker):
 
         if time_difference_minutes <= accept_time_difference_minutes:
             return True
+        return False
 
     def get_distance(self, origin, destination):
         """Get the distance between two points"""
@@ -81,3 +88,4 @@ class OpenStreetMapRouteChecker(RouteChecker):
             route = data["routes"][0]["legs"][0]
             initial_distance = float(route["distance"] / 1000)  # Distance in kilometers
             return initial_distance
+        return None

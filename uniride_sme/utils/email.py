@@ -2,10 +2,13 @@
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
-from uniride_sme import app, mail
+from uniride_sme import app, mail, rq
 from uniride_sme.utils.exception.exceptions import InvalidInputException
+from uniride_sme.utils.decorator import with_app_context
 
 
+@rq.job
+@with_app_context
 def send_email(to, subject, template):
     """Send email"""
     msg = Message(
@@ -15,6 +18,7 @@ def send_email(to, subject, template):
         sender=app.config["MAIL_USERNAME"],
     )
     mail.send(msg)
+    print("Email sent")
 
 
 def generate_token(email):
@@ -23,11 +27,13 @@ def generate_token(email):
     return serializer.dumps(email, salt=app.config["SECURITY_PASSWORD_SALT"])
 
 
-def confirm_token(token, expiration=600):
+def confirm_token(token):
     """Verify the token for email verification is valid"""
     serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
     try:
-        email = serializer.loads(token, salt=app.config["SECURITY_PASSWORD_SALT"], max_age=expiration)
+        email = serializer.loads(
+            token, salt=app.config["SECURITY_PASSWORD_SALT"], max_age=app.config["MAIL_EXPIRATION"]
+        )
         return email
     except SignatureExpired as e:
         raise InvalidInputException("LINK_EXPIRED") from e

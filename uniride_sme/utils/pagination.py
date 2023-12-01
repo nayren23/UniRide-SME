@@ -1,4 +1,4 @@
-import uniride_sme.utils.exception.exceptions as InvalidInputException
+"""Pagination Module"""
 
 
 def generate_pagination_metadata(page, page_size, total_count):
