@@ -245,13 +245,9 @@ def send_verification_email(student_email, firstname, first_mail=False):
         "r",
         encoding="UTF-8",
     ) as html:
-        url = url_for(
-            "user.verify_email",
-            token=email.generate_token(student_email),
-            _external=False,
-        )
-        url = app.config["FRONT_END_URL"] + url
-        email.send_email.queue(
+        url = app.config["FRONT_END_URL"] + "email-verification/" + email.generate_token(student_email)
+        print(url)
+        email.send_email(
             student_email,
             "Vérifier votre email",
             html.read().replace("{firstname}", firstname).replace("{link}", url),
