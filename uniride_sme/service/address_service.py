@@ -54,13 +54,13 @@ def add_address_in_db(address: AddressBO):
 
 def valid_street_number(street_number):
     """Check if the street number is valid"""
-    if street_number is None:
+    if not street_number:
         raise InvalidInputException("STREET_NUMBER_CANNOT_BE_NULL")
 
 
 def valid_street_name(street_name):
     """Check if the street name is valid"""
-    if street_name is None:
+    if not street_name:
         raise InvalidInputException("STREET_NAME_CANNOT_BE_NULL")
     if len(street_name) > 255:
         raise InvalidInputException("STREET_NAME_CANNOT_BE_GREATER_THAN_255")
@@ -68,7 +68,7 @@ def valid_street_name(street_name):
 
 def valid_city(city):
     """Check if the city is valid"""
-    if city is None:
+    if not city:
         raise InvalidInputException("CITY_CANNOT_BE_NULL")
     if len(city) > 255:
         raise InvalidInputException("CITY_CANNOT_BE_GREATER_THAN_255")
@@ -76,13 +76,13 @@ def valid_city(city):
 
 def valid_postal_code(postal_code):
     """Check if the postal code is valid"""
-    if postal_code is None:
+    if not postal_code:
         raise InvalidInputException("POSTAL_CODE_CANNOT_BE_NULL")
 
 
 def valid_latitude(latitude):
     """Check if the latitude is valid"""
-    if latitude is None:
+    if not latitude:
         raise InvalidInputException("LATITUDE_CANNOT_BE_NULL")
     if latitude > 90 or latitude < -90:
         raise InvalidInputException("LATITUDE_CANNOT_BE_GREATER_THAN_90_OR_LESS_THAN_-90")
@@ -90,7 +90,7 @@ def valid_latitude(latitude):
 
 def valid_longitude(longitude):
     """Check if the longitude is valid"""
-    if longitude is None:
+    if not longitude:
         raise InvalidInputException("LONGITUDE_CANNOT_BE_NULL")
     if longitude > 180 or longitude < -180:
         raise InvalidInputException("LONGITUDE_CANNOT_BE_GREATER_THAN_180_OR_LESS_THAN_-180")

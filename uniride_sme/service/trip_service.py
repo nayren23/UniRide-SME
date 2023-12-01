@@ -11,6 +11,7 @@ from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO
 from uniride_sme.model.dto.address_dto import AddressSimpleDTO
 from uniride_sme.model.dto.trip_dto import TripDTO
+from uniride_sme.service.car_service import get_car_info_by_user_id
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
@@ -39,7 +40,7 @@ def add_trip_in_db(trip: TripBO):
     calculate_price(trip)
 
     # validate values
-    validate_total_passenger_count(trip.total_passenger_count)
+    validate_total_passenger_count(trip.total_passenger_count, trip.user_id)
     validate_timestamp_proposed(trip.timestamp_proposed)
     validate_status(trip.status)
     validate_price(trip.price)
@@ -70,13 +71,14 @@ def add_trip_in_db(trip: TripBO):
     trip.id = trip_id
 
 
-def validate_total_passenger_count(total_passenger_count):
+def validate_total_passenger_count(total_passenger_count, user_id):
     """Check if the total passenger count is valid"""
     if total_passenger_count is None:
         raise MissingInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NULL")
     if total_passenger_count < 0:
         raise InvalidInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NEGATIVE")
-    if total_passenger_count > 10:  # TODO: change the number of seats in the car DB
+    info_car = get_car_info_by_user_id(user_id)
+    if total_passenger_count > info_car[0].get("v_total_places"):
         raise InvalidInputException("TOTAL_PASSENGER_COUNT_TOO_HIGH")
 
 
