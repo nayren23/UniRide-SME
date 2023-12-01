@@ -40,7 +40,8 @@ def add_trip_in_db(trip: TripBO):
     calculate_price(trip)
 
     # validate values
-    validate_total_passenger_count(trip.total_passenger_count, trip.user_id)
+    #validate_total_passenger_count(trip.total_passenger_count, trip.user_id)
+    validate_total_passenger_count(trip.total_passenger_count)
     validate_timestamp_proposed(trip.timestamp_proposed)
     validate_status(trip.status)
     validate_price(trip.price)
@@ -71,14 +72,15 @@ def add_trip_in_db(trip: TripBO):
     trip.id = trip_id
 
 
-def validate_total_passenger_count(total_passenger_count, user_id):
+def validate_total_passenger_count(total_passenger_count):
     """Check if the total passenger count is valid"""
     if total_passenger_count is None:
         raise MissingInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NULL")
     if total_passenger_count < 0:
         raise InvalidInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NEGATIVE")
-    info_car = get_car_info_by_user_id(user_id)
-    if total_passenger_count > info_car[0].get("v_total_places"):
+    #info_car = get_car_info_by_user_id(user_id)
+    #if total_passenger_count > info_car[0].get("v_total_places"):
+    if total_passenger_count > 4 :
         raise InvalidInputException("TOTAL_PASSENGER_COUNT_TOO_HIGH")
 
 
