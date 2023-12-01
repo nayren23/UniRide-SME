@@ -264,7 +264,7 @@ def _validate_gender(gender):
 def _validate_phone_number(phone_number):
     """Check if the phone number is valid"""
     # check if the format is valid
-    if phone_number and not (phone_number.isdigit() and len(phone_number) == 9):
+    if phone_number and not (phone_number.isdigit() and len(phone_number) == 10):
         raise InvalidInputException("PHONE_NUMBER_INVALID")
 
 
