@@ -13,3 +13,7 @@ class RouteChecker(ABC):
     @abstractmethod
     def get_distance(self, origin, destination):
         """Get the distance between two points"""
+
+    @abstractmethod
+    def get_duration(self, origin, destination):
+        """Get the duration between two points"""

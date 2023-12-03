@@ -11,3 +11,17 @@ class TripDTO(TypedDict):
     price: float
     proposed_date: str
     total_passenger_count: int
+
+
+class TripDetailedDTO(TypedDict):
+    """Trip DTO (Data Transfer Object)"""
+
+    id_trajet: int
+    adresse: dict
+    driver_id: int
+    price: float
+    departure_date: str
+    arrival_date: str
+    passenger_count: int
+    total_passenger_count: int
+    status: int

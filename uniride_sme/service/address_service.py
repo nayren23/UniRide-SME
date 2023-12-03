@@ -156,7 +156,7 @@ def concatene_address(street_number, street_name, city, postal_code):
 def check_address_existence(address_bo: AddressBO):
     """Get the address from the id"""
 
-    validate_address_depart_id(address_bo.id)
+    validate_address_departure_id(address_bo.id)
 
     query = """
     SELECT a_street_number, a_street_name, a_city, a_postal_code, a_latitude, a_longitude
@@ -187,8 +187,8 @@ def check_address_exigeance(address: AddressBO):
     valid_postal_code(address.postal_code)
 
 
-def validate_address_depart_id(id_address):
-    """Check if the address depart id is valid"""
+def validate_address_departure_id(id_address):
+    """Check if the address departure id is valid"""
     if id_address is None:
         raise MissingInputException("ADDRESS_ID_CANNOT_BE_NULL")
     if id_address < 0:

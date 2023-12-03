@@ -268,6 +268,7 @@ def verify_email(token):
 
 
 @user.route("/infos/<user_id>", methods=["GET"])
+@jwt_required()
 def get_driver_infos(user_id):
     """Get user infos endpoint"""
     try:
