@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required
 
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
-from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO
+from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
@@ -261,6 +261,24 @@ def verify_email(token):
     try:
         student_email = email.confirm_token(token)
         user_service.verify_student_email(student_email)
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@user.route("/infos/<user_id>", methods=["GET"])
+def get_driver_infos(user_id):
+    """Get user infos endpoint"""
+    try:
+        user_bo = user_service.get_user_by_id(user_id)
+        user_infos_dto = DriverInfosDTO(
+            id=user_bo.u_id,
+            firstname=user_bo.u_firstname,
+            lastname=user_bo.u_lastname,
+            description=user_bo.u_description,
+        )
+        response = jsonify(user_infos_dto), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
