@@ -617,6 +617,7 @@ def get_trip_by_id(trip_id):
     )
     return trip_dto
 
+
 def book_trip(trip_id, user_id, passenger_count):
     """Book a trip"""
     trip = get_trip_by_id(trip_id)
@@ -624,15 +625,13 @@ def book_trip(trip_id, user_id, passenger_count):
         raise InvalidInputException("DRIVER_CANNOT_BOOK_HIS_OWN_TRIP")
     if passenger_count > trip["total_passenger_count"] - trip["passenger_count"]:
         raise InvalidInputException("PASSENGER_COUNT_TOO_HIGH")
-    
-    query ="INSERT INTO uniride.ur_join(u_id, t_id, r_passenger_count) VALUES (%s, %s, %s);"
+
+    query = "INSERT INTO uniride.ur_join(u_id, t_id, r_passenger_count) VALUES (%s, %s, %s);"
     values = (trip_id, user_id, passenger_count)
 
     try:
         conn = connect_pg.connect()
         connect_pg.execute_command(conn, query, values)
         connect_pg.disconnect(conn)
-    except psycopg2.errors.UniqueViolation:
-        raise TripAlreadyBookedException()
-    
-
+    except psycopg2.errors.UniqueViolation as e:
+        raise TripAlreadyBookedException() from e

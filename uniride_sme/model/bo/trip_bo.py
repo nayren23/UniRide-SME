@@ -36,6 +36,3 @@ class TripBO:
 
         self.departure_address = departure_address_bo
         self.arrival_address = arrival_address_bo
-
-    def __repr__(self) -> str:
-        return f"TripBO({self.id}, {self.total_passenger_count}, {self.timestamp_creation}, {self.timestamp_proposed}, {self.status}, {self.price}, {self.user_id}, {self.departure_address}, {self.arrival_address})"
