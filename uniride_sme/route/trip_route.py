@@ -19,10 +19,30 @@ from uniride_sme.service.trip_service import (
     get_trip_by_id,
 )
 
-trip = Blueprint("trip", __name__)
+"""Trip related routes"""
+
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt_identity
+
+from uniride_sme.model.bo.trip_bo import TripBO
+from uniride_sme.model.bo.address_bo import AddressBO
+
+from uniride_sme.utils.exception.exceptions import ApiException
+from uniride_sme.utils.trip_status import TripStatus
+from uniride_sme.utils.field import validate_fields
+from uniride_sme.utils.pagination import create_pagination
+from uniride_sme.service.trip_service import (
+    add_trip,
+    get_driver_trips,
+    get_available_trips_to,
+    get_trip_by_id,
+)
+
+trip = Blueprint("trip", __name__, url_prefix="/trip")
 
 
-@trip.route("/trip/propose", methods=["POST"])
+@trip.route("/propose", methods=["POST"])
 @jwt_required()
 def propose_trip():
     """Propose a trip endpoint
@@ -61,16 +81,16 @@ def propose_trip():
     return response
 
 
-@trip.route("/trips", methods=["POST"])
+@trip.route("", methods=["POST"])
 def get_available_trips():
     """Get all the available trips endpoint"""
 
     try:
         json_object = request.json
 
-        validate_fields(request.json, {"depart": dict, "arrival": dict, "trip": dict})
+        validate_fields(request.json, {"departure": dict, "arrival": dict, "trip": dict})
         validate_fields(
-            json_object["depart"], {"street_number": str, "street_name": str, "city": str, "postal_code": str}
+            json_object["departure"], {"street_number": str, "street_name": str, "city": str, "postal_code": str}
         )
         validate_fields(
             json_object["arrival"], {"street_number": str, "street_name": str, "city": str, "postal_code": str}
@@ -78,10 +98,10 @@ def get_available_trips():
         validate_fields(json_object["trip"], {"passenger_count": int, "departure_date": str})
 
         departure_address_bo = AddressBO(
-            street_number=(json_object.get("depart").get("street_number", None)).strip(),
-            street_name=json_object.get("depart").get("street_name", None).strip(),
-            city=json_object.get("depart").get("city", None).strip(),
-            postal_code=json_object.get("depart").get("postal_code", None).strip(),
+            street_number=(json_object.get("departure").get("street_number", None)).strip(),
+            street_name=json_object.get("departure").get("street_name", None).strip(),
+            city=json_object.get("departure").get("city", None).strip(),
+            postal_code=json_object.get("departure").get("postal_code", None).strip(),
         )
 
         address_arrival_bo = AddressBO(
@@ -109,7 +129,7 @@ def get_available_trips():
     return response
 
 
-@trip.route("/trips/driver/current", methods=["GET"])
+@trip.route("/driver/current", methods=["GET"])
 @jwt_required()
 def get_current_driver_trips():
     """Get all the current trips of a driver"""
@@ -129,9 +149,9 @@ def get_current_driver_trips():
     return response
 
 
-@trip.route("/trips/<trip_id>", methods=["GET"])
+@trip.route("/<trip_id>", methods=["GET"])
 def get_trip(trip_id):
-    """Get all the current trips of a driver"""
+    """Get a trip by id endpoint"""
     try:
         trip_detailed_dto = get_trip_by_id(trip_id)
         response = jsonify(trip_detailed_dto), 200
@@ -139,6 +159,7 @@ def get_trip(trip_id):
         response = jsonify(message=e.message), e.status_code
 
     return response
+
 
 @trip.route("/trip/book/", methods=["POST"])
 @jwt_required()
