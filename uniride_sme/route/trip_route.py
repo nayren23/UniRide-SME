@@ -11,6 +11,7 @@ from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.pagination import create_pagination
+from uniride_sme.service import trip_service
 from uniride_sme.service.trip_service import (
     add_trip,
     get_driver_trips,
@@ -136,5 +137,30 @@ def get_trip(trip_id):
         response = jsonify(trip_detailed_dto), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
+
+    return response
+
+@trip.route("/trip/book/", methods=["POST"])
+@jwt_required()
+def book_trip():
+    """Propose a trip endpoint
+    "We define the  price of the trip and the status of the trip as pending
+    """
+
+    response = jsonify({"message": "TRIP_BOOKED_SUCCESSFULLY"}), 200
+    try:
+        user_id = get_jwt_identity()
+        json_object = request.json
+
+        validate_fields(
+            json_object,
+            {
+                "trip_id": int,
+                "passenger_count": int,
+            },
+        )
+        trip_service.book_trip(json_object["trip_id"], user_id, json_object["passenger_count"])
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
 
     return response
