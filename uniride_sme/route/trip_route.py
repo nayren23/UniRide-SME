@@ -19,26 +19,6 @@ from uniride_sme.service.trip_service import (
     get_trip_by_id,
 )
 
-"""Trip related routes"""
-
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import get_jwt_identity
-
-from uniride_sme.model.bo.trip_bo import TripBO
-from uniride_sme.model.bo.address_bo import AddressBO
-
-from uniride_sme.utils.exception.exceptions import ApiException
-from uniride_sme.utils.trip_status import TripStatus
-from uniride_sme.utils.field import validate_fields
-from uniride_sme.utils.pagination import create_pagination
-from uniride_sme.service.trip_service import (
-    add_trip,
-    get_driver_trips,
-    get_available_trips_to,
-    get_trip_by_id,
-)
-
 trip = Blueprint("trip", __name__, url_prefix="/trip")
 
 
