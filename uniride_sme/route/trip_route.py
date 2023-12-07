@@ -11,6 +11,7 @@ from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.pagination import create_pagination
+from uniride_sme.service import trip_service
 from uniride_sme.service.trip_service import (
     add_trip,
     get_driver_trips,
@@ -18,10 +19,10 @@ from uniride_sme.service.trip_service import (
     get_trip_by_id,
 )
 
-trip = Blueprint("trip", __name__)
+trip = Blueprint("trip", __name__, url_prefix="/trip")
 
 
-@trip.route("/trip/propose", methods=["POST"])
+@trip.route("/propose", methods=["POST"])
 @jwt_required()
 def propose_trip():
     """Propose a trip endpoint
@@ -60,16 +61,16 @@ def propose_trip():
     return response
 
 
-@trip.route("/trips", methods=["POST"])
+@trip.route("", methods=["POST"])
 def get_available_trips():
     """Get all the available trips endpoint"""
 
     try:
         json_object = request.json
 
-        validate_fields(request.json, {"depart": dict, "arrival": dict, "trip": dict})
+        validate_fields(request.json, {"departure": dict, "arrival": dict, "trip": dict})
         validate_fields(
-            json_object["depart"], {"street_number": str, "street_name": str, "city": str, "postal_code": str}
+            json_object["departure"], {"street_number": str, "street_name": str, "city": str, "postal_code": str}
         )
         validate_fields(
             json_object["arrival"], {"street_number": str, "street_name": str, "city": str, "postal_code": str}
@@ -77,10 +78,10 @@ def get_available_trips():
         validate_fields(json_object["trip"], {"passenger_count": int, "departure_date": str})
 
         departure_address_bo = AddressBO(
-            street_number=(json_object.get("depart").get("street_number", None)).strip(),
-            street_name=json_object.get("depart").get("street_name", None).strip(),
-            city=json_object.get("depart").get("city", None).strip(),
-            postal_code=json_object.get("depart").get("postal_code", None).strip(),
+            street_number=(json_object.get("departure").get("street_number", None)).strip(),
+            street_name=json_object.get("departure").get("street_name", None).strip(),
+            city=json_object.get("departure").get("city", None).strip(),
+            postal_code=json_object.get("departure").get("postal_code", None).strip(),
         )
 
         address_arrival_bo = AddressBO(
@@ -108,7 +109,7 @@ def get_available_trips():
     return response
 
 
-@trip.route("/trips/driver/current", methods=["GET"])
+@trip.route("/driver/current", methods=["GET"])
 @jwt_required()
 def get_current_driver_trips():
     """Get all the current trips of a driver"""
@@ -128,13 +129,39 @@ def get_current_driver_trips():
     return response
 
 
-@trip.route("/trips/<trip_id>", methods=["GET"])
+@trip.route("/<trip_id>", methods=["GET"])
 def get_trip(trip_id):
-    """Get all the current trips of a driver"""
+    """Get a trip by id endpoint"""
     try:
         trip_detailed_dto = get_trip_by_id(trip_id)
         response = jsonify(trip_detailed_dto), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@trip.route("/trip/book/", methods=["POST"])
+@jwt_required()
+def book_trip():
+    """Propose a trip endpoint
+    "We define the  price of the trip and the status of the trip as pending
+    """
+
+    response = jsonify({"message": "TRIP_BOOKED_SUCCESSFULLY"}), 200
+    try:
+        user_id = get_jwt_identity()
+        json_object = request.json
+
+        validate_fields(
+            json_object,
+            {
+                "trip_id": int,
+                "passenger_count": int,
+            },
+        )
+        trip_service.book_trip(json_object["trip_id"], user_id, json_object["passenger_count"])
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
 
     return response

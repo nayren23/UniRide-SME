@@ -29,3 +29,9 @@ class TripAlreadyExistsException(ApiException):
 
     def __init__(self):
         super().__init__("TRIP_ALREADY_EXISTS", 422)
+
+class TripAlreadyBookedException(ApiException):
+    """Exception for when the trip already exists"""
+
+    def __init__(self):
+        super().__init__("TRIP_ALREADY_BOOKED", 422)

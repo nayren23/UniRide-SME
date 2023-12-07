@@ -4,12 +4,10 @@
 from configparser import NoSectionError
 import psycopg2
 import psycopg2.extras
-import os
 from uniride_sme import app
-from uniride_sme.config import config
 
 
-def connect(filename="config.ini", section="postgresql"):
+def connect():
     """Connect to the PostgreSQL database server"""
     conn = None
     try:

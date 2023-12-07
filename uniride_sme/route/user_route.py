@@ -1,5 +1,5 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify, url_for
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -10,7 +10,7 @@ from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
-
+from uniride_sme.utils.jwt_token import revoke_token
 
 user = Blueprint("user", __name__, url_prefix="/user")
 
@@ -63,6 +63,14 @@ def authenticate():
         response = jsonify(message=e.message), e.status_code
 
     return response
+
+
+@user.route("/logout", methods=["DELETE"])
+@jwt_required()
+def logout():
+    """Logout endpoint"""
+    revoke_token()
+    return jsonify(message="ACCESS_TOKEN_REVOKED"), 200
 
 
 @user.route("/infos", methods=["GET"])

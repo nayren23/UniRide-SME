@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from math import ceil
 from typing import List
+import psycopg2
 
 from uniride_sme import app
 from uniride_sme import connect_pg
@@ -24,6 +25,7 @@ from uniride_sme.utils.exception.trip_exceptions import (
     MissingInputException,
     TripAlreadyExistsException,
     TripNotFoundException,
+    TripAlreadyBookedException,
 )
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.maths_formulas import haversine
@@ -67,7 +69,7 @@ def add_trip(trip: TripBO):
 
     conn = connect_pg.connect()
     trip_id = connect_pg.execute_command(conn, query, values)
-
+    connect_pg.disconnect(conn)
     trip.id = trip_id
 
 
@@ -121,9 +123,9 @@ def validate_user_id(user_id):
 
 
 def validate_address_departure_id_equals_address_arrival_id(departure_address: AddressBO, arrival_address: AddressBO):
-    """Check if the address departureid is not equal to the address arrival id"""
+    """Check if the address departure id is not equal to the address arrival id"""
     if departure_address.id == arrival_address.id:
-        raise InvalidInputException("ADDRESS_departure_ID_CANNOT_BE_EQUALS_TO_ADDRESS_ARRIVAL_ID")
+        raise InvalidInputException("ADDRESS_DEPARTURE_ID_CANNOT_BE_EQUALS_TO_ADDRESS_ARRIVAL_ID")
 
     university_address_bo = AddressBO(
         street_number=app.config["UNIVERSITY_STREET_NUMBER"],
@@ -141,7 +143,7 @@ def validate_address_departure_id_equals_address_arrival_id(departure_address: A
     )
 
     if id_university not in (id_departure, id_arrival):
-        raise InvalidInputException("ADDRESS_departure_OR_ADDRESS_ARRIVAL_MUST_BE_EQUALS_TO_UNIVERSITY_ADDRESS")
+        raise InvalidInputException("ADDRESS_DEPARTURE_OR_ADDRESS_ARRIVAL_MUST_BE_EQUALS_TO_UNIVERSITY_ADDRESS")
 
 
 def calculate_price(trip: TripBO):
@@ -505,7 +507,7 @@ def get_available_trips_to(trip: TripBO):
 
 
 def get_trip_by_id(trip_id):
-    """Get the trip by id"""
+    """Get the formatted trip by id"""
     if not trip_id:
         raise MissingInputException("TRIP_ID_MISSING")
 
@@ -530,20 +532,15 @@ def get_trip_by_id(trip_id):
             arrival.a_city AS arrival_a_city,
             arrival.a_postal_code AS arrival_a_postal_code,
             arrival.a_latitude AS arrival_a_latitude,
-            arrival.a_longitude AS arrival_a_longitude,
-            SUM(j.r_passenger_count) AS passenger_count
+            arrival.a_longitude AS arrival_a_longitude
         FROM 
             uniride.ur_trip t
         JOIN 
             uniride.ur_address departure ON t.t_address_departure_id = departure.a_id
         JOIN 
             uniride.ur_address arrival ON t.t_address_arrival_id = arrival.a_id
-        JOIN
-            uniride.ur_join j ON t.t_id = j.t_id
         WHERE
             t.t_id = %s
-        AND
-            j.r_accepted = true
         GROUP BY
             t.t_id, 
             t.t_price, 
@@ -564,13 +561,20 @@ def get_trip_by_id(trip_id):
             arrival.a_city,
             arrival.a_postal_code,
             arrival.a_latitude,
-            arrival.a_longitude;
+            arrival.a_longitude
     """
 
     conn = connect_pg.connect()
     trip = connect_pg.get_query(conn, query, (trip_id,), True)
+    if not trip:
+        raise TripNotFoundException()
+    trip = trip[0]
+
+    query = "SELECT COUNT(*) FROM uniride.ur_join WHERE t_id = %s"
+    passenger_count = connect_pg.get_query(conn, query, (trip_id,))[0][0]
     connect_pg.disconnect(conn)
-    trip_bo = format_trip(trip[0])
+    trip["passenger_count"] = passenger_count
+    trip_bo = format_trip(trip)
     origin = (trip_bo.departure_address.latitude, trip_bo.departure_address.longitude)
     destination = (trip_bo.arrival_address.latitude, trip_bo.arrival_address.longitude)
     duration = trip_bo.route_checker.get_duration(origin, destination)
@@ -612,3 +616,22 @@ def get_trip_by_id(trip_id):
         status=trip_bo.status,
     )
     return trip_dto
+
+
+def book_trip(trip_id, user_id, passenger_count):
+    """Book a trip"""
+    trip = get_trip_by_id(trip_id)
+    if trip["driver_id"] == user_id:
+        raise InvalidInputException("DRIVER_CANNOT_BOOK_HIS_OWN_TRIP")
+    if passenger_count > trip["total_passenger_count"] - trip["passenger_count"]:
+        raise InvalidInputException("PASSENGER_COUNT_TOO_HIGH")
+
+    query = "INSERT INTO uniride.ur_join(u_id, t_id, r_passenger_count) VALUES (%s, %s, %s);"
+    values = (trip_id, user_id, passenger_count)
+
+    try:
+        conn = connect_pg.connect()
+        connect_pg.execute_command(conn, query, values)
+        connect_pg.disconnect(conn)
+    except psycopg2.errors.UniqueViolation as e:
+        raise TripAlreadyBookedException() from e
