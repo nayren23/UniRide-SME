@@ -570,10 +570,10 @@ def get_trip_by_id(trip_id):
         raise TripNotFoundException()
     trip = trip[0]
 
-    query = "SELECT COUNT(*) FROM uniride.ur_join WHERE t_id = %s"
+    query = "SELECT SUM(r_passenger_count) FROM uniride.ur_join WHERE t_id = %s and r_accepted = true"
     passenger_count = connect_pg.get_query(conn, query, (trip_id,))[0][0]
     connect_pg.disconnect(conn)
-    trip["passenger_count"] = passenger_count
+    trip["passenger_count"] = passenger_count if passenger_count else 0
     trip_bo = format_trip(trip)
     origin = (trip_bo.departure_address.latitude, trip_bo.departure_address.longitude)
     destination = (trip_bo.arrival_address.latitude, trip_bo.arrival_address.longitude)
@@ -627,7 +627,7 @@ def book_trip(trip_id, user_id, passenger_count):
         raise InvalidInputException("PASSENGER_COUNT_TOO_HIGH")
 
     query = "INSERT INTO uniride.ur_join(u_id, t_id, r_passenger_count) VALUES (%s, %s, %s);"
-    values = (trip_id, user_id, passenger_count)
+    values = (user_id, trip_id, passenger_count)
 
     try:
         conn = connect_pg.connect()

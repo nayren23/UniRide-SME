@@ -141,7 +141,7 @@ def get_trip(trip_id):
     return response
 
 
-@trip.route("/trip/book/", methods=["POST"])
+@trip.route("/book", methods=["POST"])
 @jwt_required()
 def book_trip():
     """Propose a trip endpoint
