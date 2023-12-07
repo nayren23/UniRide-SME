@@ -5,7 +5,7 @@ from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 
 from uniride_sme import app
-from uniride_sme.service import user_service, documents_service
+from uniride_sme.service import user_service, documents_service, document_verification_service
 from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
@@ -13,6 +13,7 @@ from uniride_sme.utils import email
 
 
 user = Blueprint("user", __name__, url_prefix="/user")
+
 
 
 @user.route("/register", methods=["POST"])
@@ -265,3 +266,24 @@ def verify_email(token):
         response = jsonify(message=e.message), e.status_code
 
     return response
+
+
+
+
+
+
+@user.route("/verify/document", methods=["GET"])
+@jwt_required()
+def verify_document():
+    
+
+    try:
+        jsonDocVerified = document_verification_service.document_to_verify_number()
+        response = jsonify({"message":"DOCUMENT_VERIFIED_SUCCESSFULLY", "request" : jsonDocVerified}), 200
+
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    
+    return response
+
+
