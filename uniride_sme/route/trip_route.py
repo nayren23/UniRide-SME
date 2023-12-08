@@ -144,9 +144,7 @@ def get_trip(trip_id):
 @trip.route("/book", methods=["POST"])
 @jwt_required()
 def book_trip():
-    """Propose a trip endpoint
-    "We define the  price of the trip and the status of the trip as pending
-    """
+    """Book a trip endpoint"""
 
     response = jsonify({"message": "TRIP_BOOKED_SUCCESSFULLY"}), 200
     try:
@@ -161,6 +159,31 @@ def book_trip():
             },
         )
         trip_service.book_trip(json_object["trip_id"], user_id, json_object["passenger_count"])
+    except ApiException as e:
+        response = jsonify({"message": e.message}), e.status_code
+
+    return response
+
+
+@trip.route("/respond-booking", methods=["POST"])
+@jwt_required()
+def respond_booking():
+    """Respond to a booking request endpoint"""
+
+    response = jsonify({"message": "BOOKING_RESPONDED_SUCCESSFULLY"}), 200
+    try:
+        user_id = get_jwt_identity()
+        json_object = request.json
+
+        validate_fields(
+            json_object,
+            {
+                "trip_id": int,
+                "booker_id": int,
+                "response": int,
+            },
+        )
+        trip_service.respond_booking(json_object["trip_id"], user_id, json_object["booker_id"], json_object["response"])
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
 

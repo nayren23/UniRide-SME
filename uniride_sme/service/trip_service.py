@@ -26,6 +26,7 @@ from uniride_sme.utils.exception.trip_exceptions import (
     TripAlreadyExistsException,
     TripNotFoundException,
     TripAlreadyBookedException,
+    BookingNotFoundException,
 )
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.maths_formulas import haversine
@@ -635,3 +636,35 @@ def book_trip(trip_id, user_id, passenger_count):
         connect_pg.disconnect(conn)
     except psycopg2.errors.UniqueViolation as e:
         raise TripAlreadyBookedException() from e
+
+
+def get_booking_by_id(trip_id, user_id):
+    conn = connect_pg.connect()
+    query = "select * uniride.ur_join where t_id = %s and u_id = %s"
+    values = (trip_id, user_id)
+    booking = connect_pg.get_query(conn, query, values, True)
+    connect_pg.disconnect(conn)
+    if not booking:
+        raise BookingNotFoundException()
+
+    return book_trip[0]
+
+
+def respond_booking(trip_id, driver_id, booker_id, response):
+    """Book a trip"""
+    trip = get_trip_by_id(trip_id)
+    if trip["driver_id"] != driver_id:
+        raise InvalidInputException("ONLY_DRIVER_CAN_RESPOND")
+
+    booking = get_booking_by_id(trip_id, booker_id)
+    if booking["r_passenger_count"] > trip["total_passenger_count"] - trip["passenger_count"]:
+        raise InvalidInputException("PASSENGER_COUNT_TOO_HIGH")
+
+    if not booking["r_accepted"]:
+        raise InvalidInputException("BOOKING_ALREADY_RESPONDED")
+
+    query = "UPDATE uniride.ur_join set r_accepted = %s where t_id = %s and u_id = %s"
+    values = (response, trip_id, booker_id)
+    conn = connect_pg.connect()
+    connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
