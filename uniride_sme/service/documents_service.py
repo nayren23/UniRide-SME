@@ -116,6 +116,9 @@ def document_to_verify():
     for document in documents:
         last_modified_datetime = document[5]
         formatted_last_modified_date = datetime.strftime(last_modified_datetime, "%Y-%m-%d %H:%M:%S")
+        #profile_picture_url = f'https://example.com/images/{document[4]}'
+        #Vrai url du serveur d'image
+        profile_picture_url = f'/documents/pft/{document[4]}'
 
         request_data = {
             'request_number': document[1],
@@ -123,7 +126,7 @@ def document_to_verify():
             'person': {
                 'full_name': document[2] + " " + document[3],
                 'last_modified_date': formatted_last_modified_date,
-                'profile_picture': document[4],
+                'profile_picture': profile_picture_url,
             }
         }
 
