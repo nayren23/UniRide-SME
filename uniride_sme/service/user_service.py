@@ -60,7 +60,7 @@ def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
     return user_bo
 
 
-def add_user(
+def add_user(  # pylint: disable=too-many-arguments, too-many-locals
     login,
     lastname,
     firstname,
