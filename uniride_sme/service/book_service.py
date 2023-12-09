@@ -7,6 +7,7 @@ from uniride_sme.utils.exception.exceptions import InvalidInputException, Forbid
 from uniride_sme.utils.exception.book_exceptions import (
     TripAlreadyBookedException,
     BookingNotFoundException,
+    BookingAlreadyRespondedException,
 )
 
 
@@ -59,7 +60,7 @@ def respond_booking(trip_id, driver_id, booker_id, response):
 
     booking = get_booking_by_id(trip_id, booker_id)
     if booking["r_accepted"]:
-        raise InvalidInputException("BOOKING_ALREADY_RESPONDED")
+        raise BookingAlreadyRespondedException()
 
     if booking["r_passenger_count"] > trip["total_passenger_count"] - trip["passenger_count"]:
         raise InvalidInputException("PASSENGER_COUNT_TOO_HIGH")

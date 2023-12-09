@@ -7,10 +7,10 @@ from uniride_sme.utils.cartography.route_checker_factory import RouteCheckerFact
 
 
 @dataclasses.dataclass
-class TripBO:
+class TripBO:  # pylint: disable=too-many-instance-attributes
     """Business object of the trip"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         trip_id: int = None,
         passenger_count: int = None,
