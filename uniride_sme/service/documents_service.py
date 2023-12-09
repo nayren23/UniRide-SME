@@ -118,8 +118,8 @@ def document_to_verify():
         formatted_last_modified_date = datetime.strftime(last_modified_datetime, "%Y-%m-%d %H:%M:%S")
         #profile_picture_url = f'https://example.com/images/{document[4]}'
         #Vrai url du serveur d'image
-        profile_picture_url = f'/documents/pft/{document[4]}'
-
+        profile_picture_url = f'/Users/chefy/Desktop/SAE_BACK/UniRide-SME/documents/pft/{document[4]}'
+        
         request_data = {
             'request_number': document[1],
             'documents_to_verify': document[6],

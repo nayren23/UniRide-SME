@@ -275,7 +275,6 @@ def verify_email(token):
 
 
 @user.route("/verify/document", methods=["GET"])
-@jwt_required()
 def verify_document():
     try:
         doc_bo_list = documents_service.document_to_verify()
