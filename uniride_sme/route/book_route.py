@@ -30,7 +30,7 @@ def book_trip():
         )
         book_service.book_trip(json_object["trip_id"], user_id, json_object["passenger_count"])
     except ApiException as e:
-        response = jsonify({"message": e.message}), e.status_code
+        response = jsonify(message=e.message), e.status_code
 
     return response
 
@@ -55,6 +55,20 @@ def respond_booking():
         )
         book_service.respond_booking(json_object["trip_id"], user_id, json_object["booker_id"], json_object["response"])
     except ApiException as e:
-        response = jsonify({"message": e.message}), e.status_code
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@book.route("/requests", methods=["GET"])
+@jwt_required()
+def get_bookings():
+    """Respond to a booking request endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        bookings = book_service.get_books_dtos(user_id)
+        response = jsonify(bookings=bookings), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
 
     return response

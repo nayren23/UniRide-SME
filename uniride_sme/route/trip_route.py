@@ -55,7 +55,7 @@ def propose_trip():
         response = jsonify({"message": "CREATED_SUCCESSFULLY", "trip_id": trip_bo.id}), 200
 
     except ApiException as e:
-        response = jsonify({"message": e.message}), e.status_code
+        response = jsonify(message=e.message), e.status_code
 
     return response
 
@@ -104,7 +104,7 @@ def get_available_trips():
 
         response = jsonify({"trips": paginated_data, "meta": meta}), 200
     except ApiException as e:
-        response = jsonify({"message": e.message}), e.status_code
+        response = jsonify(message=e.message), e.status_code
     return response
 
 
@@ -123,7 +123,7 @@ def get_current_driver_trips():
         response = jsonify({"trips": paginated_data, "meta": meta}), 200
 
     except ApiException as e:
-        response = jsonify({"message": e.message}), e.status_code
+        response = jsonify(message=e.message), e.status_code
 
     return response
 
