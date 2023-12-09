@@ -121,6 +121,7 @@ def document_to_verify():
         profile_picture_url = f'/Users/chefy/Desktop/SAE_BACK/UniRide-SME/documents/pft/{document[4]}'
         
         request_data = {
+            'id_user':document[0],
             'request_number': document[1],
             'documents_to_verify': document[6],
             'person': {
