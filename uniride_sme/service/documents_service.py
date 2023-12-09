@@ -95,4 +95,42 @@ def _save_document(user_id, file, old_file_name, document_type):
     return file_name
 
 
+from datetime import datetime
+
+def document_to_verify():
+    conn = connect_pg.connect()
+    query = """
+        SELECT u_id, v_id, u_lastname, u_firstname, u_profile_picture, d_timestamp_modification,
+               v_license_verified::int + v_id_card_verified::int + v_school_certificate_verified::int
+        FROM uniride.ur_document_verification
+        NATURAL JOIN uniride.ur_user
+        NATURAL JOIN uniride.ur_documents
+        WHERE u_id = u_id
+    """
+    documents = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+
+    # Create a list to store documents with attributes
+    result = []
+
+    for document in documents:
+        last_modified_datetime = document[5]
+        formatted_last_modified_date = datetime.strftime(last_modified_datetime, "%Y-%m-%d %H:%M:%S")
+
+        request_data = {
+            'request_number': document[1],
+            'documents_to_verify': document[6],
+            'person': {
+                'full_name': document[2] + " " + document[3],
+                'last_modified_date': formatted_last_modified_date,
+                'profile_picture': document[4],
+            }
+        }
+
+        result.append(request_data)
+
+    return result
+
+
+
 
