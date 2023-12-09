@@ -1,9 +1,8 @@
-"""Address service module"""
+"""Trip service module"""
 
 from datetime import datetime, timedelta
 from math import ceil
 from typing import List
-import psycopg2
 
 from uniride_sme import app
 from uniride_sme import connect_pg
@@ -19,13 +18,11 @@ from uniride_sme.service.address_service import (
     check_address_existence,
     concatene_address,
 )
+from uniride_sme.utils.exception.exceptions import InvalidInputException, MissingInputException
 from uniride_sme.utils.exception.address_exceptions import InvalidIntermediateAddressException
 from uniride_sme.utils.exception.trip_exceptions import (
-    InvalidInputException,
-    MissingInputException,
     TripAlreadyExistsException,
     TripNotFoundException,
-    TripAlreadyBookedException,
 )
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.maths_formulas import haversine
@@ -406,7 +403,7 @@ def format_get_current_driver_trips(driver_current_trips):
             trip_id=trip_bo.id,
             address=address_dtos,
             driver_id=trip_bo.user_id,
-            proposed_date=trip_bo.timestamp_proposed,
+            proposed_date=str(trip_bo.timestamp_proposed),
             price=trip_bo.price,
         )
         available_trips.append(trip_dto)
@@ -570,7 +567,7 @@ def get_trip_by_id(trip_id):
         raise TripNotFoundException()
     trip = trip[0]
 
-    query = "SELECT SUM(r_passenger_count) FROM uniride.ur_join WHERE t_id = %s and r_accepted = true"
+    query = "SELECT SUM(r_passenger_count) FROM uniride.ur_join WHERE t_id = %s and r_accepted = 1"
     passenger_count = connect_pg.get_query(conn, query, (trip_id,))[0][0]
     connect_pg.disconnect(conn)
     trip["passenger_count"] = passenger_count if passenger_count else 0
@@ -616,22 +613,3 @@ def get_trip_by_id(trip_id):
         status=trip_bo.status,
     )
     return trip_dto
-
-
-def book_trip(trip_id, user_id, passenger_count):
-    """Book a trip"""
-    trip = get_trip_by_id(trip_id)
-    if trip["driver_id"] == user_id:
-        raise InvalidInputException("DRIVER_CANNOT_BOOK_HIS_OWN_TRIP")
-    if passenger_count > trip["total_passenger_count"] - trip["passenger_count"]:
-        raise InvalidInputException("PASSENGER_COUNT_TOO_HIGH")
-
-    query = "INSERT INTO uniride.ur_join(u_id, t_id, r_passenger_count) VALUES (%s, %s, %s);"
-    values = (user_id, trip_id, passenger_count)
-
-    try:
-        conn = connect_pg.connect()
-        connect_pg.execute_command(conn, query, values)
-        connect_pg.disconnect(conn)
-    except psycopg2.errors.UniqueViolation as e:
-        raise TripAlreadyBookedException() from e

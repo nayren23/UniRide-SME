@@ -5,10 +5,10 @@ from datetime import datetime
 
 
 @dataclasses.dataclass
-class UserBO:
+class UserBO:  # pylint: disable=too-many-instance-attributes
     """User business object class"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         u_id: int,
         u_login: str,

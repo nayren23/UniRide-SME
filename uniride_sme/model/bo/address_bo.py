@@ -3,10 +3,10 @@ import dataclasses
 
 
 @dataclasses.dataclass
-class AddressBO:
+class AddressBO:  # pylint: disable=too-many-instance-attributes
     """Address business object"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         address_id: str = None,
         street_number: str = None,

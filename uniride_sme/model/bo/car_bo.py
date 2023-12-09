@@ -5,10 +5,10 @@ import dataclasses
 
 
 @dataclasses.dataclass
-class CarBO:
+class CarBO:  # pylint: disable=too-many-instance-attributes
     """Car business object"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         car_id: int = None,
         model: str = None,
