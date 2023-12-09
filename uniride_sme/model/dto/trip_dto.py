@@ -5,8 +5,8 @@ from typing import TypedDict
 class TripDTO(TypedDict):
     """Trip DTO (Data Transfer Object)"""
 
-    id_trajet: int
-    adresse: dict
+    trip_id: int
+    address: dict
     driver_id: int
     price: float
     proposed_date: str
@@ -14,10 +14,10 @@ class TripDTO(TypedDict):
 
 
 class TripDetailedDTO(TypedDict):
-    """Trip DTO (Data Transfer Object)"""
+    """Trip Detailed DTO (Data Transfer Object)"""
 
-    id_trajet: int
-    adresse: dict
+    trip_id: int
+    address: dict
     driver_id: int
     price: float
     departure_date: str

@@ -403,7 +403,7 @@ def format_get_current_driver_trips(driver_current_trips):
             trip_id=trip_bo.id,
             address=address_dtos,
             driver_id=trip_bo.user_id,
-            proposed_date=trip_bo.timestamp_proposed,
+            proposed_date=str(trip_bo.timestamp_proposed),
             price=trip_bo.price,
         )
         available_trips.append(trip_dto)
