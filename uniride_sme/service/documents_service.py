@@ -281,3 +281,4 @@ def count_users():
     else:
         return None  # Ou une valeur par défaut selon votre logique
 
+

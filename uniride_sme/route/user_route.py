@@ -311,7 +311,6 @@ def document_user_verif(id_user):
 def user_count():
     try:
         user_count_value = documents_service.count_users()
-        print(user_count_value)
         response = jsonify({"message": "NUMBER_DISPLAY_SUCCESSFULLY", "user_count": user_count_value}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
