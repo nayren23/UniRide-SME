@@ -1,21 +1,15 @@
 """Book business object module"""
-import dataclasses
+from dataclasses import dataclass
+from typing import Optional
+from datetime import datetime
 
 
-@dataclasses.dataclass
-class BookBO:
+@dataclass
+class BookBO:  # pylint: disable=too-many-instance-attributes
     """Book business object class"""
 
-    def __init__(  # pylint: disable=too-many-arguments
-        self,
-        user_id: int = None,
-        trip_id: int = None,
-        accepted: int = None,
-        passenger_count: int = None,
-        date_requested=None,
-    ):
-        self.user_id = user_id
-        self.trip_id = trip_id
-        self.accepted = accepted
-        self.passenger_count = passenger_count
-        self.date_requested = date_requested
+    user_id: Optional[int] = None
+    trip_id: Optional[int] = None
+    accepted: Optional[int] = None
+    passenger_count: Optional[int] = None
+    date_requested: Optional[datetime] = None
