@@ -137,4 +137,59 @@ def document_to_verify():
 
 
 
+def document_check(user_id, document_type, status):
+    conn = connect_pg.connect()
+
+    # Vérifiez si l'utilisateur existe avant de procéder à la mise à jour
+    user_exists_query = "SELECT COUNT(*) FROM uniride.ur_user WHERE u_id = %s"
+    user_exists = connect_pg.get_query(conn, user_exists_query, (user_id,))[0][0]
+
+    if user_exists == 0:
+        connect_pg.disconnect(conn)
+        return {
+            'success': False,
+            'message': f"L'utilisateur avec l'ID {user_id} n'existe pas.",
+        }
+
+    column_mapping = {
+        'license': 'v_license_verified',
+        'card': 'v_id_card_verified',
+        'school_certificate': 'v_school_certificate_verified'
+        # Ajoutez d'autres types de document au besoin
+    }
+
+    # Assurez-vous que le type de document est pris en charge
+    if document_type not in column_mapping:
+        connect_pg.disconnect(conn)
+        return {
+            'success': False,
+            'message': f"Type de document non pris en charge : {document_type}",
+        }
+
+    document_column = column_mapping[document_type]
+
+    # Utilisez une clause WHERE pour spécifier les conditions de mise à jour
+    query = f"""
+        UPDATE uniride.ur_document_verification
+        SET {document_column} = %s
+        WHERE u_id = %s
+    """
+    
+    # Exécutez la requête en passant les valeurs nécessaires
+    connect_pg.execute_command(conn, query, (status, user_id))
+    
+    connect_pg.disconnect(conn)
+
+    # Créez une structure de résultat (ajustez cela selon vos besoins)
+    result = {
+        'success': True,
+        'message': f"Le statut du document {document_type} pour l'utilisateur {user_id} a été mis à jour.",
+    }
+
+    return result
+
+
+
+
+
 

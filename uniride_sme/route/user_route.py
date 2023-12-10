@@ -1,5 +1,5 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify, url_for
+from flask import Blueprint, request, jsonify,send_file
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -287,5 +287,41 @@ def verify_document():
 
     return response
 
+
+@user.route("/check", methods=["PUT"])
+def check_document():
+    try:
+        # Assurez-vous d'obtenir les paramètres nécessaires de la requête PUT
+        user_id = request.json.get('user_id')
+        document_type = request.json.get('document_type')
+        status = request.json.get('status')
+
+        # Appelez la fonction document_check avec les paramètres appropriés
+        doc_bo_list = documents_service.document_check(user_id, document_type, status)
+        print(doc_bo_list)
+
+        response = jsonify({"message": "DOCUMENT_ACCEPTED", "request": doc_bo_list}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+
+
+@app.route('/profile-picture/<path:filename>')
+def get_profile_picture(filename):
+    # Obtenez l'extension du fichier pour déterminer le type MIME correct
+    file_extension = filename.split('.')[-1].lower()
+
+    # Déterminez le type MIME en fonction de l'extension du fichier
+    if file_extension == 'jpg' or file_extension == 'jpeg':
+        mimetype = 'image/jpeg'
+    elif file_extension == 'png':
+        mimetype = 'image/png'
+    else:
+        # Ajoutez d'autres formats d'image au besoin
+        mimetype = 'application/octet-stream'  # Type MIME par défaut pour les fichiers binaires
+
+    return send_file(f'/Users/chefy/Desktop/SAE_BACK/UniRide-SME/documents/pft/{filename}', mimetype=mimetype)
 
 
