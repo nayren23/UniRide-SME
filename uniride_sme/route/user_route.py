@@ -278,50 +278,35 @@ def verify_email(token):
 def verify_document():
     try:
         doc_bo_list = documents_service.document_to_verify()
-        print(doc_bo_list)
-           
         response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", "request": doc_bo_list}), 200
-
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
-
     return response
 
 
 @user.route("/check", methods=["PUT"])
 def check_document():
     try:
-        # Assurez-vous d'ajuster la façon dont vous récupérez les données JSON de la requête dans votre application Flask
-        # L'exemple suivant suppose que vous utilisez Flask et que les données JSON sont disponibles dans request.json
         data = request.json
-
         # Appelez la fonction document_check avec les données JSON
         result = documents_service.document_check(data)
-
         # Utilisez jsonify pour retourner une réponse JSON
         response = jsonify(result), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
+    return response
 
+@user.route("/document_user/<int:id_user>", methods=["GET"])
+def document_user_verif(id_user):
+    try:
+        doc_bo_list = documents_service.document_user(id_user)
+        response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", "request": doc_bo_list}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
     return response
 
 
 
 
-@app.route('/profile-picture/<path:filename>')
-def get_profile_picture(filename):
-    # Obtenez l'extension du fichier pour déterminer le type MIME correct
-    file_extension = filename.split('.')[-1].lower()
-
-    # Déterminez le type MIME en fonction de l'extension du fichier
-    if file_extension == 'jpg' or file_extension == 'jpeg':
-        mimetype = 'image/jpeg'
-    elif file_extension == 'png':
-        mimetype = 'image/png'
-    else:
-        # Ajoutez d'autres formats d'image au besoin
-        mimetype = 'application/octet-stream'  # Type MIME par défaut pour les fichiers binaires
-
-    return send_file(f'/Users/chefy/Desktop/SAE_BACK/UniRide-SME/documents/pft/{filename}', mimetype=mimetype)
 
 

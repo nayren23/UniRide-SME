@@ -213,3 +213,60 @@ def document_check(data):
     }
 
     return result
+
+
+
+
+def document_user(user_id):
+    conn = connect_pg.connect()
+    query = """
+        SELECT u_id, d_license, d_id_card, d_school_certificate, v_license_verified, v_id_card_verified, v_school_certificate_verified
+        FROM uniride.ur_document_verification
+        NATURAL JOIN uniride.ur_documents
+        WHERE u_id = %s
+    """
+    document_data = connect_pg.get_query(conn, query, (user_id,), return_dict=True)
+    connect_pg.disconnect(conn)
+
+    if not document_data:
+        return {
+            'user_id': user_id,
+            'documents': [],
+            'success': False,
+            'message': "Aucun document trouvé pour l'utilisateur.",
+        }
+
+    documents = []
+    # Mapper les noms de colonnes aux types de documents
+    column_mapping = {
+        'd_license': 'license',
+        'd_id_card': 'url_card',
+        'd_school_certificate': 'school_certificate',
+    }
+
+
+    for document_row in document_data:
+        document = []
+        for column_name in document_row.keys():
+            if column_name.startswith('d_'):
+                document_type = column_mapping.get(column_name, None)
+                if document_type:
+                    document_url = document_row[column_name]
+                    status_column = f'v_{column_name[2:]}_verified'
+                    document_status = document_row.get(status_column, None)
+
+                    document.append({
+                        'url': document_url,
+                        'status': str(document_status),
+                        'type': document_type,
+                    })
+
+        documents.append({'document': document})
+
+    return {
+        'user_id': user_id,
+        'documents': documents,
+    
+    }
+
+
