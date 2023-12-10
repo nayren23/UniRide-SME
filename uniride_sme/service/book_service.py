@@ -13,11 +13,6 @@ from uniride_sme.utils.exception.book_exceptions import (
 )
 
 
-def _validate_user(trip, user_id):
-    if user_id == trip["driver_id"]:
-        raise ForbiddenException("DRIVER_CANNOT_BOOK_HIS_OWN_TRIP")
-
-
 def _validate_passenger_count(trip, passenger_count):
     if passenger_count <= 0:
         raise InvalidInputException("PASSENGER_COUNT_TOO_LOW")
@@ -29,7 +24,8 @@ def _validate_passenger_count(trip, passenger_count):
 def book_trip(trip_id, user_id, passenger_count):
     """Book a trip"""
     trip = trip_service.get_trip_by_id(trip_id)
-    _validate_user(trip, user_id)
+    if user_id == trip["driver_id"]:
+        raise ForbiddenException("DRIVER_CANNOT_BOOK_HIS_OWN_TRIP")
     _validate_passenger_count(trip, passenger_count)
 
     query = "INSERT INTO uniride.ur_join(u_id, t_id, r_passenger_count) VALUES (%s, %s, %s);"
@@ -56,6 +52,9 @@ def get_booking_by_id(trip_id, user_id):
 
 def respond_booking(trip_id, driver_id, booker_id, response):
     """Respond to a booking request"""
+    if response not in (-1, 1):
+        raise InvalidInputException("INVALID_RESPONSE")
+
     trip = trip_service.get_trip_by_id(trip_id)
     if trip["driver_id"] != driver_id:
         raise ForbiddenException("ONLY_DRIVER_CAN_RESPOND")
@@ -64,8 +63,7 @@ def respond_booking(trip_id, driver_id, booker_id, response):
     if booking["r_accepted"]:
         raise BookingAlreadyRespondedException()
 
-    if booking["r_passenger_count"] > trip["total_passenger_count"] - trip["passenger_count"]:
-        raise InvalidInputException("PASSENGER_COUNT_TOO_HIGH")
+    _validate_passenger_count(trip, booking["r_passenger_count"])
 
     query = "UPDATE uniride.ur_join SET r_accepted = %s WHERE t_id = %s AND u_id = %s"
     values = (response, trip_id, booker_id)
