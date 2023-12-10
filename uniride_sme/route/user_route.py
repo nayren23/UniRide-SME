@@ -310,12 +310,13 @@ def document_user_verif(id_user):
 @user.route("/user_number", methods=["GET"])
 def user_count():
     try:
-        doc_bo_list = documents_service.count_users()
-        print(doc_bo_list)
-        response = jsonify({"message": "NUMBER_DISPLAY_SUCCESSFULLY", "user_number": doc_bo_list}), 200
+        user_count_value = documents_service.count_users()
+        print(user_count_value)
+        response = jsonify({"message": "NUMBER_DISPLAY_SUCCESSFULLY", "user_count": user_count_value}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 
 

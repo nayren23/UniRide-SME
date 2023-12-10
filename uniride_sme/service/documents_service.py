@@ -269,10 +269,15 @@ def document_user(user_id):
     
     }
 
-
 def count_users():
     conn = connect_pg.connect()
     query = "SELECT COUNT(*) FROM uniride.ur_user"
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
-    return result
+
+    # Assurez-vous que le résultat est une liste non vide avant d'extraire la première valeur
+    if result and isinstance(result, list) and result[0]:
+        return result[0][0]
+    else:
+        return None  # Ou une valeur par défaut selon votre logique
+
