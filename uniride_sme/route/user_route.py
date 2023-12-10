@@ -291,18 +291,18 @@ def verify_document():
 @user.route("/check", methods=["PUT"])
 def check_document():
     try:
-        # Assurez-vous d'obtenir les paramètres nécessaires de la requête PUT
-        user_id = request.json.get('user_id')
-        document_type = request.json.get('document_type')
-        status = request.json.get('status')
+        # Assurez-vous d'ajuster la façon dont vous récupérez les données JSON de la requête dans votre application Flask
+        # L'exemple suivant suppose que vous utilisez Flask et que les données JSON sont disponibles dans request.json
+        data = request.json
 
-        # Appelez la fonction document_check avec les paramètres appropriés
-        doc_bo_list = documents_service.document_check(user_id, document_type, status)
-        print(doc_bo_list)
+        # Appelez la fonction document_check avec les données JSON
+        result = documents_service.document_check(data)
 
-        response = jsonify({"message": "DOCUMENT_ACCEPTED", "request": doc_bo_list}), 200
+        # Utilisez jsonify pour retourner une réponse JSON
+        response = jsonify(result), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
+
     return response
 
 

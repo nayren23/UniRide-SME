@@ -85,7 +85,7 @@ def _save_document(user_id, file, old_file_name, document_type):
             WHERE u_id=%s
         )
         UPDATE uniride.ur_document_verification
-        SET v_{document_type}_verified=false, v_timestamp_modification=CURRENT_TIMESTAMP
+        SET v_{document_type}_verified=0, v_timestamp_modification=CURRENT_TIMESTAMP
         WHERE u_id=%s;
         """
         values = (file_name, user_id, user_id)
@@ -137,18 +137,40 @@ def document_to_verify():
 
 
 
-def document_check(user_id, document_type, status):
-    conn = connect_pg.connect()
-
-    # Vérifiez si l'utilisateur existe avant de procéder à la mise à jour
-    user_exists_query = "SELECT COUNT(*) FROM uniride.ur_user WHERE u_id = %s"
-    user_exists = connect_pg.get_query(conn, user_exists_query, (user_id,))[0][0]
-
-    if user_exists == 0:
-        connect_pg.disconnect(conn)
+def document_check(data):
+    # Assurez-vous que toutes les données nécessaires sont présentes
+    if 'user_id' not in data or 'document' not in data:
         return {
             'success': False,
+            'message': "Les données fournies sont incomplètes. Assurez-vous d'inclure 'user_id' et 'document'.",
+        }
+
+    user_id = data['user_id']
+    document_data = data['document']
+
+    # Vérifiez si l'utilisateur existe avant de procéder à la mise à jour
+    conn = connect_pg.connect()
+    user_exists_query = "SELECT COUNT(*) FROM uniride.ur_user WHERE u_id = %s"
+    user_exists = connect_pg.get_query(conn, user_exists_query, (user_id,))[0][0]
+    connect_pg.disconnect(conn)
+
+    if user_exists == 0:
+        return {
+            'user_id': user_id,
+            'document': document_data,
+            'success': False,
             'message': f"L'utilisateur avec l'ID {user_id} n'existe pas.",
+        }
+
+    document_type = document_data.get('type')
+    status = document_data.get('status')
+
+    if not document_type or status is None:
+        return {
+            'user_id': user_id,
+            'document': document_data,
+            'success': False,
+            'message': "Les informations du document sont incomplètes. Assurez-vous d'inclure 'type' et 'status' dans 'document'.",
         }
 
     column_mapping = {
@@ -160,8 +182,9 @@ def document_check(user_id, document_type, status):
 
     # Assurez-vous que le type de document est pris en charge
     if document_type not in column_mapping:
-        connect_pg.disconnect(conn)
         return {
+            'user_id': user_id,
+            'document': document_data,
             'success': False,
             'message': f"Type de document non pris en charge : {document_type}",
         }
@@ -169,6 +192,7 @@ def document_check(user_id, document_type, status):
     document_column = column_mapping[document_type]
 
     # Utilisez une clause WHERE pour spécifier les conditions de mise à jour
+    conn = connect_pg.connect()
     query = f"""
         UPDATE uniride.ur_document_verification
         SET {document_column} = %s
@@ -180,16 +204,12 @@ def document_check(user_id, document_type, status):
     
     connect_pg.disconnect(conn)
 
-    # Créez une structure de résultat (ajustez cela selon vos besoins)
+    # Créez une structure de résultat dans le format spécifié
     result = {
+        'user_id': user_id,
+        'document': document_data,
         'success': True,
         'message': f"Le statut du document {document_type} pour l'utilisateur {user_id} a été mis à jour.",
     }
 
     return result
-
-
-
-
-
-
