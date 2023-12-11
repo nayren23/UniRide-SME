@@ -255,7 +255,7 @@ def document_user(user_id):
     # Mapper les noms de colonnes aux types de documents
     column_mapping = {
         'd_license': 'license',
-        'd_id_card': 'url_card',
+        'd_id_card': 'card',
         'd_school_certificate': 'school_certificate',
     }
 

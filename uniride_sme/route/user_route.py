@@ -300,10 +300,11 @@ def check_document():
 def document_user_verif(id_user):
     try:
         doc_bo_list = documents_service.document_user(id_user)
-        response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", "request": doc_bo_list}), 200
+        response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", **doc_bo_list}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 
 
