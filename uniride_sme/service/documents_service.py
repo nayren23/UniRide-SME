@@ -100,8 +100,7 @@ from datetime import datetime
 def document_to_verify():
     conn = connect_pg.connect()
     query = """
-        SELECT u_id, v_id, u_lastname, u_firstname, u_profile_picture, d_timestamp_modification,
-               v_license_verified::int + v_id_card_verified::int + v_school_certificate_verified::int
+        SELECT u_id, v_id, u_lastname, u_firstname, u_profile_picture, d_timestamp_modification,v_license_verified, v_id_card_verified,v_school_certificate_verified
         FROM uniride.ur_document_verification
         NATURAL JOIN uniride.ur_user
         NATURAL JOIN uniride.ur_documents
@@ -120,8 +119,20 @@ def document_to_verify():
         #Vrai url du serveur d'image
         profile_picture_url = f'/Users/chefy/Desktop/SAE_BACK/UniRide-SME/documents/pft/{document[4]}'
         
+        license_verified_str = str(document[6])
+        id_card_verified_str = str(document[7])
+        school_certificate_verified_str = str(document[8])
+         # Count the number of zeros for each verification field
+        count_license_verified_zeros = license_verified_str.count('0')
+        count_id_card_verified_zeros = id_card_verified_str.count('0')
+        count_school_certificate_verified_zeros = school_certificate_verified_str.count('0')
+
+        # Total count of zeros
+        total_zeros = count_license_verified_zeros + count_id_card_verified_zeros + count_school_certificate_verified_zeros
+
+
         request_data = {
-            'request_number': document[1],
+            'request_number': total_zeros,
             'documents_to_verify': document[6],
             'person': {
                 'id_user':document[0],
@@ -134,6 +145,10 @@ def document_to_verify():
         result.append(request_data)
 
     return result
+
+
+
+
 
 
 
