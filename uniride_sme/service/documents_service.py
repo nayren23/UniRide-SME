@@ -114,20 +114,16 @@ def document_to_verify():
 
     for document in documents:
         formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
-        # profile_picture_url = f'https://example.com/images/{document[4]}'
-        # Vrai url du serveur d'image
         profile_picture_url = f"/Users/chefy/Desktop/SAE_BACK/UniRide-SME/documents/pft/{document[4]}"
 
         license_verified_str = str(document[6])
         id_card_verified_str = str(document[7])
         school_certificate_verified_str = str(document[8])
-        count_license_verified_zeros = license_verified_str.count("0")
-        count_id_card_verified_zeros = id_card_verified_str.count("0")
-        count_school_certificate_verified_zeros = school_certificate_verified_str.count("0")
+        license_zeros = license_verified_str.count("0")
+        id_card_zeros = id_card_verified_str.count("0")
+        school_certificate_zeros = school_certificate_verified_str.count("0")
 
-        total_zeros = (
-            count_license_verified_zeros + count_id_card_verified_zeros + count_school_certificate_verified_zeros
-        )
+        total_zeros = license_zeros + id_card_zeros + school_certificate_zeros
 
         request_data = {
             "request_number": document[1],
@@ -147,47 +143,19 @@ def document_to_verify():
 
 def document_check(data):
     """Update document status"""
-    if "user_id" not in data or "document" not in data:
-        return {
-            "success": False,
-            "message": "Les données fournies sont incomplètes. Assurez-vous d'inclure 'user_id' et 'document'.",
-        }
-
     user_id = data["user_id"]
     document_data = data["document"]
 
     conn = connect_pg.connect()
-    user_exists_query = "SELECT COUNT(*) FROM uniride.ur_user WHERE u_id = %s"
-    user_exists = connect_pg.get_query(conn, user_exists_query, (user_id,))[0][0]
     connect_pg.disconnect(conn)
-
-    if user_exists == 0:
-        return {
-            "user_id": user_id,
-            "document": document_data,
-            "success": False,
-            "message": f"L'utilisateur avec l'ID {user_id} n'existe pas.",
-        }
 
     document_type = document_data.get("type")
     status = document_data.get("status")
-
-    if not document_type or status is None:
-        return {
-            "user_id": user_id,
-            "document": document_data,
-            "success": False,
-            "message": "Les informations du document sont incomplètes. Assurez-vous d'inclure 'type' et 'status' dans 'document'.",
-        }
-
     column_mapping = {
         "license": "v_license_verified",
         "card": "v_id_card_verified",
-        "school_certificate": "v_school_certificate_verified"
-        # Ajoutez d'autres types de document au besoin
+        "school_certificate": "v_school_certificate_verified",
     }
-
-    # Assurez-vous que le type de document est pris en charge
     if document_type not in column_mapping:
         return {
             "user_id": user_id,
@@ -195,28 +163,20 @@ def document_check(data):
             "success": False,
             "message": f"Type de document non pris en charge : {document_type}",
         }
-
     document_column = column_mapping[document_type]
-
-    # Utilisez une clause WHERE pour spécifier les conditions de mise à jour
     conn = connect_pg.connect()
     query = f"""
         UPDATE uniride.ur_document_verification
         SET {document_column} = %s
         WHERE u_id = %s
     """
-
-    # Exécutez la requête en passant les valeurs nécessaires
     connect_pg.execute_command(conn, query, (status, user_id))
-
     connect_pg.disconnect(conn)
-
-    # Créez une structure de résultat dans le format spécifié
     result = {
         "user_id": user_id,
         "document": document_data,
         "success": True,
-        "message": f"Le statut du document {document_type} pour l'utilisateur {user_id} a été mis à jour.",
+        "message": f"The document for {user_id} has been updated to {document_type}."
     }
 
     return result
@@ -243,7 +203,6 @@ def document_user(user_id):
         }
 
     documents = []
-    # Mapper les noms de colonnes aux types de documents
     column_mapping = {
         "d_license": "license",
         "d_id_card": "card",
@@ -282,6 +241,13 @@ def count_users():
     query = "SELECT COUNT(*) FROM uniride.ur_user"
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
-    if result and isinstance(result, list) and result[0]:
-        return result[0][0]
-    return None
+    return result[0][0]
+
+
+def count_trip():
+    """Get number of users"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_trip"
+    result = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+    return result[0][0]
