@@ -449,3 +449,11 @@ def get_available_trips_to(trip: TripBO):
     )
 
     return available_trips
+
+def count_trip():
+    """Get number of trip"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_trip"
+    result = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+    return result[0][0]

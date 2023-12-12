@@ -1,4 +1,5 @@
 """Documents service module"""
+from flask import send_file
 from datetime import datetime
 from uniride_sme import app
 from uniride_sme import connect_pg
@@ -114,8 +115,7 @@ def document_to_verify():
 
     for document in documents:
         formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
-        profile_picture_url = f"/Users/chefy/Desktop/SAE_BACK/UniRide-SME/documents/pft/{document[4]}"
-
+        profile_picture_url = document[4]
         license_verified_str = str(document[6])
         id_card_verified_str = str(document[7])
         school_certificate_verified_str = str(document[8])
@@ -176,7 +176,7 @@ def document_check(data):
         "user_id": user_id,
         "document": document_data,
         "success": True,
-        "message": f"The document for {user_id} has been updated to {document_type}."
+        "message": f"The document for {user_id} has been updated to {document_type}.",
     }
 
     return result
@@ -244,10 +244,3 @@ def count_users():
     return result[0][0]
 
 
-def count_trip():
-    """Get number of users"""
-    conn = connect_pg.connect()
-    query = "SELECT COUNT(*) FROM uniride.ur_trip"
-    result = connect_pg.get_query(conn, query)
-    connect_pg.disconnect(conn)
-    return result[0][0]

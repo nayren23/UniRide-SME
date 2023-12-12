@@ -311,13 +311,3 @@ def user_count():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
-
-@user.route("/trip_number", methods=["GET"])
-def trip_count():
-    """Trip count"""
-    try:
-        trip_count_value = documents_service.count_trip()
-        response = jsonify({"message": "TRIP_NUMBER_SUCCESSFULLY", "trip_count": trip_count_value}), 200
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-    return response
