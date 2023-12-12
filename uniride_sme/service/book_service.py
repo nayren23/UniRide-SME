@@ -158,7 +158,7 @@ def get_bookings(user_id):
     conn = connect_pg.connect()
     result = connect_pg.get_query(conn, query, values, True)
     connect_pg.disconnect(conn)
-
+    print(result)
     bookings = []
     for booking in result:
         user = UserShortDTO(
@@ -168,7 +168,7 @@ def get_bookings(user_id):
             profile_picture=get_encoded_file(booking["u_profile_picture"]),
         )
         departure_address = AddressBO(
-            address_id=booking["departure_a_id"],
+            id=booking["departure_a_id"],
             street_number=booking["departure_a_street_number"],
             street_name=booking["departure_a_street_name"],
             city=booking["departure_a_city"],
@@ -176,7 +176,7 @@ def get_bookings(user_id):
         ).get_full_address()
 
         arrival_address = AddressBO(
-            address_id=booking["arrival_a_id"],
+            id=booking["arrival_a_id"],
             street_number=booking["arrival_a_street_number"],
             street_name=booking["arrival_a_street_name"],
             city=booking["arrival_a_city"],
@@ -199,4 +199,5 @@ def get_bookings(user_id):
                 date_requested=booking["r_date_requested"],
             )
         )
+        print(bookings)
     return bookings

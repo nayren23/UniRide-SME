@@ -47,8 +47,8 @@ def propose_trip():
             total_passenger_count=json_object.get("total_passenger_count", None),
             timestamp_proposed=json_object.get("timestamp_proposed", None).strip(),
             user_id=user_id,
-            departure_address_bo=AddressBO(address_id=json_object.get("address_departure_id", None)),
-            arrival_address_bo=AddressBO(address_id=json_object.get("address_arrival_id", None)),
+            departure_address_bo=AddressBO(id=json_object.get("address_departure_id", None)),
+            arrival_address_bo=AddressBO(id=json_object.get("address_arrival_id", None)),
             status=TripStatus.PENDING.value,
         )
         add_trip(trip_bo)

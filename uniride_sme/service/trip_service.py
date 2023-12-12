@@ -394,7 +394,7 @@ def format_get_current_driver_trips(driver_current_trips):
 def format_trip(raw_trip: dict) -> TripBO:
     """Format the trip"""
     departure_address = AddressBO(
-        address_id=raw_trip["departure_a_id"],
+        id=raw_trip["departure_a_id"],
         street_number=raw_trip["departure_a_street_number"],
         street_name=raw_trip["departure_a_street_name"],
         city=raw_trip["departure_a_city"],
@@ -403,7 +403,7 @@ def format_trip(raw_trip: dict) -> TripBO:
         longitude=raw_trip["departure_a_longitude"],
     )
     arrival_address = AddressBO(
-        address_id=raw_trip["arrival_a_id"],
+        id=raw_trip["arrival_a_id"],
         street_number=raw_trip["arrival_a_street_number"],
         street_name=raw_trip["arrival_a_street_name"],
         city=raw_trip["arrival_a_city"],
