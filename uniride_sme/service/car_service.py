@@ -41,8 +41,7 @@ def add_in_db(car: CarBO):
     except psy.Error as e:
         if "ur_vehicle_u_id_key" in str(e):
             raise CarAlreadyExist()
-        else:
-            raise InvalidInputException("INVALID_INPUT")
+        raise InvalidInputException("INVALID_INPUT")
 
 
 def valid_model(model):

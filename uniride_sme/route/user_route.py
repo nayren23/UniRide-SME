@@ -1,21 +1,17 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify,send_file
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
 from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO
-from uniride_sme.model.dto.document_dto import DocumentVerificationDTO
-
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
 
 
 user = Blueprint("user", __name__, url_prefix="/user")
-
 
 
 @user.route("/register", methods=["POST"])
@@ -270,12 +266,9 @@ def verify_email(token):
     return response
 
 
-
-
-
-
 @user.route("/verify/document", methods=["GET"])
 def verify_document():
+    """Get documents to verify"""
     try:
         doc_bo_list = documents_service.document_to_verify()
         response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", "request": doc_bo_list}), 200
@@ -286,6 +279,7 @@ def verify_document():
 
 @user.route("/check", methods=["PUT"])
 def check_document():
+    """Check document"""
     try:
         data = request.json
         # Appelez la fonction document_check avec les données JSON
@@ -296,8 +290,10 @@ def check_document():
         response = jsonify(message=e.message), e.status_code
     return response
 
+
 @user.route("/document_user/<int:id_user>", methods=["GET"])
 def document_user_verif(id_user):
+    """Get documents to verify"""
     try:
         doc_bo_list = documents_service.document_user(id_user)
         response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", **doc_bo_list}), 200
@@ -306,20 +302,12 @@ def document_user_verif(id_user):
     return response
 
 
-
-
 @user.route("/user_number", methods=["GET"])
 def user_count():
+    """Get documents to verify"""
     try:
         user_count_value = documents_service.count_users()
         response = jsonify({"message": "NUMBER_DISPLAY_SUCCESSFULLY", "user_count": user_count_value}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
-
-
-
-
-
-
-

@@ -11,7 +11,6 @@ from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO
 from uniride_sme.model.dto.address_dto import AddressSimpleDTO
 from uniride_sme.model.dto.trip_dto import TripDTO
-from uniride_sme.service.car_service import get_car_info_by_user_id
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
@@ -27,7 +26,7 @@ from uniride_sme.utils.exception.trip_exceptions import (
     TripNotFoundException,
 )
 from uniride_sme.utils.trip_status import TripStatus
-from uniride_sme.utils.maths_formulas import haversine 
+from uniride_sme.utils.maths_formulas import haversine
 
 
 def add_trip_in_db(trip: TripBO):
