@@ -1,6 +1,7 @@
 """File related functions"""
 import os
-
+import base64
+from uniride_sme import app
 from uniride_sme.utils.exception.exceptions import FileException
 
 
@@ -23,3 +24,17 @@ def save_file(file, directory, allowed_extensions, user_id):
 def delete_file(file, directory):
     """Delete file"""
     os.remove(os.path.join(directory, file))
+
+
+def get_encoded_file(file_name):
+    """Get encoded file"""
+    if not file_name:
+        return ""
+
+    file_path = os.path.join(app.config["PFP_UPLOAD_FOLDER"], file_name)
+    if not os.path.isfile(file_path):
+        return ""
+
+    with open(file_path, "rb") as file:
+        file_data = file.read()
+        return base64.b64encode(file_data).decode("utf-8")

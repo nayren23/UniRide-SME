@@ -25,3 +25,7 @@ class AddressBO:  # pylint: disable=too-many-instance-attributes
         self.latitude = latitude
         self.longitude = longitude
         self.timestamp_modification = timestamp_modification
+
+    def get_full_address(self) -> str:
+        """Return a simple concatenated full address string"""
+        return f"{self.street_number} {self.street_name}, {self.city}, {self.postal_code}"

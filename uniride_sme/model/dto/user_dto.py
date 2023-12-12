@@ -14,8 +14,17 @@ class UserInfosDTO(TypedDict):
     description: str
 
 
+class UserShortDTO(TypedDict):
+    """DTO for user's informations in short version"""
+
+    id: int
+    firstname: str
+    lastname: str
+    profile_picture: str
+
+
 class DriverInfosDTO(TypedDict):
-    """DTO for user's informations"""
+    """DTO for driver's informations"""
 
     id: int
     firstname: str

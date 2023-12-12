@@ -2,8 +2,10 @@
 import psycopg2
 
 from uniride_sme import connect_pg
-from uniride_sme.model.bo.book_bo import BookBO
+from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.model.dto.book_dto import BookDTO
+from uniride_sme.model.dto.trip_dto import TripShortDTO
+from uniride_sme.model.dto.user_dto import UserShortDTO
 from uniride_sme.service import trip_service
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
@@ -15,6 +17,7 @@ from uniride_sme.utils.exception.book_exceptions import (
     BookingNotFoundException,
     BookingAlreadyRespondedException,
 )
+from uniride_sme.utils.file import get_encoded_file
 
 
 def _validate_passenger_count(trip, passenger_count):
@@ -116,7 +119,41 @@ def get_bookings(user_id):
     if not user_id:
         raise MissingInputException("USER_ID_MISSING")
 
-    query = "SELECT u_id, t_id, r_accepted, r_passenger_count, r_date_requested FROM uniride.ur_join natural join uniride.ur_trip where ur_trip.t_user_id = %s"
+    query = """
+        SELECT 
+            j.r_accepted, 
+            j.r_passenger_count, 
+            j.r_date_requested,
+            t.t_id,
+            t.t_timestamp_proposed,
+            departure.a_id AS departure_a_id,
+            departure.a_street_number AS departure_a_street_number,
+            departure.a_street_name AS departure_a_street_name,
+            departure.a_city AS departure_a_city,
+            departure.a_postal_code AS departure_a_postal_code,
+            arrival.a_id AS arrival_a_id,
+            arrival.a_street_number AS arrival_a_street_number,
+            arrival.a_street_name AS arrival_a_street_name,
+            arrival.a_city AS arrival_a_city,
+            arrival.a_postal_code AS arrival_a_postal_code,
+            u.u_id,
+            u.u_firstname,
+            u.u_lastname,
+            u.u_profile_picture
+        FROM 
+            uniride.ur_join j
+        JOIN
+            uniride.ur_trip t on j.t_id = t.t_id
+        JOIN 
+            uniride.ur_address departure ON t.t_address_departure_id = departure.a_id
+        JOIN 
+            uniride.ur_address arrival ON t.t_address_arrival_id = arrival.a_id 
+        JOIN 
+            uniride.ur_user u on j.u_id = u.u_id
+        WHERE
+            t.t_user_id = %s
+        """
+
     values = (user_id,)
     conn = connect_pg.connect()
     result = connect_pg.get_query(conn, query, values, True)
@@ -124,32 +161,42 @@ def get_bookings(user_id):
 
     bookings = []
     for booking in result:
+        user = UserShortDTO(
+            id=booking["u_id"],
+            firstname=booking["u_firstname"],
+            lastname=booking["u_lastname"],
+            profile_picture=get_encoded_file(booking["u_profile_picture"]),
+        )
+        departure_address = AddressBO(
+            address_id=booking["departure_a_id"],
+            street_number=booking["departure_a_street_number"],
+            street_name=booking["departure_a_street_name"],
+            city=booking["departure_a_city"],
+            postal_code=booking["departure_a_postal_code"],
+        ).get_full_address()
+
+        arrival_address = AddressBO(
+            address_id=booking["arrival_a_id"],
+            street_number=booking["arrival_a_street_number"],
+            street_name=booking["arrival_a_street_name"],
+            city=booking["arrival_a_city"],
+            postal_code=booking["arrival_a_postal_code"],
+        ).get_full_address()
+
+        trip = TripShortDTO(
+            trip_id=booking["t_id"],
+            departure_address=departure_address,
+            arrival_address=arrival_address,
+            departure_date=booking["t_timestamp_proposed"],
+        )
+
         bookings.append(
-            BookBO(
-                user_id=booking["u_id"],
-                trip_id=booking["t_id"],
+            BookDTO(
+                user=user,
+                trip=trip,
                 accepted=booking["r_accepted"],
                 passenger_count=booking["r_passenger_count"],
                 date_requested=booking["r_date_requested"],
             )
         )
     return bookings
-
-
-def get_books_dtos(user_id):
-    """Return all bookings of a driver"""
-    book_bos = get_bookings(user_id)
-
-    book_dtos = []
-    for book_bo in book_bos:
-        book_dtos.append(
-            BookDTO(
-                user_id=book_bo.user_id,
-                trip_id=book_bo.trip_id,
-                accepted=book_bo.accepted,
-                passenger_count=book_bo.passenger_count,
-                date_requested=book_bo.date_requested,
-            )
-        )
-
-    return book_dtos

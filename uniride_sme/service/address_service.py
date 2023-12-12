@@ -127,9 +127,7 @@ def set_latitude_longitude_from_address(address_bo: AddressBO):
     # URL API Adresse GOUV  /search/
     url_search = "https://api-adresse.data.gouv.fr/search/"
 
-    address = concatene_address(
-        address_bo.street_number, address_bo.street_name, address_bo.city, address_bo.postal_code
-    )
+    address = address_bo.get_full_address()
 
     # Parameter for research
     params = {"q": address, "limit": 1, "autocomplete": 0}
@@ -146,11 +144,6 @@ def set_latitude_longitude_from_address(address_bo: AddressBO):
         address_bo.longitude = data["features"][0]["geometry"]["coordinates"][0]
     else:
         raise InvalidAddressException()
-
-
-def concatene_address(street_number, street_name, city, postal_code):
-    """Concatene the address"""
-    return str(street_number) + " " + street_name + " " + city + " " + str(postal_code)
 
 
 def check_address_existence(address_bo: AddressBO):

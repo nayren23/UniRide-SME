@@ -25,3 +25,12 @@ class TripDetailedDTO(TypedDict):
     passenger_count: int
     total_passenger_count: int
     status: int
+
+
+class TripShortDTO(TypedDict):
+    """Trip DTO (Data Transfer Object)"""
+
+    trip_id: int
+    departure_address: str
+    arrival_address: str
+    departure_date: str
