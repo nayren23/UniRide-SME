@@ -1,8 +1,8 @@
 """Test for book service"""
-import pytest
 import datetime
+from unittest.mock import MagicMock
+import pytest
 import psycopg2
-from unittest.mock import MagicMock, Mock
 
 from uniride_sme.service.book_service import (
     _validate_passenger_count,
@@ -14,11 +14,11 @@ from uniride_sme.service.book_service import (
     _validate_booking_status,
     respond_booking,
     get_bookings,
-    get_books_dtos,
 )
-from uniride_sme.model.dto.trip_dto import TripDetailedDTO
-from uniride_sme.model.bo.book_bo import BookBO
+from uniride_sme.model.dto.trip_dto import TripDetailedDTO, TripShortDTO
+from uniride_sme.model.dto.user_dto import UserShortDTO
 from uniride_sme.model.dto.book_dto import BookDTO
+from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.utils.exception.exceptions import (
     MissingInputException,
     InvalidInputException,
@@ -265,76 +265,46 @@ def test_get_bookings_success(mock_get_query):
     mock_get_query.return_value = [
         psycopg2.extras.RealDictRow(
             [
-                ("u_id", 143),
-                ("t_id", 60),
-                ("r_accepted", 0),
+                ("r_accepted", 1),
                 ("r_passenger_count", 3),
-                ("r_date_requested", datetime.datetime(2023, 11, 9, 14, 6, 37, 904962)),
+                ("r_date_requested", datetime.datetime(2023, 12, 8, 11, 11, 13, 479329)),
+                ("t_id", 15),
+                ("t_timestamp_proposed", datetime.datetime(2023, 12, 6, 16, 22)),
+                ("departure_a_id", 1),
+                ("departure_a_street_number", "8"),
+                ("departure_a_street_name", "Rue d'Amsterdam"),
+                ("departure_a_city", "Paris"),
+                ("departure_a_postal_code", "75008"),
+                ("arrival_a_id", 2),
+                ("arrival_a_street_number", "140"),
+                ("arrival_a_street_name", "Rue de la Nouvelle France"),
+                ("arrival_a_city", "Montreuil"),
+                ("arrival_a_postal_code", "93100"),
+                ("u_id", 92),
+                ("u_firstname", "test"),
+                ("u_lastname", "test"),
+                ("u_profile_picture", None),
             ]
-        ),
-        psycopg2.extras.RealDictRow(
-            [
-                ("u_id", 42),
-                ("t_id", 17),
-                ("r_accepted", -1),
-                ("r_passenger_count", 1),
-                ("r_date_requested", datetime.datetime(2023, 12, 9, 14, 4, 37, 904962)),
-            ]
-        ),
+        )
     ]
     expected_result = [
-        BookBO(
-            user_id=143,
-            trip_id=60,
-            accepted=0,
+        BookDTO(
+            user=UserShortDTO(
+                id=92,
+                firstname="test",
+                lastname="test",
+                profile_picture="",
+            ),
+            trip=TripShortDTO(
+                trip_id=15,
+                departure_date=datetime.datetime(2023, 12, 6, 16, 22),
+                departure_address="8 Rue d'Amsterdam, Paris, 75008",
+                arrival_address="140 Rue de la Nouvelle France, Montreuil, 93100",
+            ),
+            accepted=1,
             passenger_count=3,
-            date_requested=datetime.datetime(2023, 11, 9, 14, 6, 37, 904962),
-        ),
-        BookBO(
-            user_id=42,
-            trip_id=17,
-            accepted=-1,
-            passenger_count=1,
-            date_requested=datetime.datetime(2023, 12, 9, 14, 4, 37, 904962),
+            date_requested=datetime.datetime(2023, 12, 8, 11, 11, 13, 479329),
         ),
     ]
     result = get_bookings(2)
-    assert result == expected_result
-
-
-def test_get_books_dtos_success(mock_get_bookings):
-    """Test book_trip success"""
-    mock_get_bookings.return_value = [
-        BookBO(
-            user_id=143,
-            trip_id=60,
-            accepted=0,
-            passenger_count=3,
-            date_requested=datetime.datetime(2023, 11, 9, 14, 6, 37, 904962),
-        ),
-        BookBO(
-            user_id=42,
-            trip_id=17,
-            accepted=-1,
-            passenger_count=1,
-            date_requested=datetime.datetime(2023, 12, 9, 14, 4, 37, 904962),
-        ),
-    ]
-    expected_result = [
-        BookDTO(
-            user_id=143,
-            trip_id=60,
-            accepted=0,
-            passenger_count=3,
-            date_requested=datetime.datetime(2023, 11, 9, 14, 6, 37, 904962),
-        ),
-        BookDTO(
-            user_id=42,
-            trip_id=17,
-            accepted=-1,
-            passenger_count=1,
-            date_requested=datetime.datetime(2023, 12, 9, 14, 4, 37, 904962),
-        ),
-    ]
-    result = get_books_dtos(2)
     assert result == expected_result

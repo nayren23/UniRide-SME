@@ -16,7 +16,6 @@ from uniride_sme.service.address_service import (
     set_latitude_longitude_from_address,
     address_exists,
     check_address_existence,
-    concatene_address,
 )
 from uniride_sme.utils.exception.exceptions import InvalidInputException, MissingInputException
 from uniride_sme.utils.exception.address_exceptions import InvalidIntermediateAddressException
@@ -290,28 +289,19 @@ def get_trips_for_university_address(trip_bo: TripBO, departure_address_bo, addr
                 trip_bo.departure_address.latitude,
                 trip_bo.departure_address.longitude,
             )
+
         address_dtos = {
             "departure": AddressDTO(
                 id=trip_bo.departure_address.id,
                 latitude=trip_bo.departure_address.latitude,
                 longitude=trip_bo.departure_address.longitude,
-                address_name=concatene_address(
-                    trip_bo.departure_address.street_number,
-                    trip_bo.departure_address.street_name,
-                    trip_bo.departure_address.city,
-                    trip_bo.departure_address.postal_code,
-                ),
+                address_name=trip_bo.departure_address.get_full_address(),
             ),
             "arrival": AddressDTO(
                 id=trip_bo.arrival_address.id,
                 latitude=trip_bo.arrival_address.latitude,
                 longitude=trip_bo.arrival_address.longitude,
-                address_name=concatene_address(
-                    trip_bo.arrival_address.street_number,
-                    trip_bo.arrival_address.street_name,
-                    trip_bo.arrival_address.city,
-                    trip_bo.arrival_address.postal_code,
-                ),
+                address_name=trip_bo.arrival_address.get_full_address(),
             ),
             "distance": distance,
         }
@@ -382,21 +372,11 @@ def format_get_current_driver_trips(driver_current_trips):
         address_dtos = {
             "departure": AddressSimpleDTO(
                 id=trip_bo.departure_address.id,
-                name=concatene_address(
-                    trip_bo.departure_address.street_number,
-                    trip_bo.departure_address.street_name,
-                    trip_bo.departure_address.city,
-                    trip_bo.departure_address.postal_code,
-                ),
+                name=trip_bo.departure_address.get_full_address(),
             ),
             "arrival": AddressSimpleDTO(
                 id=trip_bo.arrival_address.id,
-                name=concatene_address(
-                    trip_bo.arrival_address.street_number,
-                    trip_bo.arrival_address.street_name,
-                    trip_bo.arrival_address.city,
-                    trip_bo.arrival_address.postal_code,
-                ),
+                name=trip_bo.arrival_address.get_full_address(),
             ),
         }
         trip_dto = TripDTO(
@@ -414,7 +394,7 @@ def format_get_current_driver_trips(driver_current_trips):
 def format_trip(raw_trip: dict) -> TripBO:
     """Format the trip"""
     departure_address = AddressBO(
-        address_id=raw_trip["departure_a_id"],
+        id=raw_trip["departure_a_id"],
         street_number=raw_trip["departure_a_street_number"],
         street_name=raw_trip["departure_a_street_name"],
         city=raw_trip["departure_a_city"],
@@ -423,7 +403,7 @@ def format_trip(raw_trip: dict) -> TripBO:
         longitude=raw_trip["departure_a_longitude"],
     )
     arrival_address = AddressBO(
-        address_id=raw_trip["arrival_a_id"],
+        id=raw_trip["arrival_a_id"],
         street_number=raw_trip["arrival_a_street_number"],
         street_name=raw_trip["arrival_a_street_name"],
         city=raw_trip["arrival_a_city"],
@@ -581,23 +561,13 @@ def get_trip_by_id(trip_id):
             id=trip_bo.departure_address.id,
             latitude=trip_bo.departure_address.latitude,
             longitude=trip_bo.departure_address.longitude,
-            address_name=concatene_address(
-                trip_bo.departure_address.street_number,
-                trip_bo.departure_address.street_name,
-                trip_bo.departure_address.city,
-                trip_bo.departure_address.postal_code,
-            ),
+            address_name=trip_bo.departure_address.get_full_address(),
         ),
         "arrival": AddressDTO(
             id=trip_bo.arrival_address.id,
             latitude=trip_bo.arrival_address.latitude,
             longitude=trip_bo.arrival_address.longitude,
-            address_name=concatene_address(
-                trip_bo.arrival_address.street_number,
-                trip_bo.arrival_address.street_name,
-                trip_bo.arrival_address.city,
-                trip_bo.arrival_address.postal_code,
-            ),
+            address_name=trip_bo.arrival_address.get_full_address(),
         ),
     }
 

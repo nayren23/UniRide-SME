@@ -11,7 +11,7 @@ from uniride_sme.utils.field import validate_fields
 book = Blueprint("book", __name__, url_prefix="/book")
 
 
-@book.route("/", methods=["POST"])
+@book.route("", methods=["POST"])
 @jwt_required()
 def book_trip():
     """Book a trip endpoint"""
@@ -66,7 +66,7 @@ def get_bookings():
     """Respond to a booking request endpoint"""
     try:
         user_id = get_jwt_identity()
-        bookings = book_service.get_books_dtos(user_id)
+        bookings = book_service.get_bookings(user_id)
         response = jsonify(bookings=bookings), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code

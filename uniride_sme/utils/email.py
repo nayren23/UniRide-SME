@@ -21,6 +21,25 @@ def send_email(to, subject, template):
     print("Email sent")
 
 
+def send_verification_email(student_email, firstname, first_mail=False):
+    """Send verification email"""
+    file_path = f"{app.config['PATH']}/resource/email/email_verification_template.html"
+    if first_mail:
+        file_path = f"{app.config['PATH']}/resource/email/email_welcome_template.html"
+
+    with open(
+        file_path,
+        "r",
+        encoding="UTF-8",
+    ) as html:
+        url = app.config["FRONT_END_URL"] + "email-verification/" + email.generate_token(student_email)
+        send_email(
+            student_email,
+            "Vérifier votre email",
+            html.read().replace("{firstname}", firstname).replace("{link}", url),
+        )
+
+
 def generate_token(email):
     """Generate a token for email verification"""
     serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
