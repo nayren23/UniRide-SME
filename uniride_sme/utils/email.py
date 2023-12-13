@@ -32,7 +32,7 @@ def send_verification_email(student_email, firstname, first_mail=False):
         "r",
         encoding="UTF-8",
     ) as html:
-        url = app.config["FRONT_END_URL"] + "email-verification/" + email.generate_token(student_email)
+        url = app.config["FRONT_END_URL"] + "email-verification/" + generate_token(student_email)
         send_email(
             student_email,
             "Vérifier votre email",
