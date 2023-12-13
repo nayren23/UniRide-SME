@@ -7,6 +7,7 @@ from uniride_sme.model.bo.documents_bo import DocumentsBO
 from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException
+from uniride_sme.utils.file import get_encoded_file
 
 
 def get_documents_by_user_id(user_id):
@@ -115,7 +116,7 @@ def document_to_verify():
 
     for document in documents:
         formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
-        profile_picture_url = document[4]
+        profile_picture_url = get_encoded_file(document[4])
         license_verified_str = str(document[6])
         id_card_verified_str = str(document[7])
         school_certificate_verified_str = str(document[8])
