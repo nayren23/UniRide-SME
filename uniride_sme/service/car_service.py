@@ -36,12 +36,12 @@ def add_in_db(car: CarBO):
     try:
         conn = connect_pg.connect()
         car_id = connect_pg.execute_command(conn, query, values)
-        car.id=car_id
+        car.id = car_id
         connect_pg.disconnect(conn)
     except psy.Error as e:
         if "ur_vehicle_u_id_key" in str(e):
-            raise CarAlreadyExist()
-        raise InvalidInputException("INVALID_INPUT")
+            raise CarAlreadyExist() from e
+        raise InvalidInputException("INVALID_INPUT") from e
 
 
 def valid_model(model):

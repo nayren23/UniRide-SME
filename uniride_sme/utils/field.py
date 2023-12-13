@@ -17,4 +17,5 @@ def validate_fields(json_object, field_types):
 
     for field, expected_type in field_types.items():
         if field not in json_object or not isinstance(json_object[field], expected_type):
+            print(f"Field {field} is missing or has an invalid type")
             raise InvalidInputException("FIELD_VALIDATION_ERROR")

@@ -1,15 +1,16 @@
 """User related endpoints"""
 from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
-from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO
+from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
-
+from uniride_sme.utils.jwt_token import revoke_token
 
 user = Blueprint("user", __name__, url_prefix="/user")
 
@@ -33,7 +34,7 @@ def register():
             request.files.get("pfp", None),
         )
         documents_service.add_documents(user_bo.u_id, request.files)
-        send_verification_email(user_bo.u_student_email, user_bo.u_firstname, True)
+        email.send_verification_email(user_bo.u_student_email, user_bo.u_firstname, True)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
@@ -62,6 +63,14 @@ def authenticate():
         response = jsonify(message=e.message), e.status_code
 
     return response
+
+
+@user.route("/logout", methods=["DELETE"])
+@jwt_required()
+def logout():
+    """Logout endpoint"""
+    revoke_token()
+    return jsonify(message="ACCESS_TOKEN_REVOKED"), 200
 
 
 @user.route("/infos", methods=["GET"])
@@ -227,30 +236,10 @@ def send_email_confirmation():
         user_bo = user_service.get_user_by_id(user_id)
         if user_bo.u_email_verified:
             raise EmailAlreadyVerifiedException()
-        send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
+        email.send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
-
-
-def send_verification_email(student_email, firstname, first_mail=False):
-    """Send verification email"""
-    file_path = f"{app.config['PATH']}/resource/email/email_verification_template.html"
-    if first_mail:
-        file_path = f"{app.config['PATH']}/resource/email/email_welcome_template.html"
-
-    with open(
-        file_path,
-        "r",
-        encoding="UTF-8",
-    ) as html:
-        url = app.config["FRONT_END_URL"] + "email-verification/" + email.generate_token(student_email)
-        print(url)
-        email.send_email(
-            student_email,
-            "Vérifier votre email",
-            html.read().replace("{firstname}", firstname).replace("{link}", url),
-        )
 
 
 @user.route("/verify/email/<token>", methods=["GET"])
@@ -311,3 +300,31 @@ def user_count():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+
+@user.route("/driver/infos/<user_id>", methods=["GET"])
+@jwt_required()
+def get_driver_infos(user_id):
+    """Get user infos endpoint"""
+    try:
+        user_bo = user_service.get_user_by_id(user_id)
+        user_infos_dto = DriverInfosDTO(
+            id=user_bo.u_id,
+            firstname=user_bo.u_firstname,
+            lastname=user_bo.u_lastname,
+            description=user_bo.u_description,
+        )
+        response = jsonify(user_infos_dto), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@user.route("/default-profile-picture", methods=["GET"])
+def get_default_profile_picture():
+    """Get default profile picture""" ""
+    return send_file(
+        f"{app.config['PATH']}/resource/default_profile_picture.png",
+        download_name="default_profile_picture.png",
+    )

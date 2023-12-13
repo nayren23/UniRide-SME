@@ -51,7 +51,17 @@ class GoogleMapsRouteChecker(RouteChecker):
         gmaps = googlemaps.Client(key=self.google_api_key)
 
         initial_route = gmaps.directions(origin, destination, self.mode, departure_time=now)
-
-        initial_distance = float(initial_route[0]["legs"][0]["distance"]["value"] / 1000)  # Distance en kilomètres
+        initial_distance = float(initial_route[0]["legs"][0]["distance"]["value"] / 1000)  # Distance in kilometers
 
         return initial_distance
+
+    def get_duration(self, origin, destination):
+        """Get the duration between two points"""
+        now = datetime.now()
+
+        gmaps = googlemaps.Client(key=self.google_api_key)
+
+        initial_route = gmaps.directions(origin, destination, self.mode, departure_time=now)
+        duration = initial_route[0]["legs"][0]["duration"]["value"]  # Duration in seconds
+
+        return duration

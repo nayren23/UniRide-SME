@@ -16,6 +16,13 @@ class InternalServerErrorException(ApiException):
         super().__init__("INTERNAL_SERVER_ERROR", 500)
 
 
+class ForbiddenException(ApiException):
+    """Exception for internal server error"""
+
+    def __init__(self, message):
+        super().__init__(message, 403)
+
+
 class InvalidInputException(ApiException):
     """Exception for invalid input"""
 
