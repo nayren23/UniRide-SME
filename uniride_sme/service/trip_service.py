@@ -11,6 +11,9 @@ from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO, AddressSimpleDTO
 from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO
 from uniride_sme.service.car_service import get_car_info_by_user_id
+from uniride_sme.model.dto.address_dto import AddressDTO
+from uniride_sme.model.dto.address_dto import AddressSimpleDTO
+from uniride_sme.model.dto.trip_dto import TripDTO
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
@@ -583,3 +586,11 @@ def get_trip_by_id(trip_id):
         status=trip_bo.status,
     )
     return trip_dto
+
+def count_trip():
+    """Get number of trip"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_trip"
+    result = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+    return result[0][0]

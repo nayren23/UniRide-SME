@@ -16,6 +16,8 @@ from uniride_sme.service.trip_service import (
     get_driver_trips,
     get_available_trips_to,
     get_trip_by_id,
+    format_get_current_driver_trips,
+    count_trip  
 )
 
 trip = Blueprint("trip", __name__, url_prefix="/trip")
@@ -137,4 +139,15 @@ def get_trip(trip_id):
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
+    return response
+
+
+@trip.route("/trip_number", methods=["GET"])
+def trip_count():
+    """Trip count"""
+    try:
+        trip_count_value = count_trip()
+        response = jsonify({"message": "TRIP_NUMBER_SUCCESSFULLY", "trip_count": trip_count_value}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
     return response
