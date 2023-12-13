@@ -1,3 +1,4 @@
+"""Documents exceptions module"""
 from uniride_sme.utils.exception.exceptions import ApiException
 
 

@@ -31,6 +31,7 @@ def generate_pagination_metadata(page, page_size, total_count):
 
 
 def create_pagination(request, data):
+    """Create pagination for the provided data"""
     page = int(request.args.get("page", 1))
     page_size = int(request.args.get("limit", 10))
 

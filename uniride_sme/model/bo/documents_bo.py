@@ -2,11 +2,12 @@
 from datetime import datetime
 import dataclasses
 
+
 @dataclasses.dataclass
-class DocumentsBO:
+class DocumentsBO:  # pylint: disable=too-many-instance-attributes
     """Documents business owner class"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         u_id: int,
         d_id: int,

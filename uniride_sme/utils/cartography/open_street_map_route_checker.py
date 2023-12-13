@@ -89,3 +89,7 @@ class OpenStreetMapRouteChecker(RouteChecker):
             initial_distance = float(route["distance"] / 1000)  # Distance in kilometers
             return initial_distance
         return None
+
+    def get_duration(self, origin, destination):
+        """Get the duration between two points"""
+        # TODO : implement this method

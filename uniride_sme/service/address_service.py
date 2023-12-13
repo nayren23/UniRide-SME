@@ -127,9 +127,7 @@ def set_latitude_longitude_from_address(address_bo: AddressBO):
     # URL API Adresse GOUV  /search/
     url_search = "https://api-adresse.data.gouv.fr/search/"
 
-    address = concatene_address(
-        address_bo.street_number, address_bo.street_name, address_bo.city, address_bo.postal_code
-    )
+    address = address_bo.get_full_address()
 
     # Parameter for research
     params = {"q": address, "limit": 1, "autocomplete": 0}
@@ -148,15 +146,10 @@ def set_latitude_longitude_from_address(address_bo: AddressBO):
         raise InvalidAddressException()
 
 
-def concatene_address(street_number, street_name, city, postal_code):
-    """Concatene the address"""
-    return str(street_number) + " " + street_name + " " + city + " " + str(postal_code)
-
-
 def check_address_existence(address_bo: AddressBO):
     """Get the address from the id"""
 
-    validate_address_depart_id(address_bo.id)
+    validate_address_departure_id(address_bo.id)
 
     query = """
     SELECT a_street_number, a_street_name, a_city, a_postal_code, a_latitude, a_longitude
@@ -187,8 +180,8 @@ def check_address_exigeance(address: AddressBO):
     valid_postal_code(address.postal_code)
 
 
-def validate_address_depart_id(id_address):
-    """Check if the address depart id is valid"""
+def validate_address_departure_id(id_address):
+    """Check if the address departure id is valid"""
     if id_address is None:
         raise MissingInputException("ADDRESS_ID_CANNOT_BE_NULL")
     if id_address < 0:
