@@ -158,7 +158,6 @@ def get_bookings(user_id):
     conn = connect_pg.connect()
     result = connect_pg.get_query(conn, query, values, True)
     connect_pg.disconnect(conn)
-    print(result)
     bookings = []
     for booking in result:
         user = UserShortDTO(

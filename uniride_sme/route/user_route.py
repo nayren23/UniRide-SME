@@ -33,8 +33,8 @@ def register():
             form.get("description", None),
             request.files.get("pfp", None),
         )
-        documents_service.add_documents(user_bo.u_id, request.files)
-        email.send_verification_email(user_bo.u_student_email, user_bo.u_firstname, True)
+        documents_service.add_documents(user_bo.id, request.files)
+        email.send_verification_email(user_bo.student_email, user_bo.firstname, True)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
@@ -47,14 +47,14 @@ def authenticate():
     json_object = request.json
     try:
         user_bo = user_service.authenticate(json_object.get("login", None), json_object.get("password", None))
-        documents_bo = documents_service.get_documents_by_user_id(user_bo.u_id)
+        documents_bo = documents_service.get_documents_by_user_id(user_bo.id)
         informations_verified_dto = InformationsVerifiedDTO(
-            email_verified=user_bo.u_email_verified,
+            email_verified=user_bo.email_verified,
             license_verified=documents_bo.v_license_verified,
             id_card_verified=documents_bo.v_id_card_verified,
             school_certificate_verified=documents_bo.v_school_certificate_verified,
         )
-        token = create_access_token(user_bo.u_id)
+        token = create_access_token(user_bo.id)
         response = (
             jsonify(message="AUTHENTIFIED_SUCCESSFULLY", token=token, informations_verified=informations_verified_dto),
             200,
@@ -81,13 +81,13 @@ def get_infos():
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_infos_dto = UserInfosDTO(
-            login=user_bo.u_login,
-            student_email=user_bo.u_student_email,
-            firstname=user_bo.u_firstname,
-            lastname=user_bo.u_lastname,
-            gender=user_bo.u_gender,
-            phone_number=user_bo.u_phone_number,
-            description=user_bo.u_description,
+            login=user_bo.login,
+            student_email=user_bo.student_email,
+            firstname=user_bo.firstname,
+            lastname=user_bo.lastname,
+            gender=user_bo.gender,
+            phone_number=user_bo.phone_number,
+            description=user_bo.description,
         )
         response = jsonify(user_infos_dto), 200
     except ApiException as e:
@@ -183,7 +183,7 @@ def save_pfp():
     user_id = get_jwt_identity()
     try:
         user_bo = user_service.get_user_by_id(user_id)
-        user_service.save_pfp(user_id, request.files.get("pfp", None), user_bo.u_profile_picture)
+        user_service.save_pfp(user_id, request.files.get("pfp", None), user_bo.profile_picture)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
@@ -234,9 +234,9 @@ def send_email_confirmation():
     user_id = get_jwt_identity()
     try:
         user_bo = user_service.get_user_by_id(user_id)
-        if user_bo.u_email_verified:
+        if user_bo.email_verified:
             raise EmailAlreadyVerifiedException()
-        email.send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
+        email.send_verification_email(user_bo.student_email, user_bo.firstname)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
@@ -309,10 +309,10 @@ def get_driver_infos(user_id):
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_infos_dto = DriverInfosDTO(
-            id=user_bo.u_id,
-            firstname=user_bo.u_firstname,
-            lastname=user_bo.u_lastname,
-            description=user_bo.u_description,
+            id=user_bo.id,
+            firstname=user_bo.firstname,
+            lastname=user_bo.lastname,
+            description=user_bo.description,
         )
         response = jsonify(user_infos_dto), 200
     except ApiException as e:

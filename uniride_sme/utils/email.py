@@ -1,4 +1,5 @@
 """Email related functions"""
+import os
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
@@ -23,21 +24,26 @@ def send_email(to, subject, template):
 
 def send_verification_email(student_email, firstname, first_mail=False):
     """Send verification email"""
-    file_path = f"{app.config['PATH']}/resource/email/email_verification_template.html"
     if first_mail:
-        file_path = f"{app.config['PATH']}/resource/email/email_welcome_template.html"
+        file_path = os.path.join(app.config["PATH"], "resource/email/email_welcome_template.html")
+    else:
+        file_path = os.path.join(app.config["PATH"], "resource/email/email_verification_template.html")
 
-    with open(
-        file_path,
-        "r",
-        encoding="UTF-8",
-    ) as html:
-        url = app.config["FRONT_END_URL"] + "email-verification/" + generate_token(student_email)
-        send_email(
-            student_email,
-            "Vérifier votre email",
-            html.read().replace("{firstname}", firstname).replace("{link}", url),
-        )
+    url = app.config["FRONT_END_URL"] + "email-verification/" + generate_token(student_email)
+    with open(file_path, "r", encoding="UTF-8") as html:
+        content = html.read().replace("{firstname}", firstname).replace("{url}", url)
+    send_email(student_email, "Vérifier votre adresse e-mail", content)
+
+
+def send_reservation_response_email(student_email, firstname, trip_id):
+    """Send reservation response email"""
+    print("path : " + app.config["PATH"])
+    file_path = os.path.join(app.config["PATH"], "resource/email/email_reservation_response_template.html")
+    print("file path : " + file_path)
+    url = f"{app.config['FRONT_END_URL']}trip-info/{trip_id}"
+    with open(file_path, "r", encoding="UTF-8") as html:
+        content = html.read().replace("{firstname}", firstname).replace("{url}", url)
+    send_email(student_email, "Votre demande de réservation a reçu une réponse", content)
 
 
 def generate_token(email):

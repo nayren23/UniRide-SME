@@ -26,7 +26,7 @@ def authenticate(login, password) -> UserBO:
         raise MissingInputException("PASSWORD_MISSING")
 
     user_bo = get_user_by_login(login)
-    _verify_password(password, user_bo.u_password)
+    _verify_password(password, user_bo.password)
     return user_bo
 
 
@@ -35,9 +35,9 @@ def get_user_by_id(user_id) -> UserBO:
     return _get_user_by_identifier(user_id, "u_id")
 
 
-def get_user_by_login(u_login) -> UserBO:
+def get_user_by_login(login) -> UserBO:
     """Get user infos from db using the login"""
-    return _get_user_by_identifier(u_login, "u_login")
+    return _get_user_by_identifier(login, "u_login")
 
 
 def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
@@ -56,7 +56,24 @@ def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
         raise UserNotFoundException()
     infos = infos[0]
 
-    user_bo = UserBO(**infos)
+    user_bo = UserBO(
+        id=infos["u_id"],
+        login=infos["u_login"],
+        firstname=infos["u_firstname"],
+        lastname=infos["u_lastname"],
+        student_email=infos["u_student_email"],
+        password=infos["u_password"],
+        gender=infos["u_gender"],
+        phone_number=infos["u_phone_number"],
+        description=infos["u_description"],
+        profile_picture=infos["u_profile_picture"],
+        timestamp_creation=infos["u_timestamp_creation"],
+        timestamp_modification=infos["u_timestamp_modification"],
+        email_verified=infos["u_email_verified"],
+        status=infos["u_status"],
+        home_address_id=infos["u_home_address_id"],
+        work_address_id=infos["u_work_address_id"],
+    )
     return user_bo
 
 
@@ -180,7 +197,7 @@ def _verify_password(password, hashed_password) -> bool:
         raise PasswordIncorrectException()
 
 
-def save_pfp(user_id, pfp_file, u_profile_picture=None):
+def save_pfp(user_id, pfp_file, profile_picture=None):
     """Save profil picture"""
     if not pfp_file:
         raise MissingInputException("MISSING_PFP_FILE")
@@ -191,8 +208,8 @@ def save_pfp(user_id, pfp_file, u_profile_picture=None):
     allowed_extensions = ["png", "jpg", "jpeg"]
     file_name = save_file(pfp_file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, user_id)
     try:
-        if u_profile_picture and file_name != u_profile_picture:
-            delete_file(u_profile_picture, app.config["PFP_UPLOAD_FOLDER"])
+        if profile_picture and file_name != profile_picture:
+            delete_file(profile_picture, app.config["PFP_UPLOAD_FOLDER"])
     except FileNotFoundError:
         pass
     query = "UPDATE uniride.ur_user SET u_profile_picture=%s, u_timestamp_modification=CURRENT_TIMESTAMP WHERE u_id=%s"
@@ -311,7 +328,7 @@ def change_password(user_id, old_password, new_password, new_password_confirmati
     if not old_password:
         raise MissingInputException("PASSWORD_MISSING")
 
-    _verify_password(old_password, user_bo.u_password)
+    _verify_password(old_password, user_bo.password)
 
     if old_password == new_password:
         raise AttributeUnchangedException("PASSWORD")
@@ -329,7 +346,7 @@ def change_password(user_id, old_password, new_password, new_password_confirmati
 def change_student_email(user_id, student_email):
     """Change student email"""
     user_bo = get_user_by_id(user_id)
-    if user_bo.u_student_email == student_email:
+    if user_bo.student_email == student_email:
         raise AttributeUnchangedException("STUDENT_EMAIL")
 
     _validate_student_email(student_email)

@@ -37,8 +37,8 @@ def add_trip(trip: TripBO):
     trip_exists(trip)
     check_address_existence(trip.departure_address)
     check_address_existence(trip.arrival_address)
-    calculate_price(trip)
-
+    # calculate_price(trip)
+    trip.price = 0.0
     # validate values
     # validate_total_passenger_count(trip.total_passenger_count, trip.user_id)
     validate_total_passenger_count(trip.total_passenger_count)
@@ -586,6 +586,7 @@ def get_trip_by_id(trip_id):
         status=trip_bo.status,
     )
     return trip_dto
+
 
 def count_trip():
     """Get number of trip"""
