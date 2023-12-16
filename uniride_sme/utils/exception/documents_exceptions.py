@@ -7,3 +7,15 @@ class DocumentsNotFoundException(ApiException):
 
     def __init__(self):
         super().__init__("DOCUMENTS_NOT_FOUND", 422)
+
+
+
+
+
+
+
+class DocumentsTypeException(ApiException):
+    """Exception for when the documents isn't found"""
+
+    def __init__(self):
+        super().__init__("DOCUMENTS_TYPE_ERROR", 422)

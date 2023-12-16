@@ -6,7 +6,7 @@ from uniride_sme import connect_pg
 from uniride_sme.model.bo.documents_bo import DocumentsBO
 from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import MissingInputException
-from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException
+from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
 from uniride_sme.utils.file import get_encoded_file
 
 
@@ -158,12 +158,7 @@ def document_check(data):
         "school_certificate": "v_school_certificate_verified",
     }
     if document_type not in column_mapping:
-        return {
-            "user_id": user_id,
-            "document": document_data,
-            "success": False,
-            "message": f"Type de document non pris en charge : {document_type}",
-        }
+        raise DocumentsTypeException()
     document_column = column_mapping[document_type]
     conn = connect_pg.connect()
     query = f"""
@@ -173,14 +168,7 @@ def document_check(data):
     """
     connect_pg.execute_command(conn, query, (status, user_id))
     connect_pg.disconnect(conn)
-    result = {
-        "user_id": user_id,
-        "document": document_data,
-        "success": True,
-        "message": f"The document for {user_id} has been updated to {document_type}.",
-    }
-
-    return result
+    return {"message": "DOCUMENT_STATUS_UPDATED"}
 
 
 def document_user(user_id):
@@ -196,12 +184,7 @@ def document_user(user_id):
     connect_pg.disconnect(conn)
 
     if not document_data:
-        return {
-            "user_id": user_id,
-            "documents": [],
-            "success": False,
-            "message": "Aucun document trouvé pour l'utilisateur.",
-        }
+        raise DocumentsTypeException()
 
     documents = []
     column_mapping = {
@@ -243,5 +226,3 @@ def count_users():
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
     return result[0][0]
-
-
