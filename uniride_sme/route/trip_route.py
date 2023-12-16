@@ -17,7 +17,7 @@ from uniride_sme.service.trip_service import (
     get_available_trips_to,
     get_trip_by_id,
     format_get_current_driver_trips,
-    count_trip  
+    count_trip,
 )
 
 trip = Blueprint("trip", __name__, url_prefix="/trip")

@@ -1,5 +1,4 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -274,6 +273,13 @@ def check_document():
         # Appelez la fonction document_check avec les données JSON
         result = documents_service.document_check(data)
         # Utilisez jsonify pour retourner une réponse JSON
+        user_bo = user_service.get_user_by_id(data["user_id"])
+        email.send_document_validation_email(
+            user_bo.student_email,
+            user_bo.firstname,
+            data["document"]["type"],
+            data["document"]["status"],
+        )
         response = jsonify(result), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
