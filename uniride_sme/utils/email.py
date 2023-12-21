@@ -1,4 +1,5 @@
 """Email related functions"""
+import os
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
@@ -7,7 +8,7 @@ from uniride_sme.utils.exception.exceptions import InvalidInputException
 from uniride_sme.utils.decorator import with_app_context
 
 
-@rq.job
+@rq.job  # TODO : add .queue when function called to use redis queue
 @with_app_context
 def send_email(to, subject, template):
     """Send email"""
@@ -23,21 +24,78 @@ def send_email(to, subject, template):
 
 def send_verification_email(student_email, firstname, first_mail=False):
     """Send verification email"""
-    file_path = f"{app.config['PATH']}/resource/email/email_verification_template.html"
     if first_mail:
-        file_path = f"{app.config['PATH']}/resource/email/email_welcome_template.html"
+        file_path = os.path.join(app.config["PATH"], "resource/email/email_welcome_template.html")
+    else:
+        file_path = os.path.join(app.config["PATH"], "resource/email/email_verification_template.html")
 
-    with open(
-        file_path,
-        "r",
-        encoding="UTF-8",
-    ) as html:
-        url = app.config["FRONT_END_URL"] + "email-verification/" + generate_token(student_email)
-        send_email(
-            student_email,
-            "Vérifier votre email",
-            html.read().replace("{firstname}", firstname).replace("{link}", url),
+    url = app.config["FRONT_END_URL"] + "email-verification/" + generate_token(student_email)
+    with open(file_path, "r", encoding="UTF-8") as html:
+        content = html.read().replace("{firstname}", firstname).replace("{url}", url)
+    send_email(student_email, "Vérifier votre adresse e-mail", content)
+
+
+def send_reservation_response_email(student_email, firstname, trip_id):
+    """Send reservation response email"""
+    file_path = os.path.join(app.config["PATH"], "resource/email/email_reservation_response_template.html")
+
+    url = f"{app.config['FRONT_END_URL']}trip-info/{trip_id}"
+
+    with open(file_path, "r", encoding="UTF-8") as html:
+        content = html.read().replace("{firstname}", firstname).replace("{url}", url)
+
+    send_email(student_email, "Votre demande de réservation a reçu une réponse", content)
+
+
+def send_cancelation_email(student_email, firstname, trip_id):
+    """Send reservation response email"""
+    file_path = os.path.join(app.config["PATH"], "resource/email/email_cancelation_template.html")
+
+    url = f"{app.config['FRONT_END_URL']}trip-info/{trip_id}"
+
+    with open(file_path, "r", encoding="UTF-8") as html:
+        content = html.read().replace("{firstname}", firstname).replace("{url}", url)
+
+    send_email(student_email, "Votre trajet a été annulé", content)
+
+
+def send_document_validation_email(student_email, firstname, document_type, status):
+    """Send document validation email"""
+    file_path = os.path.join(app.config["PATH"], "resource/email/email_document_validation_template.html")
+
+    document_type = _get_document_type(document_type)
+    status = _get_status(document_type, status)
+
+    url = f"{app.config['FRONT_END_URL']}"  # TODO: add url to document page
+
+    with open(file_path, "r", encoding="UTF-8") as html:
+        content = (
+            html.read()
+            .replace("{firstname}", firstname)
+            .replace("{url}", url)
+            .replace("{document_type}", document_type["translation"])
+            .replace("{status}", status)
         )
+
+    send_email(student_email, f"Votre {document_type['translation']} a été {status}", content)
+
+
+def _get_document_type(document_type):
+    """Get string for document validation email"""
+    documents = {
+        "license": {"translation": "permis de conduire", "masculin": True},
+        "id_card": {"translation": "carte d'identité", "masculin": True},
+        "school_certificate": {"translation": "certificat de scolarité", "masculin": False},
+        "insurance": {"translation": "assurance", "masculin": False},
+    }
+    return documents[document_type]
+
+
+def _get_status(document_type, status):
+    """Get title for document validation email"""
+    if status == 1:
+        return "accepté" if document_type["masculin"] else "acceptée"
+    return "refusé" if document_type["masculin"] else "refusée"
 
 
 def generate_token(email):

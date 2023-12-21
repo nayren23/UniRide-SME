@@ -11,9 +11,6 @@ from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO, AddressSimpleDTO
 from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO
 from uniride_sme.service.car_service import get_car_info_by_user_id
-from uniride_sme.model.dto.address_dto import AddressDTO
-from uniride_sme.model.dto.address_dto import AddressSimpleDTO
-from uniride_sme.model.dto.trip_dto import TripDTO
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
@@ -37,8 +34,8 @@ def add_trip(trip: TripBO):
     trip_exists(trip)
     check_address_existence(trip.departure_address)
     check_address_existence(trip.arrival_address)
-    calculate_price(trip)
-
+    # calculate_price(trip)
+    trip.price = 0.0
     # validate values
     # validate_total_passenger_count(trip.total_passenger_count, trip.user_id)
     validate_total_passenger_count(trip.total_passenger_count)
@@ -557,7 +554,7 @@ def get_trip_by_id(trip_id):
     trip_bo = format_trip(trip)
     origin = (trip_bo.departure_address.latitude, trip_bo.departure_address.longitude)
     destination = (trip_bo.arrival_address.latitude, trip_bo.arrival_address.longitude)
-    duration = trip_bo.route_checker.get_duration(origin, destination)
+    duration = trip_bo.route_checker.get_duration(origin, destination, trip_bo.timestamp_proposed)
     arrival_date = trip_bo.timestamp_proposed + timedelta(seconds=duration)
     address_dtos = {
         "departure": AddressDTO(
@@ -586,6 +583,7 @@ def get_trip_by_id(trip_id):
         status=trip_bo.status,
     )
     return trip_dto
+
 
 def count_trip():
     """Get number of trip"""

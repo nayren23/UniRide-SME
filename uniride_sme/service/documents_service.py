@@ -1,5 +1,4 @@
 """Documents service module"""
-from flask import send_file
 from datetime import datetime
 from uniride_sme import app
 from uniride_sme import connect_pg
@@ -243,5 +242,3 @@ def count_users():
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
     return result[0][0]
-
-

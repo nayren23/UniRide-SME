@@ -3,8 +3,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
-from uniride_sme.service import book_service
-
+from uniride_sme.service import book_service, user_service
+from uniride_sme.utils import email
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.field import validate_fields
 
@@ -54,6 +54,8 @@ def respond_booking():
             },
         )
         book_service.respond_booking(json_object["trip_id"], user_id, json_object["booker_id"], json_object["response"])
+        booker = user_service.get_user_by_id(json_object["booker_id"])
+        email.send_reservation_response_email(booker.student_email, booker.firstname, json_object["trip_id"])
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
