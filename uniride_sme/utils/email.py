@@ -47,6 +47,18 @@ def send_reservation_response_email(student_email, firstname, trip_id):
     send_email(student_email, "Votre demande de réservation a reçu une réponse", content)
 
 
+def send_cancelation_email(student_email, firstname, trip_id):
+    """Send reservation response email"""
+    file_path = os.path.join(app.config["PATH"], "resource/email/email_cancelation_template.html")
+
+    url = f"{app.config['FRONT_END_URL']}trip-info/{trip_id}"
+
+    with open(file_path, "r", encoding="UTF-8") as html:
+        content = html.read().replace("{firstname}", firstname).replace("{url}", url)
+
+    send_email(student_email, "Votre trajet a été annulé", content)
+
+
 def send_document_validation_email(student_email, firstname, document_type, status):
     """Send document validation email"""
     file_path = os.path.join(app.config["PATH"], "resource/email/email_document_validation_template.html")

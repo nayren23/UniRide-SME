@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votre trajet a été annulé</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            color: #555555;
+            text-align: justify;
+        }
+
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #ffffff;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <p>Bonjour {firstname},</p>
+
+        <p>Nous avons le regret de vous informer que l'un de vos trajets a été annulé. Pour consulter
+            les détails, veuillez cliquer sur le bouton ci-dessous.</p>
+
+        <div style="text-align: center; margin: 20px">
+            <a href="{url}" class="button">Voir plus</a>
+        </div>
+        <p>Pour toute question, n'hésitez pas à contacter notre service client.</p>
+
+        <p>Cordialement,<br>L'équipe UniRide</p>
+    </div>
+</body>
+
+</html>
