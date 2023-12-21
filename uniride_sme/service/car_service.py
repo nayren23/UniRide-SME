@@ -4,7 +4,7 @@ from uniride_sme import connect_pg
 from uniride_sme.model.bo.car_bo import CarBO
 from uniride_sme.model.dto.car_dto import CarDTO
 from uniride_sme.utils.exception.exceptions import InvalidInputException, MissingInputException
-from uniride_sme.utils.exception.car_execeptions import CarAlreadyExist
+from uniride_sme.utils.exception.car_exceptions import CarAlreadyExist
 
 
 def add_in_db(car: CarBO):

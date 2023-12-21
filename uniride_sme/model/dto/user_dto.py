@@ -32,6 +32,15 @@ class DriverInfosDTO(TypedDict):
     description: str
 
 
+class PassengerInfosDTO(TypedDict):
+    """DTO for driver's informations"""
+
+    id: int
+    firstname: str
+    lastname: str
+    profile_picture: str
+
+
 class InformationsVerifiedDTO(TypedDict):
     """DTO to check if user's informations are verified"""
 
