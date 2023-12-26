@@ -131,7 +131,8 @@ def document_to_verify():
             "documents_to_verify": total_zeros,
             "person": {
                 "id_user": document[0],
-                "full_name": document[2] + " " + document[3],
+                "first_name": document[2],
+                "last_name": document[3],
                 "last_modified_date": formatted_last_modified_date,
                 "profile_picture": profile_picture_url,
             },
@@ -243,7 +244,8 @@ def users_information():
         request_data = {
             
                 "id_user": documents[0],
-                "full_name": str(documents[2]) + " " + str(documents[3]),
+                "last_name":documents[2],
+                "first_name": documents[3],
                 "timestamp_creation": documents[5],
                 "last_modified_date": documents[6],
                 "profile_picture": documents[4],
