@@ -328,3 +328,14 @@ def get_default_profile_picture():
         f"{app.config['PATH']}/resource/default_profile_picture.png",
         download_name="default_profile_picture.png",
     )
+    
+
+@user.route("/users_informations", methods=["GET"])
+def users_informations():
+    """Get users information"""
+    try:
+        users_informations = documents_service.users_information()
+        response = jsonify({"message": "USER_DISPLAYED_SUCESSFULLY", "users": users_informations}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response

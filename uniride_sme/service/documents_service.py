@@ -226,3 +226,35 @@ def count_users():
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
     return result[0][0]
+
+def users_information():
+    """Get users information"""
+    conn = connect_pg.connect()
+    result = []
+
+    query = """
+        SELECT u_id, r_id, u_lastname, u_firstname, u_profile_picture, u_timestamp_creation, u_timestamp_modification
+        FROM uniride.ur_user
+    """
+    document = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+
+    for documents in document:
+        request_data = {
+            
+                "id_user": documents[0],
+                "full_name": str(documents[2]) + " " + str(documents[3]),
+                "timestamp_creation": documents[5],
+                "last_modified_date": documents[6],
+                "profile_picture": documents[4],
+                "role": documents[1],
+            
+        }
+
+        result.append(request_data)
+
+    return result
+
+
+
+
