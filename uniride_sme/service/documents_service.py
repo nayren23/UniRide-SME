@@ -1,5 +1,4 @@
 """Documents service module"""
-from flask import send_file
 from datetime import datetime
 from uniride_sme import app
 from uniride_sme import connect_pg
@@ -8,6 +7,8 @@ from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
 from uniride_sme.utils.file import get_encoded_file
+import os
+
 
 
 def get_documents_by_user_id(user_id):
@@ -218,45 +219,3 @@ def document_user(user_id):
         "user_id": user_id,
         "documents": documents,
     }
-
-
-def count_users():
-    """Get number of users"""
-    conn = connect_pg.connect()
-    query = "SELECT COUNT(*) FROM uniride.ur_user"
-    result = connect_pg.get_query(conn, query)
-    connect_pg.disconnect(conn)
-    return result[0][0]
-
-def users_information():
-    """Get users information"""
-    conn = connect_pg.connect()
-    result = []
-
-    query = """
-        SELECT u_id, r_id, u_lastname, u_firstname, u_profile_picture, u_timestamp_creation, u_timestamp_modification
-        FROM uniride.ur_user
-    """
-    document = connect_pg.get_query(conn, query)
-    connect_pg.disconnect(conn)
-
-    for documents in document:
-        request_data = {
-            
-                "id_user": documents[0],
-                "last_name":documents[2],
-                "first_name": documents[3],
-                "timestamp_creation": documents[5],
-                "last_modified_date": documents[6],
-                "profile_picture": documents[4],
-                "role": documents[1],
-            
-        }
-
-        result.append(request_data)
-
-    return result
-
-
-
-

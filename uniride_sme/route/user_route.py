@@ -295,7 +295,7 @@ def document_user_verif(id_user):
 def user_count():
     """User count"""
     try:
-        user_count_value = documents_service.count_users()
+        user_count_value = user_service.count_users()
         response = jsonify({"message": "USER_NUMBER_SUCCESSFULLY", "user_count": user_count_value}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
@@ -334,8 +334,8 @@ def get_default_profile_picture():
 def users_informations():
     """Get users information"""
     try:
-        users_informations = documents_service.users_information()
-        response = jsonify({"message": "USER_DISPLAYED_SUCESSFULLY", "users": users_informations}), 200
+        informations_user = user_service.users_information()
+        response = jsonify({"message": "USER_DISPLAYED_SUCESSFULLY", "users": informations_user}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
