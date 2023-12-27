@@ -26,12 +26,16 @@ def delete_file(file, directory):
     os.remove(os.path.join(directory, file))
 
 
-def get_encoded_file(file_name):
-    """Get encoded file"""
+def get_encoded_file(file_name, file_location):
+    """Get encoded file
+    :param file_name: file name 
+    :param file_location: file location, either "PFP_UPLOAD_FOLDER" or "LICENSE_UPLOAD_FOLDER or ID_CARD_UPLOAD_FOLDER or SCHOOL_CERTIFICATE_UPLOAD_FOLDER"
+    :return: encoded file
+    """
     if not file_name:
         return ""
 
-    file_path = os.path.join(app.config["PFP_UPLOAD_FOLDER"], file_name)
+    file_path = os.path.join(app.config[file_location], file_name)
     if not os.path.isfile(file_path):
         return ""
 
@@ -41,5 +45,4 @@ def get_encoded_file(file_name):
         file_name_part, file_extension_part = os.path.splitext(file_name)
         file_extension_part = file_extension_part.lstrip('.')
         prefix_url = "data:image/" + file_extension_part + ";base64,"
-       
         return prefix_url + base64.b64encode(file_data).decode("utf-8")
