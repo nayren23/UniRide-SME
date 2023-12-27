@@ -13,15 +13,6 @@ from uniride_sme.route.book_route import book
 
 
 @app.after_request
-def after_request(response):
-    """Add Headers to response"""
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE")
-    return response
-
-
-@app.after_request
 def reformat_jwt_response(response):
     """Reformat the response for jwt errors"""
     response_json = response.get_json()
