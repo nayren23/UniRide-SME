@@ -399,6 +399,9 @@ def count_users():
     connect_pg.disconnect(conn)
     return result[0][0]
 
+
+
+
 def users_information():
     """Get users information"""
     conn = connect_pg.connect()
@@ -427,3 +430,14 @@ def users_information():
         result.append(request_data)
 
     return result
+
+
+def delete_user(id_user):
+    """Delete user"""
+    conn = connect_pg.connect()
+    query = "DELETE FROM uniride.ur_user WHERE u_id = %s"
+    values = (id_user,)
+    connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
+
+    return id_user

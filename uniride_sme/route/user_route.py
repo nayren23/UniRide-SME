@@ -339,3 +339,13 @@ def users_informations():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+@user.route("/user_management/<user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    """delete user """
+    try:
+        user_deleted = user_service.delete_user(user_id)
+        response = jsonify({"message": "USER_DELETED_SUCESSFULLY", "user_id : ": user_deleted}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
