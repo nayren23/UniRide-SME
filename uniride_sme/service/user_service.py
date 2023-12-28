@@ -365,13 +365,13 @@ def update_user_attribute(user_id, attribute_name, new_value, validation_func):
 
     # Check if the new value is the same as the old value
     if getattr(user_bo, attribute_name) == new_value:
-        raise AttributeUnchangedException(attribute_name[2:].upper())
+        raise AttributeUnchangedException(attribute_name.upper())
 
     # Validate the new value
     validation_func(new_value)
 
     # Construct the query dynamically
-    query = f"UPDATE uniride.ur_user SET {attribute_name}=%s WHERE u_id=%s"
+    query = f"UPDATE uniride.ur_user SET u_{attribute_name}=%s WHERE u_id=%s"
     values = (new_value, user_id)
     conn = connect_pg.connect()
     connect_pg.execute_command(conn, query, values)
@@ -380,29 +380,29 @@ def update_user_attribute(user_id, attribute_name, new_value, validation_func):
 
 def change_login(user_id, login):
     """Change login"""
-    update_user_attribute(user_id, "u_login", login, _validate_login)
+    update_user_attribute(user_id, "login", login, _validate_login)
 
 
 def change_firstname(user_id, firstname):
     """Change firstname"""
-    update_user_attribute(user_id, "u_firstname", firstname, lambda name: _validate_name(name, "FIRSTNAME"))
+    update_user_attribute(user_id, "firstname", firstname, lambda name: _validate_name(name, "FIRSTNAME"))
 
 
 def change_lastname(user_id, lastname):
     """Change lastname"""
-    update_user_attribute(user_id, "u_lastname", lastname, lambda name: _validate_name(name, "LASTNAME"))
+    update_user_attribute(user_id, "lastname", lastname, lambda name: _validate_name(name, "LASTNAME"))
 
 
 def change_phone_number(user_id, phone_number):
     """Change phone number"""
-    update_user_attribute(user_id, "u_phone_number", phone_number, _validate_phone_number)
+    update_user_attribute(user_id, "phone_number", phone_number, _validate_phone_number)
 
 
 def change_gender(user_id, gender):
     """Change gender"""
-    update_user_attribute(user_id, "u_gender", gender, _validate_gender)
+    update_user_attribute(user_id, "gender", gender, _validate_gender)
 
 
 def change_description(user_id, description):
     """Change description"""
-    update_user_attribute(user_id, "u_description", description, _validate_description)
+    update_user_attribute(user_id, "description", description, _validate_description)
