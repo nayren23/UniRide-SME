@@ -35,7 +35,7 @@ def get_encoded_file(file_name, file_location):
     if not file_name:
         return ""
 
-    file_path = os.path.join(app.config[file_location], file_name)
+    file_path = os.path.join(str(app.config[file_location]), str(file_name))
     if not os.path.isfile(file_path):
         return ""
 

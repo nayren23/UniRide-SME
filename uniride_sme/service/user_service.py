@@ -1,7 +1,8 @@
 """User service module"""
 import re
+import os
 import bcrypt
-
+from uniride_sme.utils.file import get_encoded_file
 from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.user_bo import UserBO
@@ -407,29 +408,30 @@ def users_information():
     conn = connect_pg.connect()
     result = []
 
-    query = """
-        SELECT u_id, r_id, u_lastname, u_firstname, u_profile_picture, u_timestamp_creation, u_timestamp_modification
-        FROM uniride.ur_user
-    """
-    document = connect_pg.get_query(conn, query)
-    connect_pg.disconnect(conn)
+    try:
+        query = """
+            SELECT u_id, r_id, u_lastname, u_firstname, u_profile_picture, u_timestamp_creation, u_timestamp_modification
+            FROM uniride.ur_user
+        """
+        document = connect_pg.get_query(conn, query)
 
-    for documents in document:
-        request_data = {
-            
+        for documents in document:
+            request_data = {
                 "id_user": documents[0],
-                "last_name":documents[2],
+                "last_name": documents[2],
                 "first_name": documents[3],
                 "timestamp_creation": documents[5],
                 "last_modified_date": documents[6],
-                "profile_picture": documents[4],
+                "profile_picture": get_encoded_file(document[4], "PFP_UPLOAD_FOLDER"),
                 "role": documents[1],
-            
-        }
+            }
 
-        result.append(request_data)
+            result.append(request_data)
+    finally:
+        connect_pg.disconnect(conn)
 
     return result
+
 
 
 def delete_user(id_user):
@@ -441,3 +443,34 @@ def delete_user(id_user):
     connect_pg.disconnect(conn)
 
     return id_user
+
+
+def user_information_id(id_user):
+    """Get user information"""
+    conn = connect_pg.connect()
+    result = []
+
+    query = """
+    SELECT r_id, u_login, u_student_email, u_lastname, u_firstname, u_phone_number, u_gender, u_description, u_profile_picture
+    FROM uniride.ur_user WHERE u_id = %s
+    """ 
+
+    # Pass the id_user parameter in the execute query
+    document = connect_pg.get_query(conn, query, (id_user,))
+    connect_pg.disconnect(conn)
+
+    for documents in document:
+        request_data = {
+            "login": documents[1],
+            "student_email": documents[2],
+            "first_name": documents[4],
+            "last_name": documents[3],
+            "gender": documents[6],
+            "phone_number": documents[5],
+            "description": documents[7],
+            "role": documents[0],
+            "profile_picture": get_encoded_file(documents[8], "PFP_UPLOAD_FOLDER"),  # Utilisez "documents" au lieu de "document"
+        }
+        result.append(request_data)
+
+    return result

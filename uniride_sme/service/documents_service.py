@@ -1,4 +1,5 @@
 """Documents service module"""
+import os
 from datetime import datetime
 from uniride_sme import app
 from uniride_sme import connect_pg
@@ -7,7 +8,6 @@ from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
 from uniride_sme.utils.file import get_encoded_file
-import os
 
 
 
