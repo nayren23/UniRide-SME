@@ -87,6 +87,7 @@ def get_infos():
             gender=user_bo.gender,
             phone_number=user_bo.phone_number,
             description=user_bo.description,
+            role_id=user_bo.r_id,
         )
         response = jsonify(user_infos_dto), 200
     except ApiException as e:

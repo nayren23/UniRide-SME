@@ -12,6 +12,7 @@ class UserInfosDTO(TypedDict):
     gender: str
     phone_number: str
     description: str
+    r_id: int
 
 
 class UserShortDTO(TypedDict):

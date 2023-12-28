@@ -23,3 +23,4 @@ class UserBO:  # pylint: disable=too-many-instance-attributes
     status: str = None
     home_address_id: str = None
     work_address_id: str = None
+    r_id: int= None

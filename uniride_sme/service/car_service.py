@@ -121,8 +121,7 @@ def get_car_info_by_user_id(user_id):
 
 
 def format_get_information_car(info_car):
-    """Format the current trips for the driver"""
-
+    """Format the information car to return"""
     available_car = []
     car_dto = CarDTO(
         model=info_car[0].get("v_model"),
