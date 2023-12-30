@@ -418,8 +418,8 @@ def users_information():
         for documents in document:
             request_data = {
                 "id_user": documents[0],
-                "last_name": documents[2],
-                "first_name": documents[3],
+                "lastname": documents[2],
+                "firstname": documents[3],
                 "timestamp_creation": documents[5],
                 "last_modified_date": documents[6],
                 "profile_picture": get_encoded_file(documents[4], "PFP_UPLOAD_FOLDER"),
@@ -433,13 +433,27 @@ def users_information():
     return result
 
 
+def verify_user(id_user):
+    """Verify user"""
+    conn = connect_pg.connect()
+    check_query = "SELECT * FROM uniride.ur_user WHERE u_id = %s"
+    check_values = (id_user,)
+    result = connect_pg.get_query(conn, check_query, check_values)
+
+    if not result:
+        connect_pg.disconnect(conn)
+        raise UserNotFoundException()
+
 
 def delete_user(id_user):
     """Delete user"""
     conn = connect_pg.connect()
-    query = "DELETE FROM uniride.ur_user WHERE u_id = %s"
-    values = (id_user,)
-    connect_pg.execute_command(conn, query, values)
+    
+    verify_user(id_user)
+    
+    delete_query = "DELETE FROM uniride.ur_user WHERE u_id = %s"
+    delete_values = (id_user,)
+    connect_pg.execute_command(conn, delete_query, delete_values)
     connect_pg.disconnect(conn)
 
     return id_user
@@ -463,8 +477,8 @@ def user_information_id(id_user):
         request_data = {
             "login": documents[1],
             "student_email": documents[2],
-            "first_name": documents[4],
-            "last_name": documents[3],
+            "firstname": documents[4],
+            "lastname": documents[3],
             "gender": documents[6],
             "phone_number": documents[5],
             "description": documents[7],
