@@ -422,7 +422,7 @@ def users_information():
                 "first_name": documents[3],
                 "timestamp_creation": documents[5],
                 "last_modified_date": documents[6],
-                "profile_picture": get_encoded_file(document[4], "PFP_UPLOAD_FOLDER"),
+                "profile_picture": get_encoded_file(documents[4], "PFP_UPLOAD_FOLDER"),
                 "role": documents[1],
             }
 
@@ -469,7 +469,7 @@ def user_information_id(id_user):
             "phone_number": documents[5],
             "description": documents[7],
             "role": documents[0],
-            "profile_picture": get_encoded_file(documents[8], "PFP_UPLOAD_FOLDER"),  # Utilisez "documents" au lieu de "document"
+            "profile_picture": get_encoded_file(documents[8], "PFP_UPLOAD_FOLDER"),
         }
         result.append(request_data)
 
