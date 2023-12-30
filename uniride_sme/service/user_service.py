@@ -436,7 +436,6 @@ def users_information():
 def verify_user(id_user):
     """Verify user"""
     conn = connect_pg.connect()
-    verify_user(id_user)
     check_query = "SELECT * FROM uniride.ur_user WHERE u_id = %s"
     check_values = (id_user,)
     result = connect_pg.get_query(conn, check_query, check_values)
@@ -444,6 +443,8 @@ def verify_user(id_user):
     if not result:
         connect_pg.disconnect(conn)
         raise UserNotFoundException()
+    
+    connect_pg.disconnect(conn)
 
 
 def delete_user(id_user):
