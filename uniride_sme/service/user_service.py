@@ -436,6 +436,7 @@ def users_information():
 def verify_user(id_user):
     """Verify user"""
     conn = connect_pg.connect()
+    verify_user(id_user)
     check_query = "SELECT * FROM uniride.ur_user WHERE u_id = %s"
     check_values = (id_user,)
     result = connect_pg.get_query(conn, check_query, check_values)
@@ -448,9 +449,7 @@ def verify_user(id_user):
 def delete_user(id_user):
     """Delete user"""
     conn = connect_pg.connect()
-    
     verify_user(id_user)
-    
     delete_query = "DELETE FROM uniride.ur_user WHERE u_id = %s"
     delete_values = (id_user,)
     connect_pg.execute_command(conn, delete_query, delete_values)
@@ -462,6 +461,7 @@ def delete_user(id_user):
 def user_information_id(id_user):
     """Get user information"""
     conn = connect_pg.connect()
+    verify_user(id_user)
     result = []
 
     query = """
