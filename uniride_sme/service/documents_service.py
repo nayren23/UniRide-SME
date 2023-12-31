@@ -103,7 +103,7 @@ def document_to_verify():
     """Get documents to verify"""
     conn = connect_pg.connect()
     query = """
-        SELECT u_id, v_id, u_lastname, u_firstname, u_profile_picture, d_timestamp_modification,v_license_verified, v_id_card_verified,v_school_certificate_verified
+        SELECT u_id, v_id, u_lastname, u_firstname, u_profile_picture, d_timestamp_modification,v_license_verified, v_id_card_verified,v_school_certificate_verified, v_insurance_verified
         FROM uniride.ur_document_verification
         NATURAL JOIN uniride.ur_user
         NATURAL JOIN uniride.ur_documents
@@ -121,11 +121,13 @@ def document_to_verify():
         license_verified_str = str(document[6])
         id_card_verified_str = str(document[7])
         school_certificate_verified_str = str(document[8])
+        insurance_verified_str = str(document[9])
         license_zeros = license_verified_str.count("0")
         id_card_zeros = id_card_verified_str.count("0")
         school_certificate_zeros = school_certificate_verified_str.count("0")
+        insurance_verified_zeros = insurance_verified_str.count("0")
 
-        total_zeros = license_zeros + id_card_zeros + school_certificate_zeros
+        total_zeros = license_zeros + id_card_zeros + school_certificate_zeros + insurance_verified_zeros
 
         request_data = {
             "request_number": document[1],
