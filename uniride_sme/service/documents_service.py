@@ -1,10 +1,11 @@
 """Documents service module"""
-import os
+# Import from internal modules
 from datetime import datetime
 from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.documents_bo import DocumentsBO
 from uniride_sme.utils.file import save_file, delete_file
+from uniride_sme.service.user_service import verify_user
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
 from uniride_sme.utils.file import get_encoded_file
@@ -17,6 +18,8 @@ def get_documents_by_user_id(user_id):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
+    verify_user(user_id)
+
     query = "SELECT * FROM uniride.ur_documents natural join uniride.ur_document_verification where u_id = %s"
     params = (user_id,)
     documents = connect_pg.get_query(conn, query, params, True)
@@ -35,6 +38,8 @@ def add_documents(user_id, files):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
+    verify_user(user_id)
+
     query = """
     WITH first_insert AS (
         INSERT INTO uniride.ur_documents (u_id) VALUES (%s)
@@ -118,20 +123,9 @@ def document_to_verify():
     for document in documents:
         formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
         profile_picture_url = get_encoded_file(document[4],"PFP_UPLOAD_FOLDER")
-        license_verified_str = str(document[6])
-        id_card_verified_str = str(document[7])
-        school_certificate_verified_str = str(document[8])
-        insurance_verified_str = str(document[9])
-        license_zeros = license_verified_str.count("0")
-        id_card_zeros = id_card_verified_str.count("0")
-        school_certificate_zeros = school_certificate_verified_str.count("0")
-        insurance_verified_zeros = insurance_verified_str.count("0")
-
-        total_zeros = license_zeros + id_card_zeros + school_certificate_zeros + insurance_verified_zeros
-
         request_data = {
             "request_number": document[1],
-            "documents_to_verify": total_zeros,
+            "documents_to_verify": count_zero_and_minus_one(document),
             "person": {
                 "id_user": document[0],
                 "first_name": document[2],
@@ -145,6 +139,16 @@ def document_to_verify():
 
     return result
 
+def count_zero_and_minus_one(document):
+    """Count the number of zero and minus one in a document"""
+    fields_to_check = [str(document[i]) for i in range(6, 10)]
+
+    total_zeros = sum(field.count("0") for field in fields_to_check)
+    total_minus_ones = sum(field.count("-1") for field in fields_to_check)
+
+    return total_zeros + total_minus_ones
+
+
 
 def document_check(data):
     """Update document status"""
@@ -153,6 +157,8 @@ def document_check(data):
 
     conn = connect_pg.connect()
     connect_pg.disconnect(conn)
+    verify_user(user_id)
+
 
     document_type = document_data.get("type")
     status = document_data.get("status")
@@ -160,6 +166,7 @@ def document_check(data):
         "license": "v_license_verified",
         "card": "v_id_card_verified",
         "school_certificate": "v_school_certificate_verified",
+        "insurance": "v_insurance_verified",
     }
     if document_type not in column_mapping:
         raise DocumentsTypeException()
@@ -178,6 +185,9 @@ def document_check(data):
 def document_user(user_id):
     """Get documents by user id"""
     conn = connect_pg.connect()
+    verify_user(user_id)
+
+
     query = """
         SELECT u_id, d_license, d_id_card, d_school_certificate, v_license_verified, v_id_card_verified, v_school_certificate_verified
         FROM uniride.ur_document_verification

@@ -1,5 +1,4 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -224,6 +223,8 @@ def save_id_card():
 def save_school_certificate():
     """Save profile school certificate endpoint."""
     return save_document("school_certificate")
+
+
 
 
 @user.route("/email-confirmation", methods=["GET"])
