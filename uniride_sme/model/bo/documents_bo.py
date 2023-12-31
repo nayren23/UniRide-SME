@@ -14,6 +14,7 @@ class DocumentsBO:  # pylint: disable=too-many-instance-attributes
         d_license: str,
         d_id_card: str,
         d_school_certificate: str,
+        d_insurance: str,
         d_timestamp_addition: datetime,
         d_timestamp_modification: datetime,
         v_id: int,
@@ -23,10 +24,10 @@ class DocumentsBO:  # pylint: disable=too-many-instance-attributes
         v_timestamp_modification: datetime,
     ):
         self.u_id = u_id
-
         self.d_id = d_id
         self.d_license = d_license
         self.d_id_card = d_id_card
+        self.d_insurance = d_insurance
         self.d_school_certificate = d_school_certificate
         self.d_timestamp_addition = d_timestamp_addition
         self.d_timestamp_modification = d_timestamp_modification
