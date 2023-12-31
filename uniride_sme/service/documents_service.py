@@ -218,8 +218,6 @@ def document_user(user_id):
                     document_url = document_row[column_name]
                     status_column = f"v_{column_name[2:]}_verified"
                     document_status = document_row.get(status_column, None)
-                    print(document_url, document_info["folder"])
-
                     document.append(
                         {
                             "url": get_encoded_file(document_url, document_info["folder"]),
