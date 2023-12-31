@@ -182,14 +182,14 @@ def document_check(data):
     return {"message": "DOCUMENT_STATUS_UPDATED"}
 
 
+
 def document_user(user_id):
     """Get documents by user id"""
     conn = connect_pg.connect()
     verify_user(user_id)
 
-
     query = """
-        SELECT u_id, d_license, d_id_card, d_school_certificate,d_insurance,v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
+        SELECT u_id, d_license, d_id_card, d_school_certificate, d_insurance, v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
         FROM uniride.ur_document_verification
         NATURAL JOIN uniride.ur_documents
         WHERE u_id = %s
@@ -202,25 +202,27 @@ def document_user(user_id):
 
     documents = []
     column_mapping = {
-        "d_license": "license",
-        "d_id_card": "card",
-        "d_school_certificate": "school_certificate",
-        "d_insurance": "insurance",
+        "d_license": {"type": "license", "folder": "LICENSE_UPLOAD_FOLDER"},
+        "d_id_card": {"type": "card", "folder": "ID_CARD_UPLOAD_FOLDER"},
+        "d_school_certificate": {"type": "school_certificate", "folder": "SCHOOL_CERTIFICATE_UPLOAD_FOLDER"},
+        "d_insurance": {"type": "insurance", "folder": "INSURANCE_UPLOAD_FOLDER"},
     }
 
     for document_row in document_data:
         document = []
         for column_name in document_row.keys():
             if column_name.startswith("d_"):
-                document_type = column_mapping.get(column_name, None)
-                if document_type:
+                document_info = column_mapping.get(column_name, None)
+                if document_info:
+                    document_type = document_info["type"]
                     document_url = document_row[column_name]
                     status_column = f"v_{column_name[2:]}_verified"
                     document_status = document_row.get(status_column, None)
+                    print(document_url, document_info["folder"])
 
                     document.append(
                         {
-                            "url": document_url,
+                            "url": get_encoded_file(document_url, document_info["folder"]),
                             "status": str(document_status),
                             "type": document_type,
                         }
