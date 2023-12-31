@@ -189,7 +189,7 @@ def document_user(user_id):
 
 
     query = """
-        SELECT u_id, d_license, d_id_card, d_school_certificate, v_license_verified, v_id_card_verified, v_school_certificate_verified
+        SELECT u_id, d_license, d_id_card, d_school_certificate,d_insurance,v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
         FROM uniride.ur_document_verification
         NATURAL JOIN uniride.ur_documents
         WHERE u_id = %s
@@ -205,6 +205,7 @@ def document_user(user_id):
         "d_license": "license",
         "d_id_card": "card",
         "d_school_certificate": "school_certificate",
+        "d_insurance": "insurance",
     }
 
     for document_row in document_data:
