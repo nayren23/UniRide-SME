@@ -29,7 +29,7 @@ def send_verification_email(student_email, firstname, first_mail=False):
     else:
         file_path = os.path.join(app.config["PATH"], "resource/email/email_verification_template.html")
 
-    url = app.config["FRONT_END_URL"] + "email-verification/" + generate_token(student_email)
+    url = app.config["FRONT_END_URL"] + "email/" + generate_token(student_email)
     with open(file_path, "r", encoding="UTF-8") as html:
         content = html.read().replace("{firstname}", firstname).replace("{url}", url)
     send_email(student_email, "Vérifier votre adresse e-mail", content)
