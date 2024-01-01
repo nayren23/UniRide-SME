@@ -6,7 +6,7 @@ from flask_jwt_extended import get_jwt_identity
 
 from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.bo.address_bo import AddressBO
-
+from uniride_sme.model.dto.trip_dto import TripStatusDTO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
@@ -17,7 +17,8 @@ from uniride_sme.service.trip_service import (
     get_available_trips_to,
     get_trip_by_id,
     format_get_current_driver_trips,
-    count_trip  
+    count_trip ,
+    trips_status
 )
 
 trip = Blueprint("trip", __name__, url_prefix="/trip")
@@ -116,17 +117,12 @@ def get_current_driver_trips():
     """Get all the current trips of a driver"""
     try:
         user_id = get_jwt_identity()
-
         available_trips = get_driver_trips(user_id)
-
         # We need to paginate the data
         meta, paginated_data = create_pagination(request, available_trips)
-
         response = jsonify({"trips": paginated_data, "meta": meta}), 200
-
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
-
     return response
 
 
@@ -138,7 +134,6 @@ def get_trip(trip_id):
         response = jsonify(trip_detailed_dto), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
-
     return response
 
 
@@ -146,8 +141,15 @@ def get_trip(trip_id):
 def trip_count():
     """Trip count"""
     try:
-        trip_count_value = count_trip()
-        response = jsonify({"message": "TRIP_NUMBER_SUCCESSFULLY", "trip_count": trip_count_value}), 200
+
+        trip_count_status = TripStatusDTO(
+            trip_count=count_trip(),
+            trip_pending=trips_status(1),
+            trip_canceled=trips_status(2),
+            trip_completed=trips_status(3),
+            trip_oncourse=trips_status(4),
+        )
+        response = jsonify({"message": "TRIP_NUMBER_SUCCESSFULLY", "trip_infos": trip_count_status}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

@@ -5,7 +5,7 @@ from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
-from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO
+from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO,InformationsStatUsers
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
@@ -272,9 +272,7 @@ def check_document():
     """Check document"""
     try:
         data = request.json
-        # Appelez la fonction document_check avec les données JSON
         result = documents_service.document_check(data)
-        # Utilisez jsonify pour retourner une réponse JSON
         response = jsonify(result), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
@@ -296,12 +294,14 @@ def document_user_verif(id_user):
 def user_count():
     """User count"""
     try:
-        user_count_value = user_service.count_users()
-        drivers_count_value = user_service.count_role_user(1)
-        passenger_count_value = user_service.count_role_user(2)
-        pending_count_value = user_service.count_role_user(3)
+        stats_user_infos_dto = InformationsStatUsers(
+            user_count_value=user_service.count_users(),
+            drivers_count_value=user_service.count_role_user(1),
+            passenger_count_value=user_service.count_role_user(2),
+            pending_count_value =user_service.count_role_user(3),       
+        )
 
-        response = jsonify({"message": "USER_NUMBER_SUCCESSFULLY", "user_count": user_count_value,"drivers_count": drivers_count_value, "passengers_count":passenger_count_value, "pending_count":pending_count_value}), 200
+        response = jsonify({"message": "USER_NUMBER_SUCCESSFULLY", "user_infos": stats_user_infos_dto}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

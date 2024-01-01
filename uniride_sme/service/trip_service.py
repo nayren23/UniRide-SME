@@ -595,3 +595,12 @@ def count_trip():
     connect_pg.disconnect(conn)
     return result[0][0]
 
+
+
+def trips_status(status):
+    """Get number status of trip"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_trip WHERE t_status = %s"
+    result = connect_pg.get_query(conn, query, (status,))
+    connect_pg.disconnect(conn)
+    return result[0][0]
