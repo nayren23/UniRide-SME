@@ -149,7 +149,7 @@ def trip_count():
             trip_completed=trips_status(3),
             trip_oncourse=trips_status(4),
         )
-        response = jsonify({"message": "TRIP_NUMBER_SUCCESSFULLY", "trip_infos": trip_count_status}), 200
+        response = jsonify({"message": "TRIP_NUMBER_DISPLAYED_SUCCESSFULLY", "trip_infos": trip_count_status}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
