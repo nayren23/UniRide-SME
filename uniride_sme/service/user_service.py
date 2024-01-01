@@ -401,6 +401,13 @@ def count_users():
     return result[0][0]
 
 
+def count_role_user(role):
+    """Get number of user by role"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_user WHERE r_id = %s"
+    result = connect_pg.get_query(conn, query, (role,))
+    connect_pg.disconnect(conn)
+    return result[0][0]
 
 
 def users_information():
@@ -443,7 +450,6 @@ def verify_user(id_user):
     if not result:
         connect_pg.disconnect(conn)
         raise UserNotFoundException()
-    
     connect_pg.disconnect(conn)
 
 

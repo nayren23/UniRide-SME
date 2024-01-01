@@ -297,7 +297,11 @@ def user_count():
     """User count"""
     try:
         user_count_value = user_service.count_users()
-        response = jsonify({"message": "USER_NUMBER_SUCCESSFULLY", "user_count": user_count_value}), 200
+        drivers_count_value = user_service.count_role_user(1)
+        passenger_count_value = user_service.count_role_user(2)
+        pending_count_value = user_service.count_role_user(3)
+
+        response = jsonify({"message": "USER_NUMBER_SUCCESSFULLY", "user_count": user_count_value,"drivers_count": drivers_count_value, "passengers_count":passenger_count_value, "pending_count":pending_count_value}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

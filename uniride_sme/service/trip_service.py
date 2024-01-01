@@ -594,3 +594,4 @@ def count_trip():
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
     return result[0][0]
+
