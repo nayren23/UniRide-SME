@@ -289,13 +289,23 @@ def document_user_verif(id_user):
         response = jsonify(message=e.message), e.status_code
     return response
 
+@user.route("/document_number", methods=["GET"])
+def count_documents_status():
+    """Get documents to verify"""
+    try:
+        doc_numbers = documents_service.count_documents_status()
+        response = jsonify({"message": "DOCUMENT_NUMBER_STATUS_DISPLAYED_SUCESSFULLY", "user_numbers" : doc_numbers}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
 
 @user.route("/user_number", methods=["GET"])
 def user_count():
     """User count"""
     try:
         stats_user_infos_dto = InformationsStatUsers(
-            user_count_value=user_service.count_users(),
+            admin_count_value =user_service.count_role_user(0),       
             drivers_count_value=user_service.count_role_user(1),
             passenger_count_value=user_service.count_role_user(2),
             pending_count_value =user_service.count_role_user(3),       
@@ -361,7 +371,7 @@ def user_information_token(user_id):
     """Informations user by token """
     try:
         user_information = user_service.user_information_id(user_id)
-        response = jsonify({"message": "USER_INFORMATIONS_DISPLAYED_SUCESSFULLY", "user_information : ": user_information}), 200
+        response = jsonify({"message": "USER_INFORMATIONS_DISPLAYED_SUCESSFULLY", "user_information": user_information}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

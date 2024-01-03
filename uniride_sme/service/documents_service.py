@@ -149,6 +149,19 @@ def count_zero_and_minus_one(document):
     return total_zeros + total_minus_ones
 
 
+def count_documents_status(document):
+    """Count documents by status"""
+    fields_to_check = [str(document[i]) for i in range(6, 10)]
+
+    counts = {
+        "document_pending": sum(field.count("0") for field in fields_to_check),
+        "document_validated": sum(field.count("1") for field in fields_to_check),
+        "document_refused": sum(field.count("-1") for field in fields_to_check),
+    }
+
+    return counts
+
+
 
 def document_check(data):
     """Update document status"""
@@ -232,3 +245,6 @@ def document_user(user_id):
         "user_id": user_id,
         "documents": documents,
     }
+
+
+

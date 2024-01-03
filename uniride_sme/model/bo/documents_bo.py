@@ -20,9 +20,11 @@ class DocumentsBO:  # pylint: disable=too-many-instance-attributes
         v_id: int,
         v_license_verified: bool,
         v_id_card_verified: bool,
+        v_insurance_verified: bool,
         v_school_certificate_verified: bool,
         v_timestamp_modification: datetime,
     ):
+        self.v_insurance_verified = v_insurance_verified
         self.u_id = u_id
         self.d_id = d_id
         self.d_license = d_license
