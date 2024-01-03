@@ -52,6 +52,7 @@ def add_documents(user_id, files):
         save_license(user_id, files.get("license", None))
         save_id_card(user_id, files.get("id_card", None))
         save_school_certificate(user_id, files.get("school_certificate", None))
+        save_insurance(user_id, files.get("insurance", None))
     except MissingInputException:
         pass
 
@@ -69,6 +70,10 @@ def save_id_card(user_id, file, old_file_name=None):
 def save_school_certificate(user_id, file, old_file_name=None):
     """Save school certificate"""
     _save_document(user_id, file, old_file_name, "school_certificate")
+
+def save_insurance(user_id, file, old_file_name=None):
+    """Save insurance"""
+    _save_document(user_id, file, old_file_name, "insurance")
 
 
 def _save_document(user_id, file, old_file_name, document_type):
