@@ -149,9 +149,50 @@ def count_zero_and_minus_one(document):
     return total_zeros + total_minus_ones
 
 
+def document_number_status():
+    """Get documents to verify"""
+    conn = connect_pg.connect()
+    query = """
+        SELECT v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
+        FROM uniride.ur_document_verification
+        """
+    documents = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+
+    # Initialize counts for total across all attributes
+    total_document_pending = 0
+    total_document_ok = 0
+    total_document_refused = 0
+
+    attributes = ["v_license_verified", "v_id_card_verified", "v_school_certificate_verified", "v_insurance_verified"]
+
+    for document in documents:
+        for attribute in attributes:
+            attribute_value = document[attributes.index(attribute)]
+
+            # Update counts for each attribute
+            total_document_pending += 1 if attribute_value == 0 else 0
+            total_document_ok += 1 if attribute_value == 1 else 0
+            total_document_refused += 1 if attribute_value == -1 else 0
+
+    # Create a dictionary to store total counts
+    result = {
+        "document_validated": total_document_ok,
+        "document_pending": total_document_pending,
+        "document_refused": total_document_refused,
+    }
+
+    return result
+
+
+
+
+
+
+
 def count_documents_status(document):
     """Count documents by status"""
-    fields_to_check = [str(document[i]) for i in range(6, 10)]
+    fields_to_check = [str(document[i]) for i in range(0, 4)]
 
     counts = {
         "document_pending": sum(field.count("0") for field in fields_to_check),

@@ -293,8 +293,8 @@ def document_user_verif(id_user):
 def count_documents_status():
     """Get documents to verify"""
     try:
-        doc_numbers = documents_service.count_documents_status()
-        response = jsonify({"message": "DOCUMENT_NUMBER_STATUS_DISPLAYED_SUCESSFULLY", "user_numbers" : doc_numbers}), 200
+        doc_numbers = documents_service.document_number_status()
+        response = jsonify({"message": "DOCUMENT_NUMBER_STATUS_DISPLAYED_SUCESSFULLY", "document_infos" : doc_numbers}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
