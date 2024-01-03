@@ -469,7 +469,6 @@ def user_information_id(id_user):
     """Get user information"""
     conn = connect_pg.connect()
     verify_user(id_user)
-    result = []
 
     query = """
     SELECT r_id, u_login, u_student_email, u_lastname, u_firstname, u_phone_number, u_gender, u_description, u_profile_picture
@@ -480,18 +479,23 @@ def user_information_id(id_user):
     document = connect_pg.get_query(conn, query, (id_user,))
     connect_pg.disconnect(conn)
 
-    for documents in document:
-        request_data = {
-            "login": documents[1],
-            "student_email": documents[2],
-            "firstname": documents[4],
-            "lastname": documents[3],
-            "gender": documents[6],
-            "phone_number": documents[5],
-            "description": documents[7],
-            "role": documents[0],
-            "profile_picture": get_encoded_file(documents[8], "PFP_UPLOAD_FOLDER"),
-        }
-        result.append(request_data)
+    if not document:
+        # Handle the case where no user information is found for the given ID
+        return None
+
+    user_data = document[0]
+    
+    result = {
+        "login": user_data[1],
+        "student_email": user_data[2],
+        "firstname": user_data[4],
+        "lastname": user_data[3],
+        "gender": user_data[6],
+        "phone_number": user_data[5],
+        "description": user_data[7],
+        "role": user_data[0],
+        "profile_picture": get_encoded_file(user_data[8], "PFP_UPLOAD_FOLDER"),
+    }
 
     return result
+

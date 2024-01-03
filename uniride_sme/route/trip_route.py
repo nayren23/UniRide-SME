@@ -143,7 +143,6 @@ def trip_count():
     try:
 
         trip_count_status = TripStatusDTO(
-            trip_count=count_trip(),
             trip_pending=trips_status(1),
             trip_canceled=trips_status(2),
             trip_completed=trips_status(3),
