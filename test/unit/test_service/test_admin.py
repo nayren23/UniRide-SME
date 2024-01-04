@@ -1,9 +1,9 @@
+import pytest
 from unittest.mock import MagicMock, patch, ANY, Mock
 from uniride_sme.service.documents_service import document_user, document_to_verify,document_check
 from uniride_sme.connect_pg import connect
 from uniride_sme.utils.exception.documents_exceptions import DocumentsTypeException
 from datetime import datetime
-import pytest
 
 @pytest.fixture
 def mock_connect():

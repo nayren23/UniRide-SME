@@ -241,6 +241,33 @@ def document_check(data):
     return {"message": "DOCUMENT_STATUS_UPDATED"}
 
 
+def update_r_id_if_verified(data):
+    """Update r_id to 1 if both v_license_verified and v_id_card_verified are 1"""
+    user_id = data["user_id"]
+
+    conn = connect_pg.connect()
+    query = """
+    SELECT v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
+    FROM uniride.ur_document_verification
+    Where u_id = %s
+    """
+    documents = connect_pg.get_query(conn, query, (user_id,), True)
+    if documents.get("v_id_card_verified") == 1 and documents.get("v_school_certificate_verified") == 1:
+        r_id_query = """
+            UPDATE uniride.ur_document_verification
+            SET r_id = 1
+            WHERE u_id = %s
+        """
+    elif documents.get("v_license_verified") == 0 and documents.get("v_id_card_verified") == 0 and documents.get("v_id_card_verified") == 1 and documents.get("v_school_certificate_verified") == 1:
+        r_id_query = """
+            UPDATE uniride.ur_document_verification
+            SET r_id = 4
+            WHERE u_id = %s
+        """
+
+    connect_pg.execute_command(conn, r_id_query, (user_id,))
+    connect_pg.disconnect(conn)
+
 
 def document_user(user_id):
     """Get documents by user id"""
