@@ -1,6 +1,7 @@
 """Exceptions for CarBO endpoints"""
 from uniride_sme.utils.exception.exceptions import ApiException
 
+
 class CarAlreadyExist(ApiException):
     """Exception for when an invalid intermediate car is encountered"""
 

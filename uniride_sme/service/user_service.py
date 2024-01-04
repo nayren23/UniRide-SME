@@ -391,7 +391,6 @@ def change_description(user_id, description):
     update_user_attribute(user_id, "u_description", description, _validate_description)
 
 
-
 def count_users():
     """Get number of users"""
     conn = connect_pg.connect()
@@ -473,7 +472,7 @@ def user_information_id(id_user):
     query = """
     SELECT r_id, u_login, u_student_email, u_lastname, u_firstname, u_phone_number, u_gender, u_description, u_profile_picture
     FROM uniride.ur_user WHERE u_id = %s
-    """ 
+    """
 
     # Pass the id_user parameter in the execute query
     document = connect_pg.get_query(conn, query, (id_user,))
@@ -484,7 +483,7 @@ def user_information_id(id_user):
         return None
 
     user_data = document[0]
-    
+
     result = {
         "login": user_data[1],
         "student_email": user_data[2],
@@ -498,4 +497,3 @@ def user_information_id(id_user):
     }
 
     return result
-

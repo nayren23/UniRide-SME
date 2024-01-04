@@ -11,7 +11,6 @@ from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundEx
 from uniride_sme.utils.file import get_encoded_file
 
 
-
 def get_documents_by_user_id(user_id):
     """Get user infos from db"""
     if not user_id:
@@ -71,6 +70,7 @@ def save_school_certificate(user_id, file, old_file_name=None):
     """Save school certificate"""
     _save_document(user_id, file, old_file_name, "school_certificate")
 
+
 def save_insurance(user_id, file, old_file_name=None):
     """Save insurance"""
     _save_document(user_id, file, old_file_name, "insurance")
@@ -127,7 +127,7 @@ def document_to_verify():
 
     for document in documents:
         formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
-        profile_picture_url = get_encoded_file(document[4],"PFP_UPLOAD_FOLDER")
+        profile_picture_url = get_encoded_file(document[4], "PFP_UPLOAD_FOLDER")
         request_data = {
             "request_number": document[1],
             "documents_to_verify": count_zero_and_minus_one(document),
@@ -143,6 +143,7 @@ def document_to_verify():
         result.append(request_data)
 
     return result
+
 
 def count_zero_and_minus_one(document):
     """Count the number of zero and minus one in a document"""
@@ -190,11 +191,6 @@ def document_number_status():
     return result
 
 
-
-
-
-
-
 def count_documents_status(document):
     """Count documents by status"""
     fields_to_check = [str(document[i]) for i in range(0, 4)]
@@ -208,7 +204,6 @@ def count_documents_status(document):
     return counts
 
 
-
 def document_check(data):
     """Update document status"""
     user_id = data["user_id"]
@@ -217,7 +212,6 @@ def document_check(data):
     conn = connect_pg.connect()
     connect_pg.disconnect(conn)
     verify_user(user_id)
-
 
     document_type = document_data.get("type")
     status = document_data.get("status")
@@ -238,12 +232,14 @@ def document_check(data):
     """
     connect_pg.execute_command(conn, query, (status, user_id))
     connect_pg.disconnect(conn)
+
+    print(update_r_id_if_verified(user_id))
+
     return {"message": "DOCUMENT_STATUS_UPDATED"}
 
 
-def update_r_id_if_verified(data):
+def update_r_id_if_verified(user_id):
     """Update r_id to 1 if both v_license_verified and v_id_card_verified are 1"""
-    user_id = data["user_id"]
 
     conn = connect_pg.connect()
     query = """
@@ -252,20 +248,19 @@ def update_r_id_if_verified(data):
     Where u_id = %s
     """
     documents = connect_pg.get_query(conn, query, (user_id,), True)
+    print(documents)
     if documents.get("v_id_card_verified") == 1 and documents.get("v_school_certificate_verified") == 1:
-        r_id_query = """
-            UPDATE uniride.ur_document_verification
-            SET r_id = 1
-            WHERE u_id = %s
+        if documents.get("v_license_verified") == 1 and documents.get("v_id_card_verified") == 1:
+            r_id = 1
+        else:
+            r_id = 4
+        r_id_query = f"""
+        UPDATE uniride.ur_document_verification
+        SET r_id = {r_id}
+        WHERE u_id = %s
         """
-    elif documents.get("v_license_verified") == 0 and documents.get("v_id_card_verified") == 0 and documents.get("v_id_card_verified") == 1 and documents.get("v_school_certificate_verified") == 1:
-        r_id_query = """
-            UPDATE uniride.ur_document_verification
-            SET r_id = 4
-            WHERE u_id = %s
-        """
+        connect_pg.execute_command(conn, r_id_query, (user_id,))
 
-    connect_pg.execute_command(conn, r_id_query, (user_id,))
     connect_pg.disconnect(conn)
 
 
@@ -318,6 +313,3 @@ def document_user(user_id):
         "user_id": user_id,
         "documents": documents,
     }
-
-
-

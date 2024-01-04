@@ -41,9 +41,9 @@ class InformationsVerifiedDTO(TypedDict):
     school_certificate_verified: bool
 
 
-
 class InformationsStatUsers(TypedDict):
     """DTO to take statistics about users informations"""
+
     user_count: int
     drivers_count: int
     passengers_count: int

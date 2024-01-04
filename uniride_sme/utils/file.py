@@ -28,7 +28,7 @@ def delete_file(file, directory):
 
 def get_encoded_file(file_name, file_location):
     """Get encoded file
-    :param file_name: file name 
+    :param file_name: file name
     :param file_location: file location, either "PFP_UPLOAD_FOLDER" or "LICENSE_UPLOAD_FOLDER or ID_CARD_UPLOAD_FOLDER or SCHOOL_CERTIFICATE_UPLOAD_FOLDER,INSURANCE_UPLOAD_FOLDER "
     :return: encoded file
     """
@@ -43,6 +43,6 @@ def get_encoded_file(file_name, file_location):
         file_data = file.read()
 
         file_name_part, file_extension_part = os.path.splitext(file_name)
-        file_extension_part = file_extension_part.lstrip('.')
+        file_extension_part = file_extension_part.lstrip(".")
         prefix_url = "data:image/" + file_extension_part + ";base64,"
         return prefix_url + base64.b64encode(file_data).decode("utf-8")

@@ -1,6 +1,7 @@
 import dataclasses
 from datetime import datetime
 
+
 @dataclasses.dataclass
 class UserBO:
     """User business object class"""

@@ -5,7 +5,7 @@ from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
-from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO,InformationsStatUsers
+from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO, InformationsStatUsers
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
@@ -225,8 +225,6 @@ def save_school_certificate():
     return save_document("school_certificate")
 
 
-
-
 @user.route("/email-confirmation", methods=["GET"])
 @jwt_required()
 def send_email_confirmation():
@@ -289,12 +287,16 @@ def document_user_verif(id_user):
         response = jsonify(message=e.message), e.status_code
     return response
 
+
 @user.route("/document_number", methods=["GET"])
 def count_documents_status():
     """Get documents to verify"""
     try:
         doc_numbers = documents_service.document_number_status()
-        response = jsonify({"message": "DOCUMENT_NUMBER_STATUS_DISPLAYED_SUCESSFULLY", "document_infos" : doc_numbers}), 200
+        response = (
+            jsonify({"message": "DOCUMENT_NUMBER_STATUS_DISPLAYED_SUCESSFULLY", "document_infos": doc_numbers}),
+            200,
+        )
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
@@ -305,10 +307,10 @@ def user_count():
     """User count"""
     try:
         stats_user_infos_dto = InformationsStatUsers(
-            admin_count_value =user_service.count_role_user(0),       
+            admin_count_value=user_service.count_role_user(0),
             drivers_count_value=user_service.count_role_user(1),
             passenger_count_value=user_service.count_role_user(2),
-            pending_count_value =user_service.count_role_user(3),       
+            pending_count_value=user_service.count_role_user(3),
         )
 
         response = jsonify({"message": "USER_NUMBER_SUCCESSFULLY", "user_infos": stats_user_infos_dto}), 200
@@ -343,7 +345,7 @@ def get_default_profile_picture():
         f"{app.config['PATH']}/resource/default_profile_picture.png",
         download_name="default_profile_picture.png",
     )
-    
+
 
 @user.route("/users_informations", methods=["GET"])
 def users_informations():
@@ -355,9 +357,10 @@ def users_informations():
         response = jsonify(message=e.message), e.status_code
     return response
 
+
 @user.route("/user_management/<user_id>", methods=["DELETE"])
 def delete_user(user_id):
-    """delete user """
+    """delete user"""
     try:
         user_deleted = user_service.delete_user(user_id)
         response = jsonify({"message": "USER_DELETED_SUCESSFULLY", "user_id : ": user_deleted}), 200
@@ -368,10 +371,13 @@ def delete_user(user_id):
 
 @user.route("/infos/<user_id>", methods=["GET"])
 def user_information_token(user_id):
-    """Informations user by token """
+    """Informations user by token"""
     try:
         user_information = user_service.user_information_id(user_id)
-        response = jsonify({"message": "USER_INFORMATIONS_DISPLAYED_SUCESSFULLY", "user_information": user_information}), 200
+        response = (
+            jsonify({"message": "USER_INFORMATIONS_DISPLAYED_SUCESSFULLY", "user_information": user_information}),
+            200,
+        )
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

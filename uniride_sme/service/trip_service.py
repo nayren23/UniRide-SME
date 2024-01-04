@@ -587,6 +587,7 @@ def get_trip_by_id(trip_id):
     )
     return trip_dto
 
+
 def count_trip():
     """Get number of trip"""
     conn = connect_pg.connect()
@@ -594,7 +595,6 @@ def count_trip():
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
     return result[0][0]
-
 
 
 def trips_status(status):
