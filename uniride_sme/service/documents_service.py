@@ -233,7 +233,7 @@ def document_check(data):
     connect_pg.execute_command(conn, query, (status, user_id))
     connect_pg.disconnect(conn)
 
-    print(update_r_id_if_verified(user_id))
+    update_r_id_if_verified(user_id)
 
     return {"message": "DOCUMENT_STATUS_UPDATED"}
 
@@ -248,18 +248,20 @@ def update_r_id_if_verified(user_id):
     Where u_id = %s
     """
     documents = connect_pg.get_query(conn, query, (user_id,), True)
-    print(documents)
-    if documents.get("v_id_card_verified") == 1 and documents.get("v_school_certificate_verified") == 1:
-        if documents.get("v_license_verified") == 1 and documents.get("v_id_card_verified") == 1:
+    if documents[0].get("v_id_card_verified") == 1 and documents[0].get("v_school_certificate_verified") == 1:
+        if documents[0].get("v_license_verified") == 1 and documents[0].get("v_insurance_verified") == 1:
             r_id = 1
         else:
-            r_id = 4
-        r_id_query = f"""
-        UPDATE uniride.ur_document_verification
-        SET r_id = {r_id}
-        WHERE u_id = %s
-        """
-        connect_pg.execute_command(conn, r_id_query, (user_id,))
+            r_id = 2
+    else:
+        r_id = 3
+    r_id_query = f"""
+    UPDATE uniride.ur_user
+    SET r_id = {r_id}
+    WHERE u_id = %s
+    """
+
+    connect_pg.execute_command(conn, r_id_query, (user_id,))
 
     connect_pg.disconnect(conn)
 
