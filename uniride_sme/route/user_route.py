@@ -1,8 +1,18 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify, send_file
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
+from flask import Blueprint, request, jsonify, send_file, make_response
+from flask_jwt_extended import (
+    get_jwt_identity,
+    jwt_required,
+    create_access_token,
+    set_access_cookies,
+    create_refresh_token,
+    set_refresh_cookies,
+    unset_jwt_cookies,
+    verify_jwt_in_request,
+)
+from flask_jwt_extended.exceptions import NoAuthorizationError
+from jwt import ExpiredSignatureError
+
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
 from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO
@@ -53,23 +63,51 @@ def authenticate():
             id_card_verified=documents_bo.v_id_card_verified,
             school_certificate_verified=documents_bo.v_school_certificate_verified,
         )
-        token = create_access_token(user_bo.id)
-        response = (
-            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", token=token, informations_verified=informations_verified_dto),
-            200,
+
+        response = make_response(
+            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto)
         )
+        access_token = create_access_token(user_bo.id)
+        set_access_cookies(response, access_token)
+        if json_object.get("keepLoggedIn", False):
+            refresh_token = create_refresh_token(user_bo.id)
+            set_refresh_cookies(response, refresh_token)
+        response.status_code = 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
     return response
 
 
+@user.route("/refresh", methods=["GET"])
+@jwt_required(refresh=True)
+def refresh():
+    """Refresh token endpoint"""
+    user_id = get_jwt_identity()
+    response = jsonify(message="REFRESHED_SUCCESSFULLY")
+    access_token = create_access_token(user_id)
+    set_access_cookies(response, access_token)
+    return response, 200
+
+
 @user.route("/logout", methods=["DELETE"])
-@jwt_required()
 def logout():
     """Logout endpoint"""
-    revoke_token()
-    return jsonify(message="ACCESS_TOKEN_REVOKED"), 200
+    response = jsonify(message="LOGOUT_SUCCESSFULY")
+    try:
+        verify_jwt_in_request()
+        revoke_token()
+    except (ExpiredSignatureError, NoAuthorizationError):
+        pass
+
+    try:
+        verify_jwt_in_request(refresh=True)
+        revoke_token()
+    except (ExpiredSignatureError, NoAuthorizationError):
+        pass
+
+    unset_jwt_cookies(response)
+    return response, 200
 
 
 @user.route("/infos", methods=["GET"])

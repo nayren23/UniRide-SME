@@ -10,7 +10,7 @@ from uniride_sme.config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
-cors = CORS(app, resources={r"*": {"origins": "*"}})
+cors = CORS(app, resources={r"*": {"origins": "https://localhost:4200"}}, supports_credentials=True)
 api = Api(app)
 mail = Mail(app)
 jwt = JWTManager(app)

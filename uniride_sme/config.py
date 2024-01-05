@@ -39,8 +39,13 @@ class Config:
     # JWT config
     JWT_SALT = os.getenv("JWT_SALT").encode("utf8")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    JWT_TOKEN_LOCATION = ["cookies"]
+    JWT_COOKIE_SECURE = True
+    JWT_COOKIE_CSRF_PROTECT = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES")))
-
+    JWT_ACCESS_TOKEN_REFRESH = timedelta(seconds=int(os.getenv("JWT_ACCESS_TOKEN_REFRESH")))
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(seconds=int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES")))
+    JWT_COOKIE_SAMESITE = "None"
     # RQ config
     CACHE_TYPE = os.getenv("CACHE_TYPE")
     RQ_REDIS_URL = os.getenv("RQ_REDIS_URL")
