@@ -381,3 +381,33 @@ def user_information_token(user_id):
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+
+
+@user.route("/statistics/<user_id>", methods=["GET"])
+def user_stat_id(user_id):
+    """Informations user by token"""
+    try:
+        user_stat_passenger = user_service.user_stat_passenger(user_id)
+        user_stat_driver = user_service.user_stat_driver(user_id)
+        response_data = {
+            "statistics": [
+                {
+                    "driver_trip": user_stat_driver,
+                },
+                {
+                    "passenger_trip": user_stat_passenger,
+                },
+                {
+                    "average_rating": 0,
+                },
+            ]
+        }
+
+        response = (
+            jsonify({"message": "USER_STATS_DISPLAYED_SUCESSFULLY", **response_data}),
+            200,
+        )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response

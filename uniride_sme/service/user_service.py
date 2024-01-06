@@ -497,3 +497,60 @@ def user_information_id(id_user):
     }
 
     return result
+
+
+def user_stat_passenger(id_user):
+    """Get user information"""
+    with connect_pg.connect() as conn:
+        verify_user(id_user)
+
+        query = """
+        SELECT r_accepted
+        FROM uniride.ur_join
+        WHERE u_id = %s
+        """
+        document = connect_pg.get_query(conn, query, (id_user,))
+    if not document:
+        return None
+    
+    user_data = document[0]
+    countCompleted = user_data.count(1)
+    countPending = user_data.count(0)
+    result = {
+        "completed_count": countCompleted,
+        "pending_count": countPending,
+    }
+
+    return result
+
+
+def user_stat_driver(id_user):
+    """Get user information"""
+    with connect_pg.connect() as conn:
+        verify_user(id_user)
+
+        query = """
+        SELECT t_status
+        FROM uniride.ur_trip
+        WHERE t_user_id = %s
+        """
+        document = connect_pg.get_query(conn, query, (id_user,))
+
+    if not document:
+        return None
+    
+    user_data = document[0]
+
+    countpending = user_data.count(1)
+    countcanceled = user_data.count(2)
+    countcompleted = user_data.count(3)
+    countoncourse = user_data.count(4)
+    
+    result = {
+        "pending_count": countpending,
+	    "canceled_count": countcanceled,
+        "completed_count": countcompleted,
+        "oncourse_count": countoncourse
+    }
+
+    return result
