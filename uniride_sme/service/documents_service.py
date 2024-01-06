@@ -170,6 +170,14 @@ def document_number_status():
     total_document_ok = 0
     total_document_refused = 0
 
+    if not documents:
+        # If the query result is None, return counts initialized to 0
+        return {
+            "document_validated": 0,
+            "document_pending": 0,
+            "document_refused": 0,
+        }
+
     attributes = ["v_license_verified", "v_id_card_verified", "v_school_certificate_verified", "v_insurance_verified"]
 
     for document in documents:
