@@ -6,6 +6,7 @@ on:
     pull_request:
       branches:
         - main
+        - develop
 
 env: #we need to set the tag to the latest tag
   LATEST_TAG: uniride1/uniride_back:latest
