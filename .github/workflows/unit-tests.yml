@@ -26,6 +26,7 @@ jobs:
       FRONT_END_URL: ${{ secrets.FRONT_END_URL }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       JWT_ACCESS_TOKEN_EXPIRES: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRES }}
+      JWT_ACCESS_TOKEN_REFRESH: ${{ secrets.JWT_ACCESS_TOKEN_REFRESH }}
       JWT_SALT: ${{ secrets.JWT_SALT }}
       JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
       MAIL_EXPIRATION: ${{ secrets.MAIL_EXPIRATION }}
