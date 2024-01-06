@@ -11,39 +11,41 @@ jobs:
     runs-on: ubuntu-latest
     env: # We need to set the environment variables for the tests to run
           # We can use the secrets we have stored in the repository, with secrets.<SECRET_NAME>
-      ACCEPT_TIME_DIFFERENCE_MINUTES: ${{ secrets.ACCEPT_TIME_DIFFERENCE_MINUTES }}
-      BASE_RATE: ${{ secrets.BASE_RATE }}
-      CACHE_REDIS_DB: ${{ secrets.CACHE_REDIS_DB }}
-      CACHE_REDIS_HOST: ${{ secrets.CACHE_REDIS_HOST }}
-      CACHE_REDIS_PORT: ${{ secrets.CACHE_REDIS_PORT}}
-      CACHE_TYPE: ${{ secrets.CACHE_TYPE}}
-      COST_PER_KM: ${{ secrets.COST_PER_KM}}
-      DB_HOST: ${{ secrets.DB_HOST }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_PWD: ${{ secrets.DB_PWD }}
-      DB_USER: ${{ secrets.DB_USER }}
-      FRONT_END_URL: ${{ secrets.FRONT_END_URL }}
-      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      JWT_ACCESS_TOKEN_EXPIRES: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRES }}
-      JWT_ACCESS_TOKEN_REFRESH: ${{ secrets.JWT_ACCESS_TOKEN_REFRESH }}
-      JWT_SALT: ${{ secrets.JWT_SALT }}
-      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-      MAIL_EXPIRATION: ${{ secrets.MAIL_EXPIRATION }}
-      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-      MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
-      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-      MAX_CONTENT_LENGTH: ${{ secrets.MAX_CONTENT_LENGTH }}
-      RATE_PER_KM: ${{ secrets.RATE_PER_KM }}
-      ROUTE_CHECKER: ${{ secrets.ROUTE_CHECKER }}
-      RQ_REDIS_URL: ${{ secrets.RQ_REDIS_URL }}
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      SECURITY_PASSWORD_SALT: ${{ secrets.SECURITY_PASSWORD_SALT }}
-      UNIVERSITY_CITY: ${{ secrets.UNIVERSITY_CITY }}
-      UNIVERSITY_EMAIL_DOMAIN: ${{ secrets.UNIVERSITY_EMAIL_DOMAIN }}
-      UNIVERSITY_POSTAL_CODE: ${{ secrets.UNIVERSITY_POSTAL_CODE }}
-      UNIVERSITY_STREET_NAME: ${{ secrets.UNIVERSITY_STREET_NAME }}
-      UNIVERSITY_STREET_NUMBER: ${{ secrets.UNIVERSITY_STREET_NUMBER }}
+          ACCEPT_TIME_DIFFERENCE_MINUTES: ${{ secrets.ACCEPT_TIME_DIFFERENCE_MINUTES }}
+          BASE_RATE: ${{ secrets.BASE_RATE }}
+          CACHE_REDIS_DB: ${{ secrets.CACHE_REDIS_DB }}
+          CACHE_REDIS_HOST: ${{ secrets.CACHE_REDIS_HOST }}
+          CACHE_REDIS_PORT: ${{ secrets.CACHE_REDIS_PORT}}
+          CACHE_TYPE: ${{ secrets.CACHE_TYPE}}
+          COST_PER_KM: ${{ secrets.COST_PER_KM}}
+          FRONT_END_URL: ${{ secrets.FRONT_END_URL }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          MAIL_EXPIRATION: ${{ secrets.MAIL_EXPIRATION }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAX_CONTENT_LENGTH: ${{ secrets.MAX_CONTENT_LENGTH }}
+          RATE_PER_KM: ${{ secrets.RATE_PER_KM }}
+          ROUTE_CHECKER: ${{ secrets.ROUTE_CHECKER }}
+          RQ_REDIS_URL: ${{ secrets.RQ_REDIS_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          SECURITY_PASSWORD_SALT: ${{ secrets.SECURITY_PASSWORD_SALT }}
+          UNIVERSITY_CITY: ${{ secrets.UNIVERSITY_CITY }}
+          UNIVERSITY_EMAIL_DOMAIN: ${{ secrets.UNIVERSITY_EMAIL_DOMAIN }}
+          UNIVERSITY_POSTAL_CODE: ${{ secrets.UNIVERSITY_POSTAL_CODE }}
+          UNIVERSITY_STREET_NAME: ${{ secrets.UNIVERSITY_STREET_NAME }}
+          UNIVERSITY_STREET_NUMBER: ${{ secrets.UNIVERSITY_STREET_NUMBER }}
+          JWT_ACCESS_TOKEN_REFRESH: ${{ secrets.JWT_ACCESS_TOKEN_REFRESH }}
+          PFP_UPLOAD_FOLDER: ${{ secrets.PFP_UPLOAD_FOLDER }}
+          LICENSE_UPLOAD_FOLDER: ${{ secrets.LICENSE_UPLOAD_FOLDER }}
+          ID_CARD_UPLOAD_FOLDER: ${{ secrets.ID_CARD_UPLOAD_FOLDER }}
+          SCHOOL_CERTIFICATE_UPLOAD_FOLDER: ${{ secrets.SCHOOL_CERTIFICATE_UPLOAD_FOLDER }}
+          INSURANCE_UPLOAD_FOLDER: ${{ secrets.INSURANCE_UPLOAD_FOLDER }}
+          FLASK_DEBUG: ${{ secrets.FLASK_DEBUG }}
+          FLASK_HOST: ${{ secrets.FLASK_HOST }}
+          FLASK_PORT: ${{ secrets.FLASK_PORT }}
+          CERTIFICATE_CRT_FOLDER: ${{ secrets.CERTIFICATE_CRT_FOLDER }}
+          CERTIFICATE_KEY_FOLDER: ${{ secrets.CERTIFICATE_KEY_FOLDER }}
 
     strategy:
       fail-fast: false
