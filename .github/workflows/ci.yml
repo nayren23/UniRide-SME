@@ -6,6 +6,7 @@ on:
     pull_request:
       branches:
         - main
+        - develop
 
 env: #we need to set the tag to the latest tag
   LATEST_TAG: uniride1/uniride_back:latest
@@ -23,15 +24,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
     
-      - name: Generate SSL Certificates #Maybe we should remove this step and use a real certificate
-        run: |
-          cd uniride_sme
-          mkdir -p certs
-          cd certs
-          openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout flask-selfsigned.key -out flask-selfsigned.crt \
-          -subj "/C=FR/ST=IldeDeFrance/L=Paris/O=Uniride/CN=uniride.uniride@gmail.com"
-          cd ..
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -46,44 +38,11 @@ jobs:
           push: true
           tags: ${{ env.LATEST_TAG }}   
           build-args: | #we need to pass the secrets to the dockerfile
-            ACCEPT_TIME_DIFFERENCE_MINUTES=${{ secrets.ACCEPT_TIME_DIFFERENCE_MINUTES }}
-            BASE_RATE=${{ secrets.BASE_RATE }}
-            CACHE_REDIS_DB=${{ secrets.CACHE_REDIS_DB }}
-            CACHE_REDIS_HOST=${{ secrets.CACHE_REDIS_HOST }}
-            CACHE_REDIS_PORT=${{ secrets.CACHE_REDIS_PORT}}
-            CACHE_TYPE=${{ secrets.CACHE_TYPE}}
-            COST_PER_KM=${{ secrets.COST_PER_KM}}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_PWD=${{ secrets.DB_PWD }}
-            DB_USER=${{ secrets.DB_USER }}
-            FRONT_END_URL=${{ secrets.FRONT_END_URL }}
-            GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}
-            JWT_ACCESS_TOKEN_EXPIRES=${{ secrets.JWT_ACCESS_TOKEN_EXPIRES }}
-            JWT_SALT=${{ secrets.JWT_SALT }}
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-            MAIL_EXPIRATION=${{ secrets.MAIL_EXPIRATION }}
-            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-            MAIL_SERVER=${{ secrets.MAIL_SERVER }}
-            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-            MAX_CONTENT_LENGTH=${{ secrets.MAX_CONTENT_LENGTH }}
-            RATE_PER_KM=${{ secrets.RATE_PER_KM }}
-            ROUTE_CHECKER=${{ secrets.ROUTE_CHECKER }}
-            RQ_REDIS_URL=${{ secrets.RQ_REDIS_URL }}
-            SECRET_KEY=${{ secrets.SECRET_KEY }}
-            SECURITY_PASSWORD_SALT=${{ secrets.SECURITY_PASSWORD_SALT }}
-            UNIVERSITY_CITY=${{ secrets.UNIVERSITY_CITY }}
-            UNIVERSITY_EMAIL_DOMAIN=${{ secrets.UNIVERSITY_EMAIL_DOMAIN }}
-            UNIVERSITY_POSTAL_CODE=${{ secrets.UNIVERSITY_POSTAL_CODE }}
-            UNIVERSITY_STREET_NAME=${{ secrets.UNIVERSITY_STREET_NAME }}
-            UNIVERSITY_STREET_NUMBER=${{ secrets.UNIVERSITY_STREET_NUMBER }}
-            FLASK_HOST=${{ secrets.FLASK_HOST }}
-            FLASK_PORT=${{ secrets.FLASK_PORT }}
-            FLASK_DEBUG=${{ secrets.FLASK_DEBUG }}
-            PFP_UPLOAD_FOLDER=${{ secrets.PFP_UPLOAD_FOLDER }}
-            LICENSE_UPLOAD_FOLDER=${{ secrets.LICENSE_UPLOAD_FOLDER }}
-            ID_CARD_UPLOAD_FOLDER=${{ secrets.ID_CARD_UPLOAD_FOLDER }}
-            SCHOOL_CERTIFICATE_UPLOAD_FOLDER=${{ secrets.SCHOOL_CERTIFICATE_UPLOAD_FOLDER }}
-            CERTIFICATE_CRT_FOLDER=${{ secrets.CERTIFICATE_CRT_FOLDER }}
-            CERTIFICATE_KEY_FOLDER=${{ secrets.CERTIFICATE_KEY_FOLDER }}
+          CACHE_REDIS_DB=${{ secrets.CACHE_REDIS_DB }}
+          CACHE_TYPE=${{ secrets.CACHE_TYPE}}
+          FLASK_DEBUG=${{ secrets.FLASK_DEBUG }}
+          PFP_UPLOAD_FOLDER=${{ secrets.PFP_UPLOAD_FOLDER }}
+          LICENSE_UPLOAD_FOLDER=${{ secrets.LICENSE_UPLOAD_FOLDER }}
+          ID_CARD_UPLOAD_FOLDER=${{ secrets.ID_CARD_UPLOAD_FOLDER }}
+          SCHOOL_CERTIFICATE_UPLOAD_FOLDER=${{ secrets.SCHOOL_CERTIFICATE_UPLOAD_FOLDER }}
+          INSURANCE_UPLOAD_FOLDER=${{ secrets.INSURANCE_UPLOAD_FOLDER }}
