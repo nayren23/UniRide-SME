@@ -6,6 +6,7 @@ on:
     pull_request:
       branches:
         - main
+        - develop
 
 env: #we need to set the tag to the latest tag
   LATEST_TAG: uniride1/uniride_back:latest
@@ -23,15 +24,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
     
-      - name: Generate SSL Certificates #Maybe we should remove this step and use a real certificate
-        run: |
-          cd uniride_sme
-          mkdir -p certs
-          cd certs
-          openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout flask-selfsigned.key -out flask-selfsigned.crt \
-          -subj "/C=FR/ST=IldeDeFrance/L=Paris/O=Uniride/CN=uniride.uniride@gmail.com"
-          cd ..
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
