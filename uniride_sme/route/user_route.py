@@ -52,6 +52,7 @@ def authenticate():
             license_verified=documents_bo.v_license_verified,
             id_card_verified=documents_bo.v_id_card_verified,
             school_certificate_verified=documents_bo.v_school_certificate_verified,
+            insurance_verified=documents_bo.v_insurance_verified,
         )
         token = create_access_token(user_bo.u_id)
         response = (
