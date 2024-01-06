@@ -37,6 +37,7 @@ jobs:
           UNIVERSITY_STREET_NUMBER: ${{ secrets.UNIVERSITY_STREET_NUMBER }}
           JWT_ACCESS_TOKEN_REFRESH: ${{ secrets.JWT_ACCESS_TOKEN_REFRESH }}
           JWT_ACCESS_TOKEN_EXPIRES: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRES }}
+          JWT_REFRESH_TOKEN_EXPIRES: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRES }}
           JWT_SALT: ${{ secrets.JWT_SALT }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           PFP_UPLOAD_FOLDER: ${{ secrets.PFP_UPLOAD_FOLDER }}
