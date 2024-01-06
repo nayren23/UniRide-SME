@@ -4,7 +4,7 @@ from uniride_sme import connect_pg
 from uniride_sme.model.bo.car_bo import CarBO
 from uniride_sme.model.dto.car_dto import CarDTO
 from uniride_sme.utils.exception.exceptions import InvalidInputException, MissingInputException
-from uniride_sme.utils.exception.car_exceptions import CarAlreadyExist
+from uniride_sme.utils.exception.car_exceptions import CarAlreadyExist,CarNotFoundException
 
 
 def add_in_db(car: CarBO):
@@ -19,7 +19,7 @@ def add_in_db(car: CarBO):
     validate_total_places(car.total_places)
 
     query = (
-        "INSERT INTO uniride.ur_vehicle (v_model,"
+        "INSERT INTO uniride.ur_vehicle(v_model,"
         "v_license_plate, v_country_license_plate, v_color, v_brand, u_id, v_total_places) "
         " VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING v_id"
     )
@@ -39,9 +39,7 @@ def add_in_db(car: CarBO):
         car.id = car_id
         connect_pg.disconnect(conn)
     except psy.Error as e:
-        if "ur_vehicle_u_id_key" in str(e):
-            raise CarAlreadyExist() from e
-        raise InvalidInputException("INVALID_INPUT") from e
+        raise CarAlreadyExist() from e
 
 
 def valid_model(model):
@@ -108,34 +106,44 @@ def get_car_info_by_user_id(user_id):
     """Get car information by user ID"""
 
     query = """
-        SELECT v_model,v_license_plate, v_country_license_plate, v_color, v_brand, u_id, v_total_places
+        SELECT *
         FROM uniride.ur_vehicle
         WHERE u_id = %s
     """
+    params = (user_id,)
     conn = connect_pg.connect()
-
-    info_car = connect_pg.get_query(conn, query, (user_id,), True)
+    info_car = connect_pg.get_query(conn, query, params, True)
     connect_pg.disconnect(conn)
+    
+    if not info_car:
+        raise CarNotFoundException("CAR_NOT_FOUND")
+    info_car = info_car[0]
+    
+    car_bo = CarBO(
+        model=info_car["v_model"],
+        license_plate=info_car["v_license_plate"],
+        country_license_plate=info_car["v_country_license_plate"],
+        color=info_car["v_color"],
+        brand=info_car["v_brand"],
+        user_id=info_car["u_id"],
+        total_places=info_car["v_total_places"],
+    )
 
-    return info_car
+    return car_bo
 
 
 def format_get_information_car(info_car):
-    """Format the current trips for the driver"""
-
-    available_car = []
+    """Format the information car to return"""
     car_dto = CarDTO(
-        model=info_car[0].get("v_model"),
-        licence_plate=info_car[0].get("v_license_plate"),
-        country_licence_plate=info_car[0].get("v_country_license_plate"),
-        color=info_car[0].get("v_color"),
-        brand=info_car[0].get("v_brand"),
-        id_user=info_car[0].get("u_id"),
-        total_places=info_car[0].get("v_total_places"),
+        model=info_car.model,
+        license_plate=info_car.license_plate,
+        country_license_plate=info_car.country_license_plate,
+        color=info_car.color,
+        brand=info_car.brand,
+        total_places=info_car.total_places,
     )
-    available_car.append(car_dto)
 
-    return available_car
+    return car_dto
 
 
 def update_car_information_in_db(car: CarBO):

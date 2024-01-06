@@ -118,6 +118,7 @@ def get_infos():
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_infos_dto = UserInfosDTO(
+            id=user_id,
             login=user_bo.login,
             student_email=user_bo.student_email,
             firstname=user_bo.firstname,
@@ -125,6 +126,7 @@ def get_infos():
             gender=user_bo.gender,
             phone_number=user_bo.phone_number,
             description=user_bo.description,
+            role=user_bo.r_id,
         )
         response = jsonify(user_infos_dto), 200
     except ApiException as e:

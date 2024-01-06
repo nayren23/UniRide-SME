@@ -12,5 +12,5 @@ class CarDTO(TypedDict):
     country_licence_plate: str
     color: str
     brand: str
-    id_user: int
+    user_id: int
     total_places: int

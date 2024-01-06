@@ -73,6 +73,7 @@ def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
         status=infos["u_status"],
         home_address_id=infos["u_home_address_id"],
         work_address_id=infos["u_work_address_id"],
+        r_id=infos["r_id"],
     )
     return user_bo
 
