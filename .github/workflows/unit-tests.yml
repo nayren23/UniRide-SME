@@ -20,9 +20,6 @@ jobs:
           COST_PER_KM: ${{ secrets.COST_PER_KM}}
           FRONT_END_URL: ${{ secrets.FRONT_END_URL }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          JWT_ACCESS_TOKEN_EXPIRES: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRES }}
-          JWT_SALT: ${{ secrets.JWT_SALT }}
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           MAIL_EXPIRATION: ${{ secrets.MAIL_EXPIRATION }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
