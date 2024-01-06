@@ -510,18 +510,25 @@ def user_stat_passenger(id_user):
         WHERE u_id = %s
         """
         document = connect_pg.get_query(conn, query, (id_user,))
+
     if not document:
-        return None
-    
+        # If the query result is None, return counts initialized to 0
+        return {
+            "completed_count": 0,
+            "pending_count": 0
+        }
+
     user_data = document[0]
     countCompleted = user_data.count(1)
     countPending = user_data.count(0)
+    
     result = {
         "completed_count": countCompleted,
         "pending_count": countPending,
     }
 
     return result
+
 
 
 def user_stat_driver(id_user):
@@ -537,8 +544,14 @@ def user_stat_driver(id_user):
         document = connect_pg.get_query(conn, query, (id_user,))
 
     if not document:
-        return None
-    
+        # If the query result is None, return counts initialized to 0
+        return {
+            "pending_count": 0,
+            "canceled_count": 0,
+            "completed_count": 0,
+            "oncourse_count": 0
+        }
+
     user_data = document[0]
 
     countpending = user_data.count(1)
@@ -548,7 +561,7 @@ def user_stat_driver(id_user):
     
     result = {
         "pending_count": countpending,
-	    "canceled_count": countcanceled,
+        "canceled_count": countcanceled,
         "completed_count": countcompleted,
         "oncourse_count": countoncourse
     }
