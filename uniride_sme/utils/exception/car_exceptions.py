@@ -10,5 +10,5 @@ class CarAlreadyExist(ApiException):
 class CarNotFoundException(ApiException):
     """Exception for when the car isn't found"""
 
-    def __init__(self):
-        super().__init__("CAR_NOT_FOUND", 404)
+    def __init__(self,message):
+        super().__init__(message, 422)

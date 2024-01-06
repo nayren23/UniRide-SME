@@ -35,8 +35,6 @@ def add_in_db(car: CarBO):
     )
     try:
         conn = connect_pg.connect()
-        print("------------------------------------------------")
-        print(connect_pg.execute_command(conn, query, values))
         car_id = connect_pg.execute_command(conn, query, values)
         car.id = car_id
         connect_pg.disconnect(conn)
@@ -118,7 +116,7 @@ def get_car_info_by_user_id(user_id):
     connect_pg.disconnect(conn)
     
     if not info_car:
-        raise CarNotFoundException()
+        raise CarNotFoundException("CAR_NOT_FOUND")
     info_car = info_car[0]
     
     car_bo = CarBO(

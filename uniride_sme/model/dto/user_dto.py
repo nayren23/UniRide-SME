@@ -5,6 +5,7 @@ from typing import TypedDict
 class UserInfosDTO(TypedDict):
     """DTO for user's informations"""
 
+    id: int
     login: str
     student_email: str
     firstname: str

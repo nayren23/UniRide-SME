@@ -80,6 +80,7 @@ def get_infos():
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_infos_dto = UserInfosDTO(
+            id=user_id,
             login=user_bo.login,
             student_email=user_bo.student_email,
             firstname=user_bo.firstname,
