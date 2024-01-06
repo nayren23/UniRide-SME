@@ -288,7 +288,7 @@ def document_user(user_id):
     verify_user(user_id)
 
     query = """
-        SELECT u_id, d_license, d_id_card, d_school_certificate, d_insurance, v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
+        SELECT u_id, d_license, d_id_card, d_school_certificate, d_insurance, v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified, v_license_description, v_card_description, v_school_certificate_description, v_insurance_description 
         FROM uniride.ur_document_verification
         NATURAL JOIN uniride.ur_documents
         WHERE u_id = %s
@@ -301,10 +301,10 @@ def document_user(user_id):
 
     documents = []
     column_mapping = {
-        "d_license": {"type": "license", "folder": "LICENSE_UPLOAD_FOLDER"},
-        "d_id_card": {"type": "card", "folder": "ID_CARD_UPLOAD_FOLDER"},
-        "d_school_certificate": {"type": "school_certificate", "folder": "SCHOOL_CERTIFICATE_UPLOAD_FOLDER"},
-        "d_insurance": {"type": "insurance", "folder": "INSURANCE_UPLOAD_FOLDER"},
+        "d_license": {"type": "license", "folder": "LICENSE_UPLOAD_FOLDER", "description": "v_license_description"},
+        "d_id_card": {"type": "card", "folder": "ID_CARD_UPLOAD_FOLDER" , "description": "v_card_description"},
+        "d_school_certificate": {"type": "school_certificate", "folder": "SCHOOL_CERTIFICATE_UPLOAD_FOLDER" , "description": "v_school_certificate_description"},
+        "d_insurance": {"type": "insurance", "folder": "INSURANCE_UPLOAD_FOLDER" , "description": "v_insurance_description"},
     }
 
     for document_row in document_data:
@@ -314,6 +314,7 @@ def document_user(user_id):
                 document_info = column_mapping.get(column_name, None)
                 if document_info:
                     document_type = document_info["type"]
+                    document_description = document_row.get(document_info["description"], None)
                     document_url = document_row[column_name]
                     status_column = f"v_{column_name[2:]}_verified"
                     document_status = document_row.get(status_column, None)
@@ -322,6 +323,7 @@ def document_user(user_id):
                             "url": get_encoded_file(document_url, document_info["folder"]),
                             "status": str(document_status),
                             "type": document_type,
+                            "description": document_description,
                         }
                     )
 
