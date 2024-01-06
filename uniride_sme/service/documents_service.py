@@ -215,22 +215,38 @@ def document_check(data):
 
     document_type = document_data.get("type")
     status = document_data.get("status")
+    description = document_data.get("description", "")
+
     column_mapping = {
-        "license": "v_license_verified",
-        "card": "v_id_card_verified",
-        "school_certificate": "v_school_certificate_verified",
-        "insurance": "v_insurance_verified",
+       "license": {"status_column": "v_license_verified", "description_column": "v_license_description"},
+        "card": {"status_column": "v_id_card_verified", "description_column": "v_card_description"},  # No description column for "card"
+        "school_certificate": {"status_column": "v_school_certificate_verified", "description_column": "v_school_certificate_description"},
+        "insurance": {"status_column": "v_insurance_verified", "description_column": "v_insurance_description"},
     }
+
     if document_type not in column_mapping:
         raise DocumentsTypeException()
-    document_column = column_mapping[document_type]
+
+    document_columns = column_mapping[document_type]
+    status_column = document_columns["status_column"]
+    description_column = document_columns.get("description_column")
+
     conn = connect_pg.connect()
     query = f"""
         UPDATE uniride.ur_document_verification
-        SET {document_column} = %s
-        WHERE u_id = %s
+        SET {status_column} = %s
     """
-    connect_pg.execute_command(conn, query, (status, user_id))
+
+    if description_column:
+        query += f", {description_column} = %s"
+
+    query += " WHERE u_id = %s"
+
+    if description_column:
+        connect_pg.execute_command(conn, query, (status, description, user_id))
+    else:
+        connect_pg.execute_command(conn, query, (status, user_id))
+
     connect_pg.disconnect(conn)
 
     update_r_id_if_verified(user_id)

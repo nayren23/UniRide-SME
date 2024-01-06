@@ -40,22 +40,22 @@ def mock_verify_password(monkeypatch):
 def test_authenticate_success(mock_get_user_by_login, mock_verify_password, login, password):
     """Test authenticate is working correctly"""
     mock_get_user_by_login.return_value = UserBO(
-        1,
-        "user1",
-        "u",
-        "s",
-        "user@gmail.com",
-        "f",
-        "M",
-        "0612345678",
-        "",
-        "",
-        datetime.now(),
-        datetime.now(),
-        "yes",
-        "",
-        "",
-        "",
+        u_id=1,
+        u_login="user1",
+        u_firstname="u",
+        u_lastname="s",
+        u_email="user@gmail.com",
+        u_picture="f",
+        u_gender="M",
+        u_phone="0612345678",
+        u_address="",
+        u_postal_code="",
+        u_created_at=datetime.now(),
+        u_updated_at=datetime.now(),
+        u_active="yes",
+        u_reset_password_token="",
+        u_reset_password_token_expiration="",
+        u_email_verification_token="",
     )
     mock_verify_password.return_value = True
 
