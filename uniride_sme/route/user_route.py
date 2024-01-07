@@ -12,7 +12,6 @@ from flask_jwt_extended import (
 )
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from jwt import ExpiredSignatureError
-
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
 from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO
@@ -243,6 +242,19 @@ def save_document(document_type):
         response = jsonify(message=e.message), e.status_code
     return response
 
+@user.route("documents/infos", methods=["GET"])
+@jwt_required()
+def get_user_documents_infos():
+    """Get user infos endpoint"""
+    user_id = get_jwt_identity()
+    try:
+        documents_bo = documents_service.get_documents_by_user_id(user_id)
+        user_documents_infos_dto = documents_service.format_user_documents_infos(documents_bo, user_id)
+        response = jsonify(user_documents_infos_dto), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
 
 @user.route("/save/license", methods=["POST"])
 @jwt_required()
