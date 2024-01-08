@@ -12,7 +12,6 @@ from flask_jwt_extended import (
 )
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from jwt import ExpiredSignatureError
-
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
 from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO, InformationsStatUsers
@@ -95,17 +94,17 @@ def refresh():
 def logout():
     """Logout endpoint"""
     response = jsonify(message="LOGOUT_SUCCESSFULY")
-    try:
-        verify_jwt_in_request()
-        revoke_token()
-    except (ExpiredSignatureError, NoAuthorizationError):
-        pass
+    # try:
+    #     verify_jwt_in_request()
+    #     revoke_token()
+    # except (ExpiredSignatureError, NoAuthorizationError):
+    #     pass
 
-    try:
-        verify_jwt_in_request(refresh=True)
-        revoke_token()
-    except (ExpiredSignatureError, NoAuthorizationError):
-        pass
+    # try:
+    #     verify_jwt_in_request(refresh=True)
+    #     revoke_token()
+    # except (ExpiredSignatureError, NoAuthorizationError):
+    #     pass
 
     unset_jwt_cookies(response)
     return response, 200
@@ -229,6 +228,17 @@ def save_pfp():
 
     return response
 
+@user.route("documents/infos", methods=["GET"])
+@jwt_required()
+def get_user_documents_infos():
+    """Get user infos endpoint"""
+    user_id = get_jwt_identity()
+    try:
+        doc_bo_list = documents_service.document_user(user_id)
+        response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", **doc_bo_list}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
 
 def save_document(document_type):
     """Generalized endpoint for saving a user document."""
@@ -243,7 +253,6 @@ def save_document(document_type):
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
-
 
 @user.route("/save/license", methods=["POST"])
 @jwt_required()
@@ -265,6 +274,11 @@ def save_school_certificate():
     """Save profile school certificate endpoint."""
     return save_document("school_certificate")
 
+@user.route("/save/insurance", methods=["POST"])
+@jwt_required()
+def insurance():
+    """Save profile insurance endpoint."""
+    return save_document("insurance")
 
 @user.route("/email-confirmation", methods=["GET"])
 @jwt_required()

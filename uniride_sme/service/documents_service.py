@@ -29,7 +29,6 @@ def get_documents_by_user_id(user_id):
     document_bo = DocumentsBO(**documents)
     return document_bo
 
-
 def add_documents(user_id, files):
     """Insert documents in the database"""
     if not user_id:
