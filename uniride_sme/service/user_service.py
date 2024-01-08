@@ -1,7 +1,8 @@
 """User service module"""
 import re
+import os
 import bcrypt
-
+from uniride_sme.utils.file import get_encoded_file
 from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.user_bo import UserBO
@@ -406,3 +407,181 @@ def change_gender(user_id, gender):
 def change_description(user_id, description):
     """Change description"""
     update_user_attribute(user_id, "description", description, _validate_description)
+
+
+def count_users():
+    """Get number of users"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_user"
+    result = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+    return result[0][0]
+
+
+def count_role_user(role):
+    """Get number of user by role"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_user WHERE r_id = %s"
+    result = connect_pg.get_query(conn, query, (role,))
+    connect_pg.disconnect(conn)
+    return result[0][0]
+
+
+def users_information():
+    """Get users information"""
+    conn = connect_pg.connect()
+    result = []
+
+    try:
+        query = """
+            SELECT u_id, r_id, u_lastname, u_firstname, u_profile_picture, u_timestamp_creation, u_timestamp_modification
+            FROM uniride.ur_user
+        """
+        document = connect_pg.get_query(conn, query)
+
+        for documents in document:
+            request_data = {
+                "id_user": documents[0],
+                "lastname": documents[2],
+                "firstname": documents[3],
+                "timestamp_creation": documents[5],
+                "last_modified_date": documents[6],
+                "profile_picture": get_encoded_file(documents[4], "PFP_UPLOAD_FOLDER"),
+                "role": documents[1],
+            }
+
+            result.append(request_data)
+    finally:
+        connect_pg.disconnect(conn)
+
+    return result
+
+
+def verify_user(id_user):
+    """Verify user"""
+    conn = connect_pg.connect()
+    check_query = "SELECT * FROM uniride.ur_user WHERE u_id = %s"
+    check_values = (id_user,)
+    result = connect_pg.get_query(conn, check_query, check_values)
+
+    if not result:
+        connect_pg.disconnect(conn)
+        raise UserNotFoundException()
+    connect_pg.disconnect(conn)
+
+
+def delete_user(id_user):
+    """Delete user"""
+    conn = connect_pg.connect()
+    verify_user(id_user)
+    delete_query = "DELETE FROM uniride.ur_user WHERE u_id = %s"
+    delete_values = (id_user,)
+    connect_pg.execute_command(conn, delete_query, delete_values)
+    connect_pg.disconnect(conn)
+
+    return id_user
+
+
+def user_information_id(id_user):
+    """Get user information"""
+    conn = connect_pg.connect()
+    verify_user(id_user)
+
+    query = """
+    SELECT r_id, u_login, u_student_email, u_lastname, u_firstname, u_phone_number, u_gender, u_description, u_profile_picture
+    FROM uniride.ur_user WHERE u_id = %s
+    """
+
+    # Pass the id_user parameter in the execute query
+    document = connect_pg.get_query(conn, query, (id_user,))
+    connect_pg.disconnect(conn)
+
+    if not document:
+        # Handle the case where no user information is found for the given ID
+        return None
+
+    user_data = document[0]
+
+    result = {
+        "login": user_data[1],
+        "student_email": user_data[2],
+        "firstname": user_data[4],
+        "lastname": user_data[3],
+        "gender": user_data[6],
+        "phone_number": user_data[5],
+        "description": user_data[7],
+        "role": user_data[0],
+        "profile_picture": get_encoded_file(user_data[8], "PFP_UPLOAD_FOLDER"),
+    }
+
+    return result
+
+
+def user_stat_passenger(id_user):
+    """Get user information"""
+    with connect_pg.connect() as conn:
+        verify_user(id_user)
+
+        query = """
+        SELECT r_accepted
+        FROM uniride.ur_join
+        WHERE u_id = %s
+        """
+        document = connect_pg.get_query(conn, query, (id_user,))
+
+    if not document:
+        # If the query result is None, return counts initialized to 0
+        return {
+            "completed_count": 0,
+            "pending_count": 0
+        }
+
+    user_data = document[0]
+    countCompleted = user_data.count(1)
+    countPending = user_data.count(0)
+    
+    result = {
+        "completed_count": countCompleted,
+        "pending_count": countPending,
+    }
+
+    return result
+
+
+
+def user_stat_driver(id_user):
+    """Get user information"""
+    with connect_pg.connect() as conn:
+        verify_user(id_user)
+
+        query = """
+        SELECT t_status
+        FROM uniride.ur_trip
+        WHERE t_user_id = %s
+        """
+        document = connect_pg.get_query(conn, query, (id_user,))
+
+    if not document:
+        # If the query result is None, return counts initialized to 0
+        return {
+            "pending_count": 0,
+            "canceled_count": 0,
+            "completed_count": 0,
+            "oncourse_count": 0
+        }
+
+    user_data = document[0]
+
+    countpending = user_data.count(1)
+    countcanceled = user_data.count(2)
+    countcompleted = user_data.count(3)
+    countoncourse = user_data.count(4)
+    
+    result = {
+        "pending_count": countpending,
+        "canceled_count": countcanceled,
+        "completed_count": countcompleted,
+        "oncourse_count": countoncourse
+    }
+
+    return result

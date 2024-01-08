@@ -4,8 +4,9 @@ from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.documents_bo import DocumentsBO
 from uniride_sme.utils.file import save_file, delete_file
+from uniride_sme.service.user_service import verify_user
 from uniride_sme.utils.exception.exceptions import MissingInputException
-from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException
+from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
 from uniride_sme.utils.file import get_encoded_file
 
 
@@ -15,6 +16,8 @@ def get_documents_by_user_id(user_id):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
+    verify_user(user_id)
+
     query = "SELECT * FROM uniride.ur_documents natural join uniride.ur_document_verification where u_id = %s"
     params = (user_id,)
     documents = connect_pg.get_query(conn, query, params, True)
@@ -32,6 +35,8 @@ def add_documents(user_id, files):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
+    verify_user(user_id)
+
     query = """
     WITH first_insert AS (
         INSERT INTO uniride.ur_documents (u_id) VALUES (%s)
@@ -44,6 +49,7 @@ def add_documents(user_id, files):
         save_license(user_id, files.get("license", None))
         save_id_card(user_id, files.get("id_card", None))
         save_school_certificate(user_id, files.get("school_certificate", None))
+        save_insurance(user_id, files.get("insurance", None))
     except MissingInputException:
         pass
 
@@ -61,6 +67,11 @@ def save_id_card(user_id, file, old_file_name=None):
 def save_school_certificate(user_id, file, old_file_name=None):
     """Save school certificate"""
     _save_document(user_id, file, old_file_name, "school_certificate")
+
+
+def save_insurance(user_id, file, old_file_name=None):
+    """Save insurance"""
+    _save_document(user_id, file, old_file_name, "insurance")
 
 
 def _save_document(user_id, file, old_file_name, document_type):
@@ -100,7 +111,7 @@ def document_to_verify():
     """Get documents to verify"""
     conn = connect_pg.connect()
     query = """
-        SELECT u_id, v_id, u_lastname, u_firstname, u_profile_picture, d_timestamp_modification,v_license_verified, v_id_card_verified,v_school_certificate_verified
+        SELECT u_id, v_id, u_lastname, u_firstname, u_profile_picture, d_timestamp_modification,v_license_verified, v_id_card_verified,v_school_certificate_verified, v_insurance_verified
         FROM uniride.ur_document_verification
         NATURAL JOIN uniride.ur_user
         NATURAL JOIN uniride.ur_documents
@@ -114,22 +125,14 @@ def document_to_verify():
 
     for document in documents:
         formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
-        profile_picture_url = get_encoded_file(document[4])
-        license_verified_str = str(document[6])
-        id_card_verified_str = str(document[7])
-        school_certificate_verified_str = str(document[8])
-        license_zeros = license_verified_str.count("0")
-        id_card_zeros = id_card_verified_str.count("0")
-        school_certificate_zeros = school_certificate_verified_str.count("0")
-
-        total_zeros = license_zeros + id_card_zeros + school_certificate_zeros
-
+        profile_picture_url = get_encoded_file(document[4], "PFP_UPLOAD_FOLDER")
         request_data = {
             "request_number": document[1],
-            "documents_to_verify": total_zeros,
+            "documents_to_verify": count_zero_and_minus_one(document),
             "person": {
                 "id_user": document[0],
-                "full_name": document[2] + " " + document[3],
+                "first_name": document[2],
+                "last_name": document[3],
                 "last_modified_date": formatted_last_modified_date,
                 "profile_picture": profile_picture_url,
             },
@@ -140,6 +143,73 @@ def document_to_verify():
     return result
 
 
+def count_zero_and_minus_one(document):
+    """Count the number of zero and minus one in a document"""
+    fields_to_check = [str(document[i]) for i in range(6, 10)]
+
+    total_zeros = sum(field.count("0") for field in fields_to_check)
+    total_minus_ones = sum(field.count("-1") for field in fields_to_check)
+
+    return total_zeros + total_minus_ones
+
+
+def document_number_status():
+    """Get documents to verify"""
+    conn = connect_pg.connect()
+    query = """
+        SELECT v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
+        FROM uniride.ur_document_verification
+        """
+    documents = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+
+    # Initialize counts for total across all attributes
+    total_document_pending = 0
+    total_document_ok = 0
+    total_document_refused = 0
+
+    if not documents:
+        # If the query result is None, return counts initialized to 0
+        return {
+            "document_validated": 0,
+            "document_pending": 0,
+            "document_refused": 0,
+        }
+
+    attributes = ["v_license_verified", "v_id_card_verified", "v_school_certificate_verified", "v_insurance_verified"]
+
+    for document in documents:
+        for attribute in attributes:
+            attribute_value = document[attributes.index(attribute)]
+
+            # Update counts for each attribute
+            total_document_pending += 1 if attribute_value == 0 else 0
+            total_document_ok += 1 if attribute_value == 1 else 0
+            total_document_refused += 1 if attribute_value == -1 else 0
+
+    # Create a dictionary to store total counts
+    result = {
+        "document_validated": total_document_ok,
+        "document_pending": total_document_pending,
+        "document_refused": total_document_refused,
+    }
+
+    return result
+
+
+def count_documents_status(document):
+    """Count documents by status"""
+    fields_to_check = [str(document[i]) for i in range(0, 4)]
+
+    counts = {
+        "document_pending": sum(field.count("0") for field in fields_to_check),
+        "document_validated": sum(field.count("1") for field in fields_to_check),
+        "document_refused": sum(field.count("-1") for field in fields_to_check),
+    }
+
+    return counts
+
+
 def document_check(data):
     """Update document status"""
     user_id = data["user_id"]
@@ -147,45 +217,84 @@ def document_check(data):
 
     conn = connect_pg.connect()
     connect_pg.disconnect(conn)
+    verify_user(user_id)
 
     document_type = document_data.get("type")
     status = document_data.get("status")
+    description = document_data.get("description", "")
+
     column_mapping = {
-        "license": "v_license_verified",
-        "card": "v_id_card_verified",
-        "school_certificate": "v_school_certificate_verified",
+       "license": {"status_column": "v_license_verified", "description_column": "v_license_description"},
+        "card": {"status_column": "v_id_card_verified", "description_column": "v_card_description"},  # No description column for "card"
+        "school_certificate": {"status_column": "v_school_certificate_verified", "description_column": "v_school_certificate_description"},
+        "insurance": {"status_column": "v_insurance_verified", "description_column": "v_insurance_description"},
     }
+
     if document_type not in column_mapping:
-        return {
-            "user_id": user_id,
-            "document": document_data,
-            "success": False,
-            "message": f"Type de document non pris en charge : {document_type}",
-        }
-    document_column = column_mapping[document_type]
+        raise DocumentsTypeException()
+
+    document_columns = column_mapping[document_type]
+    status_column = document_columns["status_column"]
+    description_column = document_columns.get("description_column")
+
     conn = connect_pg.connect()
     query = f"""
         UPDATE uniride.ur_document_verification
-        SET {document_column} = %s
-        WHERE u_id = %s
+        SET {status_column} = %s
     """
-    connect_pg.execute_command(conn, query, (status, user_id))
-    connect_pg.disconnect(conn)
-    result = {
-        "user_id": user_id,
-        "document": document_data,
-        "success": True,
-        "message": f"The document for {user_id} has been updated to {document_type}.",
-    }
 
-    return result
+    if description_column:
+        query += f", {description_column} = %s"
+
+    query += " WHERE u_id = %s"
+
+    if description_column:
+        connect_pg.execute_command(conn, query, (status, description, user_id))
+    else:
+        connect_pg.execute_command(conn, query, (status, user_id))
+
+    connect_pg.disconnect(conn)
+
+    update_r_id_if_verified(user_id)
+
+    return {"message": "DOCUMENT_STATUS_UPDATED"}
+
+
+def update_r_id_if_verified(user_id):
+    """Update r_id to 1 if both v_license_verified and v_id_card_verified are 1"""
+
+    conn = connect_pg.connect()
+    query = """
+    SELECT v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
+    FROM uniride.ur_document_verification
+    Where u_id = %s
+    """
+    documents = connect_pg.get_query(conn, query, (user_id,), True)
+    if documents[0].get("v_id_card_verified") == 1 and documents[0].get("v_school_certificate_verified") == 1:
+        if documents[0].get("v_license_verified") == 1 and documents[0].get("v_insurance_verified") == 1:
+            r_id = 1
+        else:
+            r_id = 2
+    else:
+        r_id = 3
+    r_id_query = f"""
+    UPDATE uniride.ur_user
+    SET r_id = {r_id}
+    WHERE u_id = %s
+    """
+
+    connect_pg.execute_command(conn, r_id_query, (user_id,))
+
+    connect_pg.disconnect(conn)
 
 
 def document_user(user_id):
     """Get documents by user id"""
     conn = connect_pg.connect()
+    verify_user(user_id)
+
     query = """
-        SELECT u_id, d_license, d_id_card, d_school_certificate, v_license_verified, v_id_card_verified, v_school_certificate_verified
+        SELECT u_id, d_license, d_id_card, d_school_certificate, d_insurance, v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified, v_license_description, v_card_description, v_school_certificate_description, v_insurance_description 
         FROM uniride.ur_document_verification
         NATURAL JOIN uniride.ur_documents
         WHERE u_id = %s
@@ -194,35 +303,33 @@ def document_user(user_id):
     connect_pg.disconnect(conn)
 
     if not document_data:
-        return {
-            "user_id": user_id,
-            "documents": [],
-            "success": False,
-            "message": "Aucun document trouvé pour l'utilisateur.",
-        }
+        raise DocumentsTypeException()
 
     documents = []
     column_mapping = {
-        "d_license": "license",
-        "d_id_card": "card",
-        "d_school_certificate": "school_certificate",
+        "d_license": {"type": "license", "folder": "LICENSE_UPLOAD_FOLDER", "description": "v_license_description"},
+        "d_id_card": {"type": "card", "folder": "ID_CARD_UPLOAD_FOLDER" , "description": "v_card_description"},
+        "d_school_certificate": {"type": "school_certificate", "folder": "SCHOOL_CERTIFICATE_UPLOAD_FOLDER" , "description": "v_school_certificate_description"},
+        "d_insurance": {"type": "insurance", "folder": "INSURANCE_UPLOAD_FOLDER" , "description": "v_insurance_description"},
     }
 
     for document_row in document_data:
         document = []
         for column_name in document_row.keys():
             if column_name.startswith("d_"):
-                document_type = column_mapping.get(column_name, None)
-                if document_type:
+                document_info = column_mapping.get(column_name, None)
+                if document_info:
+                    document_type = document_info["type"]
+                    document_description = document_row.get(document_info["description"], None)
                     document_url = document_row[column_name]
                     status_column = f"v_{column_name[2:]}_verified"
                     document_status = document_row.get(status_column, None)
-
                     document.append(
                         {
-                            "url": document_url,
+                            "url": get_encoded_file(document_url, document_info["folder"]),
                             "status": str(document_status),
                             "type": document_type,
+                            "description": document_description,
                         }
                     )
 

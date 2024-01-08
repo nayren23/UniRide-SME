@@ -14,7 +14,7 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 from jwt import ExpiredSignatureError
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
-from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO
+from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO, InformationsStatUsers
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
@@ -61,6 +61,7 @@ def authenticate():
             license_verified=documents_bo.v_license_verified,
             id_card_verified=documents_bo.v_id_card_verified,
             school_certificate_verified=documents_bo.v_school_certificate_verified,
+            insurance_verified=documents_bo.v_insurance_verified,
         )
 
         response = make_response(
@@ -324,7 +325,6 @@ def check_document():
     """Check document"""
     try:
         data = request.json
-        # Appelez la fonction document_check avec les données JSON
         result = documents_service.document_check(data)
         # Utilisez jsonify pour retourner une réponse JSON
         user_bo = user_service.get_user_by_id(data["user_id"])
@@ -351,12 +351,32 @@ def document_user_verif(id_user):
     return response
 
 
+@user.route("/document_number", methods=["GET"])
+def count_documents_status():
+    """Get documents to verify"""
+    try:
+        doc_numbers = documents_service.document_number_status()
+        response = (
+            jsonify({"message": "DOCUMENT_NUMBER_STATUS_DISPLAYED_SUCESSFULLY", "document_infos": doc_numbers}),
+            200,
+        )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
 @user.route("/user_number", methods=["GET"])
 def user_count():
     """User count"""
     try:
-        user_count_value = documents_service.count_users()
-        response = jsonify({"message": "USER_NUMBER_SUCCESSFULLY", "user_count": user_count_value}), 200
+        stats_user_infos_dto = InformationsStatUsers(
+            admin_count_value=user_service.count_role_user(0),
+            drivers_count_value=user_service.count_role_user(1),
+            passenger_count_value=user_service.count_role_user(2),
+            pending_count_value=user_service.count_role_user(3),
+        )
+
+        response = jsonify({"message": "USER_NUMBER_SUCCESSFULLY", "user_infos": stats_user_infos_dto}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
@@ -388,3 +408,69 @@ def get_default_profile_picture():
         f"{app.config['PATH']}/resource/default_profile_picture.png",
         download_name="default_profile_picture.png",
     )
+
+
+@user.route("/users_informations", methods=["GET"])
+def users_informations():
+    """Get users information"""
+    try:
+        informations_user = user_service.users_information()
+        response = jsonify({"message": "USER_DISPLAYED_SUCESSFULLY", "users": informations_user}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/user_management/<user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    """delete user"""
+    try:
+        user_deleted = user_service.delete_user(user_id)
+        response = jsonify({"message": "USER_DELETED_SUCESSFULLY", "user_id : ": user_deleted}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/infos/<user_id>", methods=["GET"])
+def user_information_token(user_id):
+    """Informations user by token"""
+    try:
+        user_information = user_service.user_information_id(user_id)
+        response = (
+            jsonify({"message": "USER_INFORMATIONS_DISPLAYED_SUCESSFULLY", "user_information": user_information}),
+            200,
+        )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+
+@user.route("/statistics/<user_id>", methods=["GET"])
+def user_stat_id(user_id):
+    """Informations user by token"""
+    try:
+        user_stat_passenger = user_service.user_stat_passenger(user_id)
+        user_stat_driver = user_service.user_stat_driver(user_id)
+        response_data = {
+            "statistics": [
+                {
+                    "driver_trip": user_stat_driver,
+                },
+                {
+                    "passenger_trip": user_stat_passenger,
+                },
+                {
+                    "average_rating": 0,
+                },
+            ]
+        }
+
+        response = (
+            jsonify({"message": "USER_STATS_DISPLAYED_SUCESSFULLY", **response_data}),
+            200,
+        )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response

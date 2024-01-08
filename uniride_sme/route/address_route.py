@@ -28,12 +28,13 @@ def add_address():
         response = jsonify({"message": e.message}), e.status_code
     return response
 
+
 @address.route("/address/university", methods=["GET"])
 def get_university_address():
     """Returns the university address"""
     street_number = app.config["UNIVERSITY_STREET_NUMBER"]
     street_name = app.config["UNIVERSITY_STREET_NAME"]
     city = app.config["UNIVERSITY_CITY"]
-    postal_code  =app.config["UNIVERSITY_POSTAL_CODE"]
+    postal_code = app.config["UNIVERSITY_POSTAL_CODE"]
     response = jsonify({"address": f"{street_number} {street_name} {city} {postal_code}"})
     return response

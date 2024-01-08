@@ -40,7 +40,7 @@ def mock_verify_password(monkeypatch):
 def test_authenticate_success(mock_get_user_by_login, mock_verify_password, login, password):
     """Test authenticate is working correctly"""
     mock_get_user_by_login.return_value = UserBO(
-        1,
+         1,
         "user1",
         "u",
         "s",

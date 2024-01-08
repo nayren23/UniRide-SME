@@ -50,3 +50,12 @@ class InformationsVerifiedDTO(TypedDict):
     license_verified: bool
     id_card_verified: bool
     school_certificate_verified: bool
+
+
+class InformationsStatUsers(TypedDict):
+    """DTO to take statistics about users informations"""
+
+    user_count: int
+    drivers_count: int
+    passengers_count: int
+    pending_count: int

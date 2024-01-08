@@ -1,10 +1,9 @@
-"""User business object module"""
 import dataclasses
 from datetime import datetime
 
 
 @dataclasses.dataclass
-class UserBO:  # pylint: disable=too-many-instance-attributes
+class UserBO:
     """User business object class"""
 
     id: int = None
@@ -24,3 +23,4 @@ class UserBO:  # pylint: disable=too-many-instance-attributes
     home_address_id: str = None
     work_address_id: str = None
     r_id: int= None
+    
