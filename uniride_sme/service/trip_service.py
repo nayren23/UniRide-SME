@@ -659,3 +659,12 @@ def get_passengers(trip_id, user_id):
             )
         )
     return passenger_dtos
+
+
+def trips_status(status):
+    """Get number status of trip"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_trip WHERE t_status = %s"
+    result = connect_pg.get_query(conn, query, (status,))
+    connect_pg.disconnect(conn)
+    return result[0][0]
