@@ -6,6 +6,23 @@ from datetime import datetime
 class UserBO:
     """User business object class"""
 
+    id: int = None
+    login: str = None
+    firstname: str = None
+    lastname: str = None
+    student_email: str = None
+    password: str = None
+    gender: str = None
+    phone_number: str = None
+    description: str = None
+    profile_picture: str = None
+    timestamp_creation: datetime = None
+    timestamp_modification: datetime = None
+    email_verified: str = None
+    status: str = None
+    home_address_id: str = None
+    work_address_id: str = None
+    r_id: int= None
     u_id: int = None
     u_login: str = None
     u_firstname: str = None
@@ -22,7 +39,3 @@ class UserBO:
     u_status: str = None
     u_home_address_id: str = None
     u_work_address_id: str = None
-
-    def __init__(self, **kwargs):
-        for field in dataclasses.fields(self):
-            setattr(self, field.name, kwargs.get(field.name, field.default))

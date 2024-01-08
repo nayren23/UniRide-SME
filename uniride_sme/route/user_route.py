@@ -1,8 +1,18 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify, send_file
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
+from flask import Blueprint, request, jsonify, send_file, make_response
+from flask_jwt_extended import (
+    get_jwt_identity,
+    jwt_required,
+    create_access_token,
+    set_access_cookies,
+    create_refresh_token,
+    set_refresh_cookies,
+    unset_jwt_cookies,
+    verify_jwt_in_request,
+)
+from flask_jwt_extended.exceptions import NoAuthorizationError
+from jwt import ExpiredSignatureError
+
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
 from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO, InformationsStatUsers
@@ -32,8 +42,8 @@ def register():
             form.get("description", None),
             request.files.get("pfp", None),
         )
-        documents_service.add_documents(user_bo.u_id, request.files)
-        email.send_verification_email(user_bo.u_student_email, user_bo.u_firstname, True)
+        documents_service.add_documents(user_bo.id, request.files)
+        email.send_verification_email(user_bo.student_email, user_bo.firstname, True)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
@@ -46,31 +56,59 @@ def authenticate():
     json_object = request.json
     try:
         user_bo = user_service.authenticate(json_object.get("login", None), json_object.get("password", None))
-        documents_bo = documents_service.get_documents_by_user_id(user_bo.u_id)
+        documents_bo = documents_service.get_documents_by_user_id(user_bo.id)
         informations_verified_dto = InformationsVerifiedDTO(
-            email_verified=user_bo.u_email_verified,
+            email_verified=user_bo.email_verified,
             license_verified=documents_bo.v_license_verified,
             id_card_verified=documents_bo.v_id_card_verified,
             school_certificate_verified=documents_bo.v_school_certificate_verified,
             insurance_verified=documents_bo.v_insurance_verified,
         )
-        token = create_access_token(user_bo.u_id)
-        response = (
-            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", token=token, informations_verified=informations_verified_dto),
-            200,
+
+        response = make_response(
+            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto)
         )
+        access_token = create_access_token(user_bo.id)
+        set_access_cookies(response, access_token)
+        if json_object.get("keepLoggedIn", False):
+            refresh_token = create_refresh_token(user_bo.id)
+            set_refresh_cookies(response, refresh_token)
+        response.status_code = 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
     return response
 
 
+@user.route("/refresh", methods=["GET"])
+@jwt_required(refresh=True)
+def refresh():
+    """Refresh token endpoint"""
+    user_id = get_jwt_identity()
+    response = jsonify(message="REFRESHED_SUCCESSFULLY")
+    access_token = create_access_token(user_id)
+    set_access_cookies(response, access_token)
+    return response, 200
+
+
 @user.route("/logout", methods=["DELETE"])
-@jwt_required()
 def logout():
     """Logout endpoint"""
-    revoke_token()
-    return jsonify(message="ACCESS_TOKEN_REVOKED"), 200
+    response = jsonify(message="LOGOUT_SUCCESSFULY")
+    try:
+        verify_jwt_in_request()
+        revoke_token()
+    except (ExpiredSignatureError, NoAuthorizationError):
+        pass
+
+    try:
+        verify_jwt_in_request(refresh=True)
+        revoke_token()
+    except (ExpiredSignatureError, NoAuthorizationError):
+        pass
+
+    unset_jwt_cookies(response)
+    return response, 200
 
 
 @user.route("/infos", methods=["GET"])
@@ -81,13 +119,15 @@ def get_infos():
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_infos_dto = UserInfosDTO(
-            login=user_bo.u_login,
-            student_email=user_bo.u_student_email,
-            firstname=user_bo.u_firstname,
-            lastname=user_bo.u_lastname,
-            gender=user_bo.u_gender,
-            phone_number=user_bo.u_phone_number,
-            description=user_bo.u_description,
+            id=user_id,
+            login=user_bo.login,
+            student_email=user_bo.student_email,
+            firstname=user_bo.firstname,
+            lastname=user_bo.lastname,
+            gender=user_bo.gender,
+            phone_number=user_bo.phone_number,
+            description=user_bo.description,
+            role=user_bo.r_id,
         )
         response = jsonify(user_infos_dto), 200
     except ApiException as e:
@@ -183,7 +223,7 @@ def save_pfp():
     user_id = get_jwt_identity()
     try:
         user_bo = user_service.get_user_by_id(user_id)
-        user_service.save_pfp(user_id, request.files.get("pfp", None), user_bo.u_profile_picture)
+        user_service.save_pfp(user_id, request.files.get("pfp", None), user_bo.profile_picture)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
@@ -234,9 +274,9 @@ def send_email_confirmation():
     user_id = get_jwt_identity()
     try:
         user_bo = user_service.get_user_by_id(user_id)
-        if user_bo.u_email_verified:
+        if user_bo.email_verified:
             raise EmailAlreadyVerifiedException()
-        email.send_verification_email(user_bo.u_student_email, user_bo.u_firstname)
+        email.send_verification_email(user_bo.student_email, user_bo.firstname)
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
@@ -272,6 +312,14 @@ def check_document():
     try:
         data = request.json
         result = documents_service.document_check(data)
+        # Utilisez jsonify pour retourner une réponse JSON
+        user_bo = user_service.get_user_by_id(data["user_id"])
+        email.send_document_validation_email(
+            user_bo.student_email,
+            user_bo.firstname,
+            data["document"]["type"],
+            data["document"]["status"],
+        )
         response = jsonify(result), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
@@ -327,10 +375,10 @@ def get_driver_infos(user_id):
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_infos_dto = DriverInfosDTO(
-            id=user_bo.u_id,
-            firstname=user_bo.u_firstname,
-            lastname=user_bo.u_lastname,
-            description=user_bo.u_description,
+            id=user_bo.id,
+            firstname=user_bo.firstname,
+            lastname=user_bo.lastname,
+            description=user_bo.description,
         )
         response = jsonify(user_infos_dto), 200
     except ApiException as e:

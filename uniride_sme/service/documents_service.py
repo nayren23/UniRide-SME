@@ -1,5 +1,4 @@
 """Documents service module"""
-# Import from internal modules
 from datetime import datetime
 from uniride_sme import app
 from uniride_sme import connect_pg
@@ -341,3 +340,12 @@ def document_user(user_id):
         "user_id": user_id,
         "documents": documents,
     }
+
+
+def count_users():
+    """Get number of users"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_user"
+    result = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+    return result[0][0]

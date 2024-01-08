@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vérifier votre adresse e-mail</title>
+    <title>Votre trajet a été annulé</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -46,14 +46,14 @@
 <body>
     <div class="container">
         <p>Bonjour {firstname},</p>
-        <p>Pour valider votre adresse mail, veuillez cliquer sur le lien de vérification ci-dessous :</p>
 
-        <div style="text-align: center;">
-            <a class="button" href="{url}">Vérifier votre adresse e-mail</a>
-            <p><em style="font-size: 14px;">(Ce lien n'est valable que 10 minutes)</em></p>
+        <p>Nous avons le regret de vous informer que l'un de vos trajets a été annulé. Pour consulter
+            les détails, veuillez cliquer sur le bouton ci-dessous.</p>
+
+        <div style="text-align: center; margin: 20px">
+            <a href="{url}" class="button">Voir plus</a>
         </div>
-
-        <p>Si vous n'avez pas demandé cette vérification, veuillez ignorer ce message.</p>
+        <p>Pour toute question, n'hésitez pas à contacter notre service client.</p>
 
         <p>Cordialement,<br>L'équipe UniRide</p>
     </div>

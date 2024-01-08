@@ -63,7 +63,7 @@ def test_authenticate_success(mock_get_user_by_login, mock_verify_password, logi
 
     # Vérifiez que les mocks ont été appelés
     mock_get_user_by_login.assert_called_once_with(login)
-    mock_verify_password.assert_called_once_with(password, user.u_password)
+    mock_verify_password.assert_called_once_with(password, user.password)
     assert user is not None
 
 

@@ -9,18 +9,20 @@ from uniride_sme import connect_pg
 from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO, AddressSimpleDTO
+from uniride_sme.model.dto.user_dto import PassengerInfosDTO
 from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO
 from uniride_sme.service.car_service import get_car_info_by_user_id
-from uniride_sme.model.dto.address_dto import AddressDTO
-from uniride_sme.model.dto.address_dto import AddressSimpleDTO
-from uniride_sme.model.dto.trip_dto import TripDTO
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
     address_exists,
     check_address_existence,
 )
-from uniride_sme.utils.exception.exceptions import InvalidInputException, MissingInputException
+from uniride_sme.utils.exception.exceptions import (
+    InvalidInputException,
+    MissingInputException,
+    ForbiddenException,
+)
 from uniride_sme.utils.exception.address_exceptions import InvalidIntermediateAddressException
 from uniride_sme.utils.exception.trip_exceptions import (
     TripAlreadyExistsException,
@@ -28,6 +30,7 @@ from uniride_sme.utils.exception.trip_exceptions import (
 )
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.maths_formulas import haversine
+from uniride_sme.utils.file import get_encoded_file
 
 
 def add_trip(trip: TripBO):
@@ -37,8 +40,8 @@ def add_trip(trip: TripBO):
     trip_exists(trip)
     check_address_existence(trip.departure_address)
     check_address_existence(trip.arrival_address)
-    calculate_price(trip)
-
+    # calculate_price(trip)
+    trip.price = 0.0
     # validate values
     # validate_total_passenger_count(trip.total_passenger_count, trip.user_id)
     validate_total_passenger_count(trip.total_passenger_count)
@@ -557,7 +560,7 @@ def get_trip_by_id(trip_id):
     trip_bo = format_trip(trip)
     origin = (trip_bo.departure_address.latitude, trip_bo.departure_address.longitude)
     destination = (trip_bo.arrival_address.latitude, trip_bo.arrival_address.longitude)
-    duration = trip_bo.route_checker.get_duration(origin, destination)
+    duration = trip_bo.route_checker.get_duration(origin, destination, trip_bo.timestamp_proposed)
     arrival_date = trip_bo.timestamp_proposed + timedelta(seconds=duration)
     address_dtos = {
         "departure": AddressDTO(
@@ -595,6 +598,67 @@ def count_trip():
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
     return result[0][0]
+
+
+def _validate_trip_id(trip_id):
+    """Validate the trip id"""
+    conn = connect_pg.connect()
+
+    query = """
+    SELECT 
+        t_user_id
+    FROM 
+        uniride.ur_trip 
+    WHERE 
+        t_id = %s
+    """
+    driver_id = connect_pg.get_query(conn, query, (trip_id,))
+    connect_pg.disconnect(conn)
+
+    if not driver_id:
+        raise TripNotFoundException()
+
+    return driver_id[0][0]
+
+
+def _verify_user_id(user_id, driver_id, passengers):
+    """Verify the user id"""
+    user_ids = [passenger["u_id"] for passenger in passengers]
+    user_ids.append(driver_id)
+    if user_id not in user_ids:
+        raise ForbiddenException("ONLY_DRIVER_AND_PASSENGERS_ALLOWED")
+
+
+def get_passengers(trip_id, user_id):
+    """Get passengers"""
+    driver_id = _validate_trip_id(trip_id)
+
+    conn = connect_pg.connect()
+    query = """
+    SELECT 
+        u_id, 
+        u_firstname, 
+        u_lastname, 
+        u_profile_picture 
+    FROM 
+        uniride.ur_user 
+    WHERE 
+        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND r_accepted = 1)
+    """
+    passengers = connect_pg.get_query(conn, query, (trip_id,), True)
+    connect_pg.disconnect(conn)
+    _verify_user_id(user_id, driver_id, passengers)
+    passenger_dtos = []
+    for passenger in passengers:
+        passenger_dtos.append(
+            PassengerInfosDTO(
+                id=passenger["u_id"],
+                firstname=passenger["u_firstname"],
+                lastname=passenger["u_lastname"],
+                profile_picture=get_encoded_file(passenger["u_profile_picture"]),
+            )
+        )
+    return passenger_dtos
 
 
 def trips_status(status):

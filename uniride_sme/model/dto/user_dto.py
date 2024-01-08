@@ -5,6 +5,7 @@ from typing import TypedDict
 class UserInfosDTO(TypedDict):
     """DTO for user's informations"""
 
+    id: int
     login: str
     student_email: str
     firstname: str
@@ -12,6 +13,7 @@ class UserInfosDTO(TypedDict):
     gender: str
     phone_number: str
     description: str
+    role: int
 
 
 class UserShortDTO(TypedDict):
@@ -30,6 +32,15 @@ class DriverInfosDTO(TypedDict):
     firstname: str
     lastname: str
     description: str
+
+
+class PassengerInfosDTO(TypedDict):
+    """DTO for driver's informations"""
+
+    id: int
+    firstname: str
+    lastname: str
+    profile_picture: str
 
 
 class InformationsVerifiedDTO(TypedDict):

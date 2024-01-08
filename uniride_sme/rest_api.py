@@ -3,22 +3,15 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+from datetime import datetime, timedelta
 from flask import jsonify
+from flask_jwt_extended import get_jwt, get_jwt_identity, create_access_token, set_access_cookies, verify_jwt_in_request
 from uniride_sme import app
 from uniride_sme.route.user_route import user
 from uniride_sme.route.trip_route import trip
 from uniride_sme.route.address_route import address
 from uniride_sme.route.car_route import car
 from uniride_sme.route.book_route import book
-
-
-@app.after_request
-def after_request(response):
-    """Add Headers to response"""
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE")
-    return response
 
 
 @app.after_request
@@ -35,6 +28,21 @@ def reformat_jwt_response(response):
         del response_json["msg"]
         response.data = json.dumps(response_json)
     return response
+
+
+@app.after_request
+def refresh_expiring_jwts(response):
+    """Refresh the jwt token"""
+    try:
+        exp_timestamp = get_jwt()["exp"]
+        now = datetime.now()
+        target_timestamp = datetime.timestamp(now + app.config["JWT_ACCESS_TOKEN_REFRESH"])
+        if target_timestamp > exp_timestamp:
+            access_token = create_access_token(identity=get_jwt_identity())
+            set_access_cookies(response, access_token)
+        return response
+    except (RuntimeError, KeyError):
+        return response
 
 
 @app.errorhandler(413)

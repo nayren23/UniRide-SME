@@ -55,12 +55,9 @@ def get_car_information():
     """Get information about the user's car endpoint"""
     try:
         user_id = get_jwt_identity()
-        car_info = get_car_info_by_user_id(user_id)
-        if car_info:
-            available_car = format_get_information_car(car_info)
-            response = jsonify(available_car), 200
-        else:
-            response = jsonify({"message": "CAR_NOT_FOUND"}), 404
+        car_info = get_car_info_by_user_id(user_id)   
+        available_car = format_get_information_car(car_info)
+        response = jsonify(available_car), 200
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
     return response
@@ -82,41 +79,20 @@ def update_car_information():
         # Récupérer l'objet CarBO existant depuis la base de données
         existing_car_data_list = get_car_info_by_user_id(user_id)
 
-        if existing_car_data_list:
-            existing_car_data = existing_car_data_list[0]
-            existing_car_model = existing_car_data.get("v_model", "").strip()
-            existing_car_license_plate = existing_car_data.get("v_license_plate", "").strip()
-            existing_car_country_license_plate = existing_car_data.get("v_country_license_plate", "").strip()
-            existing_car_color = existing_car_data.get("v_color", "").strip()
-            existing_car_brand = existing_car_data.get("v_brand", "").strip()
-            existing_car_total_places = existing_car_data.get("v_total_places", "")
 
-            # Créez un nouvel objet CarBO avec les informations existantes
-            existing_car = CarBO(
-                model=existing_car_model,
-                license_plate=existing_car_license_plate,
-                country_license_plate=existing_car_country_license_plate,
-                color=existing_car_color,
-                brand=existing_car_brand,
-                user_id=existing_car_data.get("u_id"),
-                total_places=existing_car_total_places,
-            )
+        # Mettre à jour les propriétés modifiables
+        existing_car_data_list.model = json_object.get("model", existing_car_data_list.model).strip()
+        existing_car_data_list.license_plate = json_object.get("license_plate", existing_car_data_list.license_plate).strip()
+        existing_car_data_list.country_license_plate = json_object.get(
+            "country_license_plate", existing_car_data_list.country_license_plate
+        ).strip()
+        existing_car_data_list.color = json_object.get("color", existing_car_data_list.color).strip()
+        existing_car_data_list.brand = json_object.get("brand", existing_car_data_list.brand).strip()
+        existing_car_data_list.total_places = json_object.get("total_places", existing_car_data_list.total_places)
+        # Mettre à jour la base de données
+        update_car_information_in_db(existing_car_data_list)
 
-            # Mettre à jour les propriétés modifiables
-            existing_car.model = json_object.get("model", existing_car.model).strip()
-            existing_car.license_plate = json_object.get("license_plate", existing_car.license_plate).strip()
-            existing_car.country_license_plate = json_object.get(
-                "country_license_plate", existing_car.country_license_plate
-            ).strip()
-            existing_car.color = json_object.get("color", existing_car.color).strip()
-            existing_car.brand = json_object.get("brand", existing_car.brand).strip()
-            existing_car.total_places = json_object.get("total_places", existing_car.total_places)
-            # Mettre à jour la base de données
-            update_car_information_in_db(existing_car)
-
-            response = jsonify({"message": "CAR_UPDATED_SUCCESSFULLY"}), 200
-        else:
-            response = jsonify({"message": "CAR_NOT_FOUND"}), 404
+        response = jsonify({"message": "CAR_UPDATED_SUCCESSFULLY"}), 200
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
     return response
