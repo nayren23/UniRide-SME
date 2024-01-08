@@ -6,7 +6,6 @@ from uniride_sme.model.bo.documents_bo import DocumentsBO
 from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException
-from uniride_sme.model.dto.document_dto import UserDocumentsInfosDTO
 from uniride_sme.utils.file import get_encoded_file
 
 
@@ -26,25 +25,6 @@ def get_documents_by_user_id(user_id):
     documents = documents[0]
     document_bo = DocumentsBO(**documents)
     return document_bo
-
-def format_user_documents_infos(document_bo,user_id):
-    """Format the user documents infos to return""" 
-    user_documents_infos_dto = UserDocumentsInfosDTO(
-        id_user=user_id,
-        license=document_bo.d_license,
-        id_card=document_bo.d_id_card,
-        school_certificate=document_bo.d_school_certificate,
-        insurance=document_bo.d_insurance,
-        license_verified=document_bo.v_license_verified,
-        id_card_verified=document_bo.v_id_card_verified,
-        insurance_verified=document_bo.v_insurance_verified,
-        school_certificate_verified=document_bo.v_school_certificate_verified,
-        id_card_description=document_bo.v_card_description,
-        license_description=document_bo.v_license_description,
-        insurance_description=document_bo.v_insurance_description,
-        school_certificate_description=document_bo.v_school_certificate_description,
-    )
-    return user_documents_infos_dto
 
 def add_documents(user_id, files):
     """Insert documents in the database"""

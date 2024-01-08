@@ -227,6 +227,17 @@ def save_pfp():
 
     return response
 
+@user.route("documents/infos", methods=["GET"])
+@jwt_required()
+def get_user_documents_infos():
+    """Get user infos endpoint"""
+    user_id = get_jwt_identity()
+    try:
+        doc_bo_list = documents_service.document_user(user_id)
+        response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", **doc_bo_list}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
 
 def save_document(document_type):
     """Generalized endpoint for saving a user document."""
@@ -240,20 +251,6 @@ def save_document(document_type):
         )
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
-    return response
-
-@user.route("documents/infos", methods=["GET"])
-@jwt_required()
-def get_user_documents_infos():
-    """Get user infos endpoint"""
-    user_id = get_jwt_identity()
-    try:
-        documents_bo = documents_service.get_documents_by_user_id(user_id)
-        user_documents_infos_dto = documents_service.format_user_documents_infos(documents_bo, user_id)
-        response = jsonify(user_documents_infos_dto), 200
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
     return response
 
 @user.route("/save/license", methods=["POST"])
@@ -276,6 +273,11 @@ def save_school_certificate():
     """Save profile school certificate endpoint."""
     return save_document("school_certificate")
 
+@user.route("/save/insurance", methods=["POST"])
+@jwt_required()
+def insurance():
+    """Save profile insurance endpoint."""
+    return save_document("insurance")
 
 @user.route("/email-confirmation", methods=["GET"])
 @jwt_required()
