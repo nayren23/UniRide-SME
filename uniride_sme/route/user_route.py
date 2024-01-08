@@ -94,17 +94,17 @@ def refresh():
 def logout():
     """Logout endpoint"""
     response = jsonify(message="LOGOUT_SUCCESSFULY")
-    try:
-        verify_jwt_in_request()
-        revoke_token()
-    except (ExpiredSignatureError, NoAuthorizationError):
-        pass
+    # try:
+    #     verify_jwt_in_request()
+    #     revoke_token()
+    # except (ExpiredSignatureError, NoAuthorizationError):
+    #     pass
 
-    try:
-        verify_jwt_in_request(refresh=True)
-        revoke_token()
-    except (ExpiredSignatureError, NoAuthorizationError):
-        pass
+    # try:
+    #     verify_jwt_in_request(refresh=True)
+    #     revoke_token()
+    # except (ExpiredSignatureError, NoAuthorizationError):
+    #     pass
 
     unset_jwt_cookies(response)
     return response, 200
