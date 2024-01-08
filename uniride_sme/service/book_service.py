@@ -164,7 +164,7 @@ def get_bookings(user_id):
             id=booking["u_id"],
             firstname=booking["u_firstname"],
             lastname=booking["u_lastname"],
-            profile_picture=get_encoded_file(booking["u_profile_picture"]),
+            profile_picture=get_encoded_file(booking["u_profile_picture"], "PFP_UPLOAD_FOLDER"),
         )
         departure_address = AddressBO(
             id=booking["departure_a_id"],
