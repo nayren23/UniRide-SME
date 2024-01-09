@@ -585,3 +585,73 @@ def user_stat_driver(id_user):
     }
 
     return result
+
+
+def get_rating_criteria():
+    """Get users notes """
+    conn = connect_pg.connect()
+    result = []
+
+    try:
+        query = """
+            SELECT rc_id, rc_name, rc_description
+            FROM uniride.ur_rating_criteria
+        """
+        document = connect_pg.get_query(conn, query)
+
+        for documents in document:
+            request_data = {
+                "id_criteria": documents[0],
+                "name": documents[1],
+                "description": documents[2],
+            }
+
+            result.append(request_data)
+    finally:
+        connect_pg.disconnect(conn)
+
+    return result
+
+
+def insert_rating_criteria(data):
+    """Insert new rating criteria"""
+    conn = connect_pg.connect()
+    try:
+        query = """
+           INSERT INTO uniride.ur_rating_criteria (rc_name, rc_description)
+           VALUES (%s, %s)
+           RETURNING rc_id
+        """
+        result = connect_pg.execute_command(conn, query, (data['name'], data['description']))
+    finally:
+        connect_pg.disconnect(conn)
+    return result
+
+def delete_rating_criteria(id_criteria):
+    """Delete rating criteria"""
+    conn = connect_pg.connect()
+    try:
+        query = """
+           DELETE FROM uniride.ur_rating_criteria WHERE rc_id = %s
+        """
+        connect_pg.execute_command(conn, query, (id_criteria,))
+    finally:
+        connect_pg.disconnect(conn)
+    return id_criteria
+
+
+def update_rating_criteria(data):
+    """Update users notes """
+    conn = connect_pg.connect()
+
+    try:
+        query = """
+           UPDATE uniride.ur_rating_criteria
+           SET rc_name = %s, rc_description = %s
+           WHERE rc_id = %s
+        """
+        connect_pg.execute_command(conn, query, (data['name'], data['description'], data['id_criteria']))
+
+    finally:
+        connect_pg.disconnect(conn)
+    return {"message": "Rating criteria updated successfully"}

@@ -474,3 +474,50 @@ def user_stat_id(user_id):
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+
+@user.route("/label", methods=["GET"])
+def get_rating_criteria():
+    """Get rating criteria"""
+    try:
+        user_information = user_service.get_rating_criteria()
+        response_data = {"labels": [{"label": user_information}]}
+        return jsonify({"message": "USER_INFORMATIONS_DISPLAYED_SUCCESSFULLY", **response_data}), 200
+    except ApiException as e:
+        return jsonify(message=e.message), e.status_code
+
+@user.route("/insert_label", methods=["POST"])
+def insert_label():
+    """Insert rating criteria"""
+    data = request.get_json()
+    try:
+        user_information = user_service.insert_rating_criteria(data)
+        response = jsonify({"message": "RATING_CRITERIA_INSERTED_SUCCESSFULLY", "user_information": user_information}), 201
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@user.route("/delete_label/<id_criteria>", methods=["DELETE"])
+def delete_label(id_criteria):
+    """Delete rating criteria"""
+    try:
+        user_information = user_service.delete_rating_criteria(id_criteria)
+        return jsonify({"message": "RATING_CRITERIA_DELETED_SUCCESSFULLY", "id_criteria": user_information}), 200
+    except ApiException as e:
+        return jsonify(message=e.message), e.status_code
+
+
+@user.route("/update_label", methods=["PUT"])
+def update_label():
+    """Update rating criteria"""
+    data = request.get_json()
+
+    try:
+        user_information = user_service.update_rating_criteria(data)
+        response = jsonify({"message": "RATING_CRITERIA_UPDATED_SUCCESSFULLY", "user_information": user_information}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
