@@ -8,7 +8,7 @@ class DocumentsBO:  # pylint: disable=too-many-instance-attributes
     """Documents business owner class"""
 
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals
-       self,
+        self,
         u_id: int,
         d_id: int,
         d_license: str,

@@ -11,6 +11,7 @@ from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.pagination import create_pagination
+from uniride_sme.service import trip_service
 from uniride_sme.service.trip_service import (
     add_trip,
     get_driver_trips,
@@ -142,7 +143,6 @@ def get_trip(trip_id):
 def trip_count():
     """Trip count"""
     try:
-
         trip_count_status = TripStatusDTO(
             trip_pending=trips_status(1),
             trip_canceled=trips_status(2),
@@ -161,8 +161,47 @@ def passengers(trip_id: int):
     """Get trip passengers endpoint"""
     try:
         user_id = get_jwt_identity()
-        passengers = get_passengers(trip_id, user_id)
-        response = jsonify(passengers), 200
+        passengers_list = get_passengers(trip_id, user_id)
+        response = jsonify(passengers_list), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@trip.route("/<trip_id>/start", methods=["PUT"])
+@jwt_required()
+def start_trip(trip_id: int):
+    """Get trip passengers endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        trip_service.start_trip(trip_id, user_id)
+        response = jsonify(message="TRIP_STARTED_SUCCESSFULLY"), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@trip.route("/<trip_id>/end", methods=["PUT"])
+@jwt_required()
+def end_trip(trip_id: int):
+    """Get trip passengers endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        trip_service.end_trip(trip_id, user_id)
+        response = jsonify(message="TRIP_ENDED_SUCCESSFULLY"), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@trip.route("/<trip_id>/cancel", methods=["PUT"])
+@jwt_required()
+def cancel_trip(trip_id: int):
+    """Get trip passengers endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        trip_service.cancel_trip(trip_id, user_id)
+        response = jsonify(message="TRIP_CANCELED_SUCCESSFULLY"), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

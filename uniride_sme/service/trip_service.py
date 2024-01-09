@@ -643,7 +643,7 @@ def get_passengers(trip_id, user_id):
     FROM 
         uniride.ur_user 
     WHERE 
-        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND j_accepted = 1)
+        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND r_accepted = 1)
     """
     passengers = connect_pg.get_query(conn, query, (trip_id,), True)
     connect_pg.disconnect(conn)
@@ -668,3 +668,68 @@ def trips_status(status):
     result = connect_pg.get_query(conn, query, (status,))
     connect_pg.disconnect(conn)
     return result[0][0]
+
+
+def _validate_driver_id(driver_id, user_id):
+    if not user_id:
+        raise MissingInputException("USER_ID_MISSING")
+
+    if driver_id != user_id:
+        raise ForbiddenException("ONLY_DRIVER_ALLOWED")
+
+
+def _validate_start_time(departure_date):
+    date_format = "%Y-%m-%d %H:%M:%S"
+
+    departure_date = datetime.strptime(departure_date, date_format)
+    print(departure_date)
+    if departure_date - timedelta(minutes=15) > datetime.now():
+        raise ForbiddenException("TOO_EARLY_TO_START_TRIP")
+
+    if departure_date + timedelta(minutes=15) < datetime.now():
+        raise ForbiddenException("TOO_LATE_TO_START_TRIP")
+
+
+def start_trip(trip_id, user_id):
+    """Start the trip"""
+    trip = get_trip_by_id(trip_id)
+    _validate_driver_id(trip["driver_id"], user_id)
+    _validate_start_time(trip["departure_date"])
+
+    status = TripStatus.ONCOURSE.value
+    if trip["status"] != TripStatus.PENDING.value:
+        raise ForbiddenException("TRIP_NOT_PENDING")
+
+    change_trip_status(trip_id, status)
+
+
+def end_trip(trip_id, user_id):
+    """Start the trip"""
+    trip = get_trip_by_id(trip_id)
+    _validate_driver_id(trip["driver_id"], user_id)
+
+    status = TripStatus.COMPLETED.value
+    if trip["status"] != TripStatus.ONCOURSE.value:
+        raise ForbiddenException("TRIP_NOT_STARTED")
+
+    change_trip_status(trip_id, status)
+
+
+def cancel_trip(trip_id, user_id):
+    """Start the trip"""
+    trip = get_trip_by_id(trip_id)
+    _validate_driver_id(trip["driver_id"], user_id)
+
+    status = TripStatus.CANCELED.value
+    if trip["status"] != TripStatus.PENDING.value:
+        raise ForbiddenException("TRIP_NOT_PENDING")
+
+    change_trip_status(trip_id, status)
+
+
+def change_trip_status(trip_id, status):
+    """Change the trip status"""
+    conn = connect_pg.connect()
+    query = "UPDATE uniride.ur_trip SET t_status = %s WHERE t_id = %s"
+    connect_pg.execute_command(conn, query, (status, trip_id))
+    connect_pg.disconnect(conn)

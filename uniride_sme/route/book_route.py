@@ -35,7 +35,7 @@ def book_trip():
     return response
 
 
-@book.route("/respond", methods=["POST"])
+@book.route("/respond", methods=["PUT"])
 @jwt_required()
 def respond_booking():
     """Respond to a booking request endpoint"""
@@ -70,6 +70,36 @@ def get_bookings():
         user_id = get_jwt_identity()
         bookings = book_service.get_bookings(user_id)
         response = jsonify(bookings=bookings), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@book.route("/join", methods=["PUT"])
+@jwt_required()
+def join_booking():
+    """Join a booking request endpoint"""
+
+    response = jsonify({"message": "BOOKING_JOIN_SUCCESSFULLY"}), 200
+    try:
+        user_id = get_jwt_identity()
+        json_object = request.json
+
+        validate_fields(
+            json_object,
+            {
+                "trip_id": int,
+                "booker_id": int,
+                "verification_code": int,
+            },
+        )
+        book_service.join(
+            json_object["trip_id"],
+            user_id,
+            json_object["booker_id"],
+            json_object["verification_code"],
+        )
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 

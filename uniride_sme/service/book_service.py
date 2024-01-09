@@ -214,3 +214,35 @@ def get_bookings(user_id):
             )
         )
     return bookings
+
+
+def _validate_trip_started(trip):
+    if trip["status"] != 4:
+        raise ForbiddenException("TRIP_NOT_STARTED")
+
+
+def _validate_booking(booking, verification_code):
+    if not booking:
+        raise BookingNotFoundException()
+
+    if booking["j_accepted"] != 1:
+        raise ForbiddenException("BOOKING_NOT_ACCEPTED")
+
+    if booking["j_verification_code"] != verification_code:
+        raise ForbiddenException("INVALID_VERIFICATION_CODE")
+
+
+def join(trip_id, driver_id, booker_id, verification_code):
+    """Respond to a booking request"""
+    trip = trip_service.get_trip_by_id(trip_id)
+    _validate_trip_started(trip)
+    _validate_driver_id(trip, driver_id)
+
+    booking = get_booking_by_id(trip_id, booker_id)
+    _validate_booking(booking, verification_code)
+
+    conn = connect_pg.connect()
+    query = "UPDATE uniride.ur_join SET j_joined = true WHERE t_id = %s AND u_id = %s"
+    values = (trip_id, booker_id)
+    connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
