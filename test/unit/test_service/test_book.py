@@ -18,7 +18,6 @@ from uniride_sme.service.book_service import (
 from uniride_sme.model.dto.trip_dto import TripDetailedDTO, TripShortDTO
 from uniride_sme.model.dto.user_dto import UserShortDTO
 from uniride_sme.model.dto.book_dto import BookDTO
-from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.utils.exception.exceptions import (
     MissingInputException,
     InvalidInputException,

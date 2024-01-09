@@ -1,4 +1,6 @@
 """Book service module"""
+import random
+from datetime import datetime
 import psycopg2
 
 from uniride_sme import connect_pg
@@ -39,13 +41,18 @@ def _validate_user_id(trip, user_id):
         raise ForbiddenException("DRIVER_CANNOT_BOOK_HIS_OWN_TRIP")
 
 
+def _validate_trip_availability(trip):
+    if trip["status"] != 1 or trip["t_timestamp_proposed"] < datetime.now():
+        raise ForbiddenException("TRIP_NOT_AVAILABLE")
+
+
 def book_trip(trip_id, user_id, passenger_count):
     """Book a trip"""
     trip = trip_service.get_trip_by_id(trip_id)
+    _validate_trip_availability(trip)
 
     _validate_user_id(trip, user_id)
     _validate_passenger_count(trip, passenger_count)
-
     query = "INSERT INTO uniride.ur_join(u_id, t_id, j_passenger_count) VALUES (%s, %s, %s);"
     values = (user_id, trip_id, passenger_count)
     try:
@@ -105,10 +112,17 @@ def respond_booking(trip_id, driver_id, booker_id, response):
 
     booking = get_booking_by_id(trip_id, booker_id)
     _validate_booking_status(booking["j_accepted"])
-    _validate_passenger_count(trip, booking["j_passenger_count"])
 
-    query = "UPDATE uniride.ur_join SET j_accepted = %s WHERE t_id = %s AND u_id = %s"
-    values = (response, trip_id, booker_id)
+    query = "UPDATE uniride.ur_join SET"
+
+    if response == -1:
+        _validate_passenger_count(trip, booking["j_passenger_count"])
+    else:
+        query += " j_verification_code = %s,"
+        values = (random.randint(1000, 9999),)
+
+    query += " j_accepted = %s WHERE t_id = %s AND u_id = %s"
+    values += (response, trip_id, booker_id)
 
     conn = connect_pg.connect()
     connect_pg.execute_command(conn, query, values)
