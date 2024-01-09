@@ -46,7 +46,7 @@ def book_trip(trip_id, user_id, passenger_count):
     _validate_user_id(trip, user_id)
     _validate_passenger_count(trip, passenger_count)
 
-    query = "INSERT INTO uniride.ur_join(u_id, t_id, r_passenger_count) VALUES (%s, %s, %s);"
+    query = "INSERT INTO uniride.ur_join(u_id, t_id, j_passenger_count) VALUES (%s, %s, %s);"
     values = (user_id, trip_id, passenger_count)
     try:
         conn = connect_pg.connect()
@@ -107,7 +107,7 @@ def respond_booking(trip_id, driver_id, booker_id, response):
     _validate_booking_status(booking["r_accepted"])
     _validate_passenger_count(trip, booking["r_passenger_count"])
 
-    query = "UPDATE uniride.ur_join SET r_accepted = %s WHERE t_id = %s AND u_id = %s"
+    query = "UPDATE uniride.ur_join SET j_accepted = %s WHERE t_id = %s AND u_id = %s"
     values = (response, trip_id, booker_id)
     conn = connect_pg.connect()
     connect_pg.execute_command(conn, query, values)
