@@ -553,7 +553,7 @@ def get_trip_by_id(trip_id):
         raise TripNotFoundException()
     trip = trip[0]
 
-    query = "SELECT SUM(r_passenger_count) FROM uniride.ur_join WHERE t_id = %s and r_accepted = 1"
+    query = "SELECT SUM(r_passenger_count) FROM uniride.ur_join WHERE t_id = %s and j_accepted = 1"
     passenger_count = connect_pg.get_query(conn, query, (trip_id,))[0][0]
     connect_pg.disconnect(conn)
     trip["passenger_count"] = passenger_count if passenger_count else 0
@@ -643,7 +643,7 @@ def get_passengers(trip_id, user_id):
     FROM 
         uniride.ur_user 
     WHERE 
-        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND r_accepted = 1)
+        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND j_accepted = 1)
     """
     passengers = connect_pg.get_query(conn, query, (trip_id,), True)
     connect_pg.disconnect(conn)
@@ -655,7 +655,7 @@ def get_passengers(trip_id, user_id):
                 id=passenger["u_id"],
                 firstname=passenger["u_firstname"],
                 lastname=passenger["u_lastname"],
-                profile_picture=get_encoded_file(passenger["u_profile_picture"]),
+                profile_picture=get_encoded_file(passenger["u_profile_picture"], app.config["PFP_UPLOAD_FOLDER"]),
             )
         )
     return passenger_dtos

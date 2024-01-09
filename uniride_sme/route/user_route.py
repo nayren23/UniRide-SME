@@ -66,7 +66,7 @@ def authenticate():
         )
 
         response = make_response(
-            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto)
+            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto, u_id=user_bo.id)
         )
         access_token = create_access_token(user_bo.id)
         set_access_cookies(response, access_token)
@@ -136,6 +136,18 @@ def get_infos():
 
     return response
 
+@user.route("/role", methods=["GET"])
+@jwt_required()
+def get_user_id():
+    """Get user ID and his role ID"""
+    user_id = get_jwt_identity()
+    try:
+        user_role = user_service.get_user_role(user_id)
+        response = jsonify(user_role), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+        
+    return response
 
 @user.route("/change/password", methods=["POST"])
 @jwt_required()
