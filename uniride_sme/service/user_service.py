@@ -1,6 +1,5 @@
 """User service module"""
 import re
-import os
 import bcrypt
 from uniride_sme.utils.file import get_encoded_file
 from uniride_sme import app
@@ -10,11 +9,13 @@ from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
     MissingInputException,
+    
 )
 from uniride_sme.utils.exception.user_exceptions import (
     UserNotFoundException,
     PasswordIncorrectException,
     AttributeUnchangedException,
+    RatingNotFoundException,
 )
 
 
@@ -586,6 +587,18 @@ def user_stat_driver(id_user):
 
     return result
 
+def verify_rating_criteria(id_criteria):
+    """Verify criteria"""
+    conn = connect_pg.connect()
+    check_query = "SELECT * FROM uniride.ur_rating_criteria WHERE rc_id = %s"
+    check_values = (id_criteria,)
+    result = connect_pg.get_query(conn, check_query, check_values)
+
+    if not result:
+        connect_pg.disconnect(conn)
+        raise RatingNotFoundException()
+    connect_pg.disconnect(conn)
+
 
 def get_rating_criteria():
     """Get rating criteria from the database"""
@@ -603,7 +616,7 @@ def get_rating_criteria():
         for document in documents:
             label_data = {
                 "label": {
-                    "id": document[0],
+                    "id_criteria": document[0],
                     "name": document[1],
                     "description": document[2],
                 }
@@ -635,6 +648,7 @@ def insert_rating_criteria(data):
 def delete_rating_criteria(id_criteria):
     """Delete rating criteria"""
     conn = connect_pg.connect()
+    verify_rating_criteria(id_criteria)
     try:
         query = """
            DELETE FROM uniride.ur_rating_criteria WHERE rc_id = %s
@@ -646,7 +660,7 @@ def delete_rating_criteria(id_criteria):
 
 
 def update_rating_criteria(data):
-    """Update users notes """
+    """Update rating criteria"""
     conn = connect_pg.connect()
 
     try:
@@ -655,6 +669,8 @@ def update_rating_criteria(data):
            SET rc_name = %s, rc_description = %s
            WHERE rc_id = %s
         """
+
+        verify_rating_criteria(data['id_criteria'])
         connect_pg.execute_command(conn, query, (data['name'], data['description'], data['id_criteria']))
 
     finally:

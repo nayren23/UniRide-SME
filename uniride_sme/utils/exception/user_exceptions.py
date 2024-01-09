@@ -29,3 +29,10 @@ class AttributeUnchangedException(ApiException):
 
     def __init__(self, message):
         super().__init__(message + "_NEW_OLD_SAME", 422)
+
+
+class RatingNotFoundException(ApiException):
+    """Exception for when the rating isn't found"""
+
+    def __init__(self):
+        super().__init__("RATING_NOT_FOUND", 422)
