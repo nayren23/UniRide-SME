@@ -553,7 +553,7 @@ def get_trip_by_id(trip_id):
         raise TripNotFoundException()
     trip = trip[0]
 
-    query = "SELECT SUM(r_passenger_count) FROM uniride.ur_join WHERE t_id = %s and j_accepted = 1"
+    query = "SELECT SUM(j_passenger_count) FROM uniride.ur_join WHERE t_id = %s and j_accepted = 1"
     passenger_count = connect_pg.get_query(conn, query, (trip_id,))[0][0]
     connect_pg.disconnect(conn)
     trip["passenger_count"] = passenger_count if passenger_count else 0
