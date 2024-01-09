@@ -18,6 +18,7 @@ from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
+from uniride_sme.utils.file import get_encoded_file
 from uniride_sme.utils.jwt_token import revoke_token
 
 user = Blueprint("user", __name__, url_prefix="/user")
@@ -127,6 +128,7 @@ def get_infos():
             phone_number=user_bo.phone_number,
             description=user_bo.description,
             role=user_bo.r_id,
+            profile_picture=get_encoded_file(user_bo.profile_picture,'PFP_UPLOAD_FOLDER')
         )
         response = jsonify(user_infos_dto), 200
     except ApiException as e:
