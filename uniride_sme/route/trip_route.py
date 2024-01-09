@@ -20,6 +20,7 @@ from uniride_sme.service.trip_service import (
     count_trip,
     get_passengers,
     trips_status,
+    passenger_current_trips
 )
 
 trip = Blueprint("trip", __name__, url_prefix="/trip")
@@ -163,6 +164,18 @@ def passengers(trip_id: int):
         user_id = get_jwt_identity()
         passengers = get_passengers(trip_id, user_id)
         response = jsonify(passengers), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+@trip.route("/passenger/current", methods=["GET"])
+@jwt_required()
+def passenger_current_trip():
+    """Get passenger current trip endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        passenger_current_trips_result = passenger_current_trips(user_id)
+        response = jsonify(passenger_current_trips_result), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

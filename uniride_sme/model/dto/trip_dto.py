@@ -43,3 +43,15 @@ class TripStatusDTO(TypedDict):
     trip_canceled: int
     trip_completed: int
     trip_oncourse: int
+
+class PassengerTripDTO(TypedDict):
+    """Passenger Trip DTO (Data Transfer Object)"""
+
+    trip_id: int
+    departure_address: str
+    arrival_address: str
+    proposed_date: str
+    status: int
+    book_status: int
+    
+  
