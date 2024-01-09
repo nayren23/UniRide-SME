@@ -30,6 +30,29 @@ def authenticate(login, password) -> UserBO:
     _verify_password(password, user_bo.password)
     return user_bo
 
+def get_user_role(user_id):
+    with connect_pg.connect() as conn:
+        verify_user(user_id)
+
+        query = """
+        SELECT r_id, u_id
+        FROM uniride.ur_user
+        WHERE u_id = %s
+        """
+        
+        r_id = connect_pg.get_query(conn, query, (user_id,))
+        
+    
+    if not r_id:
+        raise UserNotFoundException
+    
+    document = r_id[0]
+    
+    return {
+        "role": document[0],
+        "id": user_id
+    }
+    
 
 def get_user_by_id(user_id) -> UserBO:
     """Get user infos from db using the id"""
