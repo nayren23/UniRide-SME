@@ -515,8 +515,8 @@ def update_label():
     data = request.get_json()
 
     try:
-        user_information = user_service.update_rating_criteria(data)
-        response = jsonify({"message": "RATING_CRITERIA_UPDATED_SUCCESSFULLY", "user_information": user_information}), 200
+        user_service.update_rating_criteria(data)
+        response = jsonify({"message": "RATING_CRITERIA_UPDATED_SUCCESSFULLY"}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
