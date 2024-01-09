@@ -588,29 +588,34 @@ def user_stat_driver(id_user):
 
 
 def get_rating_criteria():
-    """Get users notes """
+    """Get rating criteria from the database"""
     conn = connect_pg.connect()
-    result = []
 
     try:
         query = """
             SELECT rc_id, rc_name, rc_description
             FROM uniride.ur_rating_criteria
         """
-        document = connect_pg.get_query(conn, query)
+        documents = connect_pg.get_query(conn, query)
 
-        for documents in document:
-            request_data = {
-                "id_criteria": documents[0],
-                "name": documents[1],
-                "description": documents[2],
+        labels = []
+
+        for document in documents:
+            label_data = {
+                "label": {
+                    "id": document[0],
+                    "name": document[1],
+                    "description": document[2],
+                }
             }
+            labels.append(label_data)
 
-            result.append(request_data)
     finally:
         connect_pg.disconnect(conn)
 
-    return result
+    return labels
+
+
 
 
 def insert_rating_criteria(data):
@@ -654,4 +659,5 @@ def update_rating_criteria(data):
 
     finally:
         connect_pg.disconnect(conn)
+
     return {"message": "Rating criteria updated successfully"}
