@@ -104,11 +104,12 @@ def respond_booking(trip_id, driver_id, booker_id, response):
     _validate_driver_id(trip, driver_id)
 
     booking = get_booking_by_id(trip_id, booker_id)
-    _validate_booking_status(booking["r_accepted"])
-    _validate_passenger_count(trip, booking["r_passenger_count"])
+    _validate_booking_status(booking["j_accepted"])
+    _validate_passenger_count(trip, booking["j_passenger_count"])
 
     query = "UPDATE uniride.ur_join SET j_accepted = %s WHERE t_id = %s AND u_id = %s"
     values = (response, trip_id, booker_id)
+
     conn = connect_pg.connect()
     connect_pg.execute_command(conn, query, values)
     connect_pg.disconnect(conn)
@@ -121,9 +122,9 @@ def get_bookings(user_id):
 
     query = """
         SELECT 
-            j.r_accepted, 
-            j.r_passenger_count, 
-            j.r_date_requested,
+            j.j_accepted, 
+            j.j_passenger_count, 
+            j.j_date_requested,
             t.t_id,
             t.t_timestamp_proposed,
             departure.a_id AS departure_a_id,
@@ -193,10 +194,9 @@ def get_bookings(user_id):
             BookDTO(
                 user=user,
                 trip=trip,
-                accepted=booking["r_accepted"],
-                passenger_count=booking["r_passenger_count"],
-                date_requested=booking["r_date_requested"],
+                accepted=booking["j_accepted"],
+                passenger_count=booking["j_passenger_count"],
+                date_requested=booking["j_date_requested"],
             )
         )
-        print(bookings)
     return bookings

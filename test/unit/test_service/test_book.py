@@ -170,9 +170,9 @@ def test_get_booking_by_id_success(mock_get_query):
             [
                 ("u_id", 143),
                 ("t_id", 60),
-                ("r_accepted", 1),
-                ("r_passenger_count", 1),
-                ("r_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
+                ("j_accepted", 1),
+                ("j_passenger_count", 1),
+                ("j_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
             ]
         )
     ]
@@ -244,9 +244,9 @@ def test_respond_booking_success(mock_get_trip_by_id, mock_get_booking_by_id, mo
         [
             ("u_id", 143),
             ("t_id", 60),
-            ("r_accepted", 0),
-            ("r_passenger_count", 1),
-            ("r_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
+            ("j_accepted", 0),
+            ("j_passenger_count", 1),
+            ("j_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
         ]
     )
     mock_execute_command.return_value = None
@@ -265,9 +265,9 @@ def test_get_bookings_success(mock_get_query):
     mock_get_query.return_value = [
         psycopg2.extras.RealDictRow(
             [
-                ("r_accepted", 1),
-                ("r_passenger_count", 3),
-                ("r_date_requested", datetime.datetime(2023, 12, 8, 11, 11, 13, 479329)),
+                ("j_accepted", 1),
+                ("j_passenger_count", 3),
+                ("j_date_requested", datetime.datetime(2023, 12, 8, 11, 11, 13, 479329)),
                 ("t_id", 15),
                 ("t_timestamp_proposed", datetime.datetime(2023, 12, 6, 16, 22)),
                 ("departure_a_id", 1),
