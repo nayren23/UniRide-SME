@@ -42,13 +42,15 @@ def _validate_user_id(trip, user_id):
 
 
 def _validate_trip_availability(trip):
-    if trip["status"] != 1 or trip["t_timestamp_proposed"] < datetime.now():
+    departure_date = datetime.strptime(trip["departure_date"], "%Y-%m-%d %H:%M:%S")
+    if trip["status"] != 1 or departure_date < datetime.now():
         raise ForbiddenException("TRIP_NOT_AVAILABLE")
 
 
 def book_trip(trip_id, user_id, passenger_count):
     """Book a trip"""
     trip = trip_service.get_trip_by_id(trip_id)
+    print(trip)
     _validate_trip_availability(trip)
 
     _validate_user_id(trip, user_id)

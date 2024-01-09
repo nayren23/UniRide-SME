@@ -679,9 +679,7 @@ def _validate_driver_id(driver_id, user_id):
 
 
 def _validate_start_time(departure_date):
-    date_format = "%Y-%m-%d %H:%M:%S"
-
-    departure_date = datetime.strptime(departure_date, date_format)
+    departure_date = datetime.strptime(departure_date, "%Y-%m-%d %H:%M:%S")
     print(departure_date)
     if departure_date - timedelta(minutes=15) > datetime.now():
         raise ForbiddenException("TOO_EARLY_TO_START_TRIP")
