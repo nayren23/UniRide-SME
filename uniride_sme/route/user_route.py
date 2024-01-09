@@ -145,8 +145,7 @@ def get_user_id():
         user_role = user_service.get_user_role(user_id)
         response = jsonify(user_role), 200
     except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-        
+        response = jsonify(message=e.message), e.status_code    
     return response
 
 @user.route("/change/password", methods=["POST"])
