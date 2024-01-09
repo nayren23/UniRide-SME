@@ -228,6 +228,7 @@ def save_pfp():
 
     return response
 
+
 @user.route("documents/infos", methods=["GET"])
 @jwt_required()
 def get_user_documents_infos():
@@ -239,6 +240,7 @@ def get_user_documents_infos():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 def save_document(document_type):
     """Generalized endpoint for saving a user document."""
@@ -253,6 +255,7 @@ def save_document(document_type):
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 @user.route("/save/license", methods=["POST"])
 @jwt_required()
@@ -274,11 +277,13 @@ def save_school_certificate():
     """Save profile school certificate endpoint."""
     return save_document("school_certificate")
 
+
 @user.route("/save/insurance", methods=["POST"])
 @jwt_required()
 def insurance():
     """Save profile insurance endpoint."""
     return save_document("insurance")
+
 
 @user.route("/email-confirmation", methods=["GET"])
 @jwt_required()
@@ -446,7 +451,6 @@ def user_information_token(user_id):
     return response
 
 
-
 @user.route("/statistics/<user_id>", methods=["GET"])
 def user_stat_id(user_id):
     """Informations user by token"""
@@ -485,13 +489,17 @@ def get_rating_criteria():
     except ApiException as e:
         return jsonify(message=e.message), e.status_code
 
+
 @user.route("/label", methods=["POST"])
 def insert_label():
     """Insert rating criteria"""
     data = request.get_json()
     try:
         user_information = user_service.insert_rating_criteria(data)
-        response = jsonify({"message": "RATING_CRITERIA_INSERTED_SUCCESSFULLY", "user_information": user_information}), 201
+        response = (
+            jsonify({"message": "RATING_CRITERIA_INSERTED_SUCCESSFULLY", "user_information": user_information}),
+            201,
+        )
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 

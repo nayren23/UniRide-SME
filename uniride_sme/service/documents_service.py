@@ -29,6 +29,7 @@ def get_documents_by_user_id(user_id):
     document_bo = DocumentsBO(**documents)
     return document_bo
 
+
 def add_documents(user_id, files):
     """Insert documents in the database"""
     if not user_id:
@@ -224,9 +225,15 @@ def document_check(data):
     description = document_data.get("description", "")
 
     column_mapping = {
-       "license": {"status_column": "v_license_verified", "description_column": "v_license_description"},
-        "card": {"status_column": "v_id_card_verified", "description_column": "v_card_description"},  # No description column for "card"
-        "school_certificate": {"status_column": "v_school_certificate_verified", "description_column": "v_school_certificate_description"},
+        "license": {"status_column": "v_license_verified", "description_column": "v_license_description"},
+        "card": {
+            "status_column": "v_id_card_verified",
+            "description_column": "v_card_description",
+        },  # No description column for "card"
+        "school_certificate": {
+            "status_column": "v_school_certificate_verified",
+            "description_column": "v_school_certificate_description",
+        },
         "insurance": {"status_column": "v_insurance_verified", "description_column": "v_insurance_description"},
     }
 
@@ -308,9 +315,17 @@ def document_user(user_id):
     documents = []
     column_mapping = {
         "d_license": {"type": "license", "folder": "LICENSE_UPLOAD_FOLDER", "description": "v_license_description"},
-        "d_id_card": {"type": "card", "folder": "ID_CARD_UPLOAD_FOLDER" , "description": "v_card_description"},
-        "d_school_certificate": {"type": "school_certificate", "folder": "SCHOOL_CERTIFICATE_UPLOAD_FOLDER" , "description": "v_school_certificate_description"},
-        "d_insurance": {"type": "insurance", "folder": "INSURANCE_UPLOAD_FOLDER" , "description": "v_insurance_description"},
+        "d_id_card": {"type": "card", "folder": "ID_CARD_UPLOAD_FOLDER", "description": "v_card_description"},
+        "d_school_certificate": {
+            "type": "school_certificate",
+            "folder": "SCHOOL_CERTIFICATE_UPLOAD_FOLDER",
+            "description": "v_school_certificate_description",
+        },
+        "d_insurance": {
+            "type": "insurance",
+            "folder": "INSURANCE_UPLOAD_FOLDER",
+            "description": "v_insurance_description",
+        },
     }
 
     for document_row in document_data:

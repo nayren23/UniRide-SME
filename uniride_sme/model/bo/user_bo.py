@@ -22,5 +22,4 @@ class UserBO:
     status: str = None
     home_address_id: str = None
     work_address_id: str = None
-    r_id: int= None
-    
+    r_id: int = None
