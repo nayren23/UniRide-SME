@@ -246,3 +246,24 @@ def join(trip_id, driver_id, booker_id, verification_code):
     values = (trip_id, booker_id)
     connect_pg.execute_command(conn, query, values)
     connect_pg.disconnect(conn)
+
+
+def get_verification_code(trip_id, user_id):
+    """Get verification code"""
+    if not trip_id:
+        raise MissingInputException("TRIP_ID_MISSING")
+    if not user_id:
+        raise MissingInputException("USER_ID_MISSING")
+
+    conn = connect_pg.connect()
+    query = "SELECT j_accepted, j_verification_code FROM uniride.ur_join WHERE t_id = %s AND u_id = %s"
+    values = (trip_id, user_id)
+    booking = connect_pg.get_query(conn, query, values, True)
+    connect_pg.disconnect(conn)
+
+    if not booking:
+        raise BookingNotFoundException()
+    if booking[0]["j_accepted"] != 1:
+        raise ForbiddenException("BOOKING_NOT_ACCEPTED")
+
+    return booking[0]["j_verification_code"]
