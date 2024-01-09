@@ -481,7 +481,7 @@ def get_rating_criteria():
     """Get rating criteria"""
     try:
         user_information = user_service.get_rating_criteria()
-        response_data = {"labels": [{"label": user_information}]}
+        response_data = {"labels": {"label": user_information}}
         return jsonify({"message": "USER_INFORMATIONS_DISPLAYED_SUCCESSFULLY", **response_data}), 200
     except ApiException as e:
         return jsonify(message=e.message), e.status_code
@@ -513,11 +513,9 @@ def delete_label(id_criteria):
 def update_label():
     """Update rating criteria"""
     data = request.get_json()
-
     try:
         user_service.update_rating_criteria(data)
         response = jsonify({"message": "RATING_CRITERIA_UPDATED_SUCCESSFULLY"}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
-
     return response
