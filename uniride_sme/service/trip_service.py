@@ -643,7 +643,7 @@ def get_passengers(trip_id, user_id):
     FROM 
         uniride.ur_user 
     WHERE 
-        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND r_accepted = 1)
+        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND j_accepted = 1)
     """
     passengers = connect_pg.get_query(conn, query, (trip_id,), True)
     connect_pg.disconnect(conn)
