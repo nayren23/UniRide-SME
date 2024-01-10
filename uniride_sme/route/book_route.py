@@ -118,3 +118,17 @@ def get_code(trip_id):
         response = jsonify(message=e.message), e.status_code
 
     return response
+
+
+@book.route("/<trip_id>", methods=["GET"])
+@jwt_required()
+def get_booking(trip_id):
+    """Get booking endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        booking = book_service.get_booking(trip_id, user_id)
+        response = jsonify(booking), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response

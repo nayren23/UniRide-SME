@@ -227,6 +227,9 @@ def _validate_booking(booking, verification_code):
     if not booking:
         raise BookingNotFoundException()
 
+    if booking["j_joined"]:
+        raise ForbiddenException("PASSENGER_AlREADY_JOINED")
+
     if booking["j_accepted"] != 1:
         raise ForbiddenException("BOOKING_NOT_ACCEPTED")
 
@@ -252,8 +255,8 @@ def join(trip_id, driver_id, booker_id, verification_code):
 
 def get_verification_code(trip_id, user_id):
     """Get verification code"""
-    if not trip_id:
-        raise MissingInputException("TRIP_ID_MISSING")
+    trip = trip_service.get_trip_by_id(trip_id)
+    _validate_trip_started(trip)
     if not user_id:
         raise MissingInputException("USER_ID_MISSING")
 
@@ -269,3 +272,31 @@ def get_verification_code(trip_id, user_id):
         raise ForbiddenException("BOOKING_NOT_ACCEPTED")
 
     return booking[0]["j_verification_code"]
+
+
+def get_booking(trip_id, user_id):
+    """Get booking by id"""
+    if not trip_id:
+        raise MissingInputException("TRIP_ID_MISSING")
+    if not user_id:
+        raise MissingInputException("USER_ID_MISSING")
+
+    conn = connect_pg.connect()
+    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s"
+    values = (trip_id, user_id)
+    booking = connect_pg.get_query(conn, query, values, True)
+    connect_pg.disconnect(conn)
+
+    if not booking:
+        raise BookingNotFoundException()
+
+    booking_dto = BookDTO(
+        user_id=booking[0]["u_id"],
+        trip_id=booking[0]["t_id"],
+        accepted=booking[0]["j_accepted"],
+        passenger_count=booking[0]["j_passenger_count"],
+        date_requested=booking[0]["j_date_requested"],
+        verification_code=booking[0]["j_verification_code"],
+        joined=booking[0]["j_joined"],
+    )
+    return booking_dto

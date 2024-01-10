@@ -636,14 +636,18 @@ def get_passengers(trip_id, user_id):
     conn = connect_pg.connect()
     query = """
     SELECT 
-        u_id, 
-        u_firstname, 
-        u_lastname, 
-        u_profile_picture 
+        u.u_id, 
+        u.u_firstname, 
+        u.u_lastname, 
+        u.u_profile_picture,
+        j.j_joined
     FROM 
-        uniride.ur_user 
+        uniride.ur_user u
+    JOIN 
+        uniride.ur_join j ON u.u_id = j.u_id
     WHERE 
-        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND j_accepted = 1)
+        j.t_id = %s AND 
+        j.j_accepted = 1;
     """
     passengers = connect_pg.get_query(conn, query, (trip_id,), True)
     connect_pg.disconnect(conn)
@@ -656,6 +660,7 @@ def get_passengers(trip_id, user_id):
                 firstname=passenger["u_firstname"],
                 lastname=passenger["u_lastname"],
                 profile_picture=get_encoded_file(passenger["u_profile_picture"], app.config["PFP_UPLOAD_FOLDER"]),
+                joined=passenger["j_joined"],
             )
         )
     return passenger_dtos
