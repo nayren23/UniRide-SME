@@ -4,7 +4,6 @@ from flask_jwt_extended import get_jwt
 from uniride_sme import cache, jwt
 
 
-
 @jwt.token_in_blocklist_loader
 def check_if_token_is_revoked(jwt_header, jwt_payload: dict):  # pylint: disable=unused-argument
     """Check if token is revoked"""

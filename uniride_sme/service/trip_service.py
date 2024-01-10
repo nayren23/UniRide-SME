@@ -10,8 +10,7 @@ from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO, AddressSimpleDTO
 from uniride_sme.model.dto.user_dto import PassengerInfosDTO
-from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO
-from uniride_sme.service.car_service import get_car_info_by_user_id
+from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO, PassengerTripDTO
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
@@ -736,3 +735,64 @@ def change_trip_status(trip_id, status):
     query = "UPDATE uniride.ur_trip SET t_status = %s WHERE t_id = %s"
     connect_pg.execute_command(conn, query, (status, trip_id))
     connect_pg.disconnect(conn)
+
+
+def passenger_current_trips(user_id):
+    """Get passager current"""
+    if user_id is None:
+        raise MissingInputException("USER_ID_CANNOT_BE_NULL")
+
+    conn = connect_pg.connect()
+    query = """
+        Select  
+                u_id, 
+                t_id, 
+                j_accepted,
+                t.t_timestamp_proposed,
+                t.t_status,
+                departure.a_id AS departure_a_id,
+                departure.a_street_number AS departure_a_street_number,
+                departure.a_street_name AS departure_a_street_name,
+                departure.a_city AS departure_a_city,
+                arrival.a_id AS arrival_a_id,
+                arrival.a_street_number AS arrival_a_street_number,
+                arrival.a_street_name AS arrival_a_street_name,
+                arrival.a_city AS arrival_a_city,
+                arrival.a_postal_code AS arrival_a_postal_code,
+                departure.a_postal_code AS departure_a_postal_code
+        FROM 
+            uniride.ur_join 
+        INNER JOIN
+            uniride.ur_trip as t using (t_id)
+        INNER JOIN
+            uniride.ur_address departure ON t.t_address_departure_id = departure.a_id
+        INNER JOIN
+            uniride.ur_address arrival ON t.t_address_arrival_id = arrival.a_id
+        WHERE 
+            u_id=%s;
+        """
+    conn = connect_pg.connect()
+    passenger_trips = connect_pg.get_query(conn, query, (user_id,), True)
+    if not passenger_trips:
+        raise TripNotFoundException()
+    connect_pg.disconnect(conn)
+    result_list = []
+
+    for trip_data in passenger_trips:
+        trip_dto = PassengerTripDTO(
+            trip_id=trip_data["t_id"],
+            departure_address=(
+                f"{trip_data['departure_a_street_number']} {trip_data['departure_a_street_name']},"
+                f" {trip_data['departure_a_city']}"
+            ),
+            arrival_address=(
+                f"{trip_data['arrival_a_street_number']} {trip_data['arrival_a_street_name']}"
+                f", {trip_data['arrival_a_city']}"
+            ),
+            proposed_date=str(trip_data["t_timestamp_proposed"]),
+            status=trip_data["t_status"],
+            book_status=trip_data["j_accepted"],
+        )
+        result_list.append(trip_dto)
+
+    return result_list

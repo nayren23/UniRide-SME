@@ -14,6 +14,7 @@ class UserInfosDTO(TypedDict):
     phone_number: str
     description: str
     role: int
+    profile_picture: str
 
 
 class UserShortDTO(TypedDict):

@@ -3,9 +3,9 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from flask import jsonify
-from flask_jwt_extended import get_jwt, get_jwt_identity, create_access_token, set_access_cookies, verify_jwt_in_request
+from flask_jwt_extended import get_jwt, get_jwt_identity, create_access_token, set_access_cookies
 from uniride_sme import app
 from uniride_sme.route.user_route import user
 from uniride_sme.route.trip_route import trip
