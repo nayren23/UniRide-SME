@@ -395,7 +395,7 @@ def test_validate_trip_started_with_invalid_status():
 
 def test_validate_booking_unaccepted():
     """Test _validate_booking with an unaccepted booking"""
-    unaccepted_booking = {"j_accepted": 0, "j_verification_code": 12345}
+    unaccepted_booking = {"j_accepted": 0, "j_verification_code": 12345, "j_joined": False}
     verification_code = 12345
 
     with pytest.raises(ForbiddenException) as e:
@@ -405,7 +405,7 @@ def test_validate_booking_unaccepted():
 
 def test_validate_booking_invalid_verification_code():
     """Test _validate_booking with an invalid verification code"""
-    booking = {"j_accepted": 1, "j_verification_code": 12345}
+    booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
     invalid_verification_code = 54321
 
     with pytest.raises(ForbiddenException) as e:
@@ -413,50 +413,70 @@ def test_validate_booking_invalid_verification_code():
     assert "INVALID_VERIFICATION_CODE" in str(e.value)
 
 
+def test_validate_booking_passenger_already_joined():
+    """Test _validate_booking with the passenger already joined"""
+    booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": True}
+    with pytest.raises(ForbiddenException) as e:
+        _validate_booking(booking, 12345)
+    assert "PASSENGER_AlREADY_JOINED" in str(e.value)
+
+
 def test_validate_booking_success():
     """Test _validate_booking success"""
-    valid_booking = {"j_accepted": 1, "j_verification_code": 12345}
+    valid_booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
     verification_code = 12345
     _validate_booking(valid_booking, verification_code)
 
 
 def test_join_success(mock_get_booking_by_id, mock_get_trip_by_id):
     """Test join success"""
-    mock_get_booking_by_id.return_value = {"j_accepted": 1, "j_verification_code": 12345}
+    mock_get_booking_by_id.return_value = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
     mock_get_trip_by_id.return_value = {"status": 4, "driver_id": 1}
     join(1, 1, 2, 12345)
 
 
 def test_get_verification_code_missing_trip_id():
     """Test get_verification_code with missing trip_id"""
-    with pytest.raises(MissingInputException) as excinfo:
+    with pytest.raises(MissingInputException) as e:
         get_verification_code(None, 1)
-    assert "TRIP_ID_MISSING" in str(excinfo.value)
+    assert "TRIP_ID_MISSING" in str(e.value)
 
 
-def test_get_verification_code_missing_user_id():
+def test_get_verification_code_status_invalid(mock_get_trip_by_id):
+    """Test get_verification_code with invalid status"""
+    mock_get_trip_by_id.return_value = {"status": 1}
+    with pytest.raises(ForbiddenException) as e:
+        get_verification_code(1, 1)
+    assert "TRIP_NOT_STARTED" in str(e.value)
+
+
+def test_get_verification_code_missing_user_id(mock_get_trip_by_id):
     """Test get_verification_code with missing user_id"""
-    with pytest.raises(MissingInputException) as excinfo:
+    mock_get_trip_by_id.return_value = {"status": 4}
+    with pytest.raises(MissingInputException) as e:
         get_verification_code(1, None)
-    assert "USER_ID_MISSING" in str(excinfo.value)
+    assert "USER_ID_MISSING" in str(e.value)
 
 
-def test_get_verification_code_booking_not_found(mock_get_query):
+def test_get_verification_code_booking_not_found(mock_get_trip_by_id, mock_get_query):
     """Test get_verification_code with booking not found"""
+    mock_get_trip_by_id.return_value = {"status": 4}
     mock_get_query.return_value = None
     with pytest.raises(BookingNotFoundException):
         get_verification_code(1, 1)
 
 
-def test_get_verification_code_unaccepted_booking(mock_get_query):
+def test_get_verification_code_unaccepted_booking(mock_get_trip_by_id, mock_get_query):
     """Test get_verification_code with booking not accepted"""
+    mock_get_trip_by_id.return_value = {"status": 4}
     mock_get_query.return_value = [{"j_accepted": 0, "j_verification_code": 12345}]
     with pytest.raises(ForbiddenException):
         get_verification_code(1, 1)
 
 
-def test_get_verification_code_success(mock_get_query):
+def test_get_verification_code_success(mock_get_trip_by_id, mock_get_query):
     """Test get_verification_code successfully retrieves the verification code"""
+    mock_get_trip_by_id.return_value = {"status": 4}
     expected_verification_code = 12345
     mock_get_query.return_value = [{"j_accepted": 1, "j_verification_code": expected_verification_code}]
     actual_verification_code = get_verification_code(1, 1)
