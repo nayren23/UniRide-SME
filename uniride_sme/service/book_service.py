@@ -48,6 +48,20 @@ def _validate_trip_availability(trip):
         raise ForbiddenException("TRIP_NOT_AVAILABLE")
 
 
+def _check_trip_already_booked(trip_id, user_id):
+    conn = connect_pg.connect()
+    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s"
+    values = (trip_id, user_id)
+    bookings = connect_pg.get_query(conn, query, values, True)
+    connect_pg.disconnect(conn)
+    if len(bookings) > 0:
+        for booking in bookings:
+            if booking["j_accepted"] != -2:
+                raise TripAlreadyBookedException()
+        if len(bookings) > 3:
+            raise ForbiddenException("BOOKED_TOO_MANY_TIMES")
+
+
 def book_trip(trip_id, user_id, passenger_count):
     """Book a trip"""
     trip = trip_service.get_trip_by_id(trip_id)
@@ -56,14 +70,12 @@ def book_trip(trip_id, user_id, passenger_count):
 
     _validate_user_id(trip, user_id)
     _validate_passenger_count(trip, passenger_count)
+    _check_trip_already_booked(trip_id, user_id)
     query = "INSERT INTO uniride.ur_join(u_id, t_id, j_passenger_count) VALUES (%s, %s, %s);"
     values = (user_id, trip_id, passenger_count)
-    try:
-        conn = connect_pg.connect()
-        connect_pg.execute_command(conn, query, values)
-        connect_pg.disconnect(conn)
-    except psycopg2.errors.UniqueViolation as e:
-        raise TripAlreadyBookedException() from e
+    conn = connect_pg.connect()
+    connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
 
 
 def get_booking_by_id(trip_id, user_id):
