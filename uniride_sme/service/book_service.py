@@ -5,6 +5,7 @@ import psycopg2
 
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.address_bo import AddressBO
+from uniride_sme.model.bo.book_bo import BookBO
 from uniride_sme.model.dto.book_dto import BookDTO
 from uniride_sme.model.dto.trip_dto import TripShortDTO
 from uniride_sme.model.dto.user_dto import UserShortDTO
@@ -47,22 +48,34 @@ def _validate_trip_availability(trip):
         raise ForbiddenException("TRIP_NOT_AVAILABLE")
 
 
+def _check_trip_already_booked(trip_id, user_id):
+    conn = connect_pg.connect()
+    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s"
+    values = (trip_id, user_id)
+    bookings = connect_pg.get_query(conn, query, values, True)
+    connect_pg.disconnect(conn)
+    for booking in bookings:
+        if booking["j_accepted"] != -2:
+            raise TripAlreadyBookedException()
+    if len(bookings) > 3:
+        raise ForbiddenException("BOOKED_TOO_MANY_TIMES")
+
+
 def book_trip(trip_id, user_id, passenger_count):
     """Book a trip"""
     trip = trip_service.get_trip_by_id(trip_id)
-    print(trip)
-    _validate_trip_availability(trip)
 
+    _validate_trip_availability(trip)
     _validate_user_id(trip, user_id)
     _validate_passenger_count(trip, passenger_count)
+
+    _check_trip_already_booked(trip_id, user_id)
+
     query = "INSERT INTO uniride.ur_join(u_id, t_id, j_passenger_count) VALUES (%s, %s, %s);"
     values = (user_id, trip_id, passenger_count)
-    try:
-        conn = connect_pg.connect()
-        connect_pg.execute_command(conn, query, values)
-        connect_pg.disconnect(conn)
-    except psycopg2.errors.UniqueViolation as e:
-        raise TripAlreadyBookedException() from e
+    conn = connect_pg.connect()
+    connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
 
 
 def get_booking_by_id(trip_id, user_id):
@@ -221,11 +234,11 @@ def get_bookings(user_id):
 def cancel_request_trip(user_id, trip_id):
     """Cancel request trip"""
     if user_id is None:
-        raise MissingInputException("USER_ID_CANNOT_BE_NULL")
+        raise MissingInputException("USER_ID_MISSING")
     if trip_id is None:
-        raise MissingInputException("TRIP_ID_CANNOT_BE_NULL")
+        raise MissingInputException("TRIP_ID_MISSING")
     conn = connect_pg.connect()
-    query = "DELETE FROM uniride.ur_join WHERE u_id = %s AND t_id = %s"
+    query = "UPDATE uniride.ur_join SET j_accepted=-2 WHERE u_id = %s AND t_id = %s"
     connect_pg.execute_command(conn, query, (user_id, trip_id))
     connect_pg.disconnect(conn)
 
@@ -294,7 +307,7 @@ def get_booking(trip_id, user_id):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
-    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s"
+    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s ORDER BY j_date_requested DESC"
     values = (trip_id, user_id)
     booking = connect_pg.get_query(conn, query, values, True)
     connect_pg.disconnect(conn)
@@ -302,13 +315,13 @@ def get_booking(trip_id, user_id):
     if not booking:
         raise BookingNotFoundException()
 
-    booking_dto = BookDTO(
+    booking_dto = BookBO(
         user_id=booking[0]["u_id"],
         trip_id=booking[0]["t_id"],
         accepted=booking[0]["j_accepted"],
         passenger_count=booking[0]["j_passenger_count"],
         date_requested=booking[0]["j_date_requested"],
-        verification_code=booking[0]["j_verification_code"],
         joined=booking[0]["j_joined"],
+        verification_code=booking[0]["j_verification_code"],
     )
     return booking_dto
