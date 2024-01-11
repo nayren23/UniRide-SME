@@ -54,23 +54,23 @@ def _check_trip_already_booked(trip_id, user_id):
     values = (trip_id, user_id)
     bookings = connect_pg.get_query(conn, query, values, True)
     connect_pg.disconnect(conn)
-    if len(bookings) > 0:
-        for booking in bookings:
-            if booking["j_accepted"] != -2:
-                raise TripAlreadyBookedException()
-        if len(bookings) > 3:
-            raise ForbiddenException("BOOKED_TOO_MANY_TIMES")
+    for booking in bookings:
+        if booking["j_accepted"] != -2:
+            raise TripAlreadyBookedException()
+    if len(bookings) > 3:
+        raise ForbiddenException("BOOKED_TOO_MANY_TIMES")
 
 
 def book_trip(trip_id, user_id, passenger_count):
     """Book a trip"""
     trip = trip_service.get_trip_by_id(trip_id)
-    print(trip)
-    _validate_trip_availability(trip)
 
+    _validate_trip_availability(trip)
     _validate_user_id(trip, user_id)
     _validate_passenger_count(trip, passenger_count)
+
     _check_trip_already_booked(trip_id, user_id)
+
     query = "INSERT INTO uniride.ur_join(u_id, t_id, j_passenger_count) VALUES (%s, %s, %s);"
     values = (user_id, trip_id, passenger_count)
     conn = connect_pg.connect()
@@ -307,7 +307,7 @@ def get_booking(trip_id, user_id):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
-    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s"
+    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s ORDER BY j_date_requested DESC"
     values = (trip_id, user_id)
     booking = connect_pg.get_query(conn, query, values, True)
     connect_pg.disconnect(conn)
