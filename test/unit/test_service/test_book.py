@@ -19,6 +19,7 @@ from uniride_sme.service.book_service import (
     _validate_booking,
     join,
     get_verification_code,
+    _check_trip_already_booked,
 )
 from uniride_sme.model.dto.trip_dto import TripDetailedDTO, TripShortDTO
 from uniride_sme.model.dto.user_dto import UserShortDTO
@@ -156,8 +157,38 @@ def test_trip_availability_success():
     _validate_trip_availability(future_trip)
 
 
-def test_book_trip_already_booked(mock_get_trip_by_id, mock_execute_command):
+def test_check_trip_already_booked_uncanceled_booking(mock_get_query):
+    """Test _check_trip_already_booked with an uncanceled booking"""
+    mock_get_query.return_value = [{"j_accepted": 1}]
+
+    with pytest.raises(TripAlreadyBookedException):
+        _check_trip_already_booked(1, 1)
+
+
+def test_check_trip_already_booked_more_than_three_canceled_booking(mock_get_query):
+    """Test _check_trip_already_booked with more than three canceled bookings"""
+    mock_get_query.return_value = [{"j_accepted": -2}, {"j_accepted": -2}, {"j_accepted": -2}, {"j_accepted": -2}]
+
+    with pytest.raises(ForbiddenException, match="BOOKED_TOO_MANY_TIMES"):
+        _check_trip_already_booked(1, 1)
+
+
+def test_check_trip_already_booked_less_than_four_canceled_booking(mock_get_query):
+    """Test _check_trip_already_booked with more than three canceled bookings"""
+    mock_get_query.return_value = [{"j_accepted": -2}, {"j_accepted": -2}, {"j_accepted": -2}]
+    _check_trip_already_booked(1, 1)
+
+
+def test_check_trip_already_booked_not_booked(mock_get_query):
+    """Test _check_trip_already_booked with no booking"""
+    mock_get_query.return_value = []
+    _check_trip_already_booked(1, 1)
+
+
+def test_book_trip_already_booked(mock_get_trip_by_id, mock_get_query):
     """Test book_trip trip already booked"""
+    mock_get_query.return_value = [{"j_accepted": 1}]
+
     mock_get_trip_by_id.return_value = TripDetailedDTO(
         status=1,
         passenger_count=3,
@@ -165,12 +196,11 @@ def test_book_trip_already_booked(mock_get_trip_by_id, mock_execute_command):
         driver_id=2,
         departure_date=str(datetime.datetime.now().replace(microsecond=0) + datetime.timedelta(days=1)),
     )
-    mock_execute_command.side_effect = psycopg2.errors.UniqueViolation()
     with pytest.raises(TripAlreadyBookedException):
         book_trip(1, 1, 1)
 
 
-def test_book_trip_trip_started(mock_get_trip_by_id, mock_execute_command):
+def test_book_trip_trip_started(mock_get_trip_by_id):
     """Test book_trip trip already booked"""
     # status error
     mock_get_trip_by_id.return_value = TripDetailedDTO(
