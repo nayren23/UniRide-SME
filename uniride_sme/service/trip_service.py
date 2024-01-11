@@ -9,7 +9,7 @@ from uniride_sme import connect_pg
 from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO, AddressSimpleDTO
-from uniride_sme.model.dto.user_dto import PassengerInfosDTO
+from uniride_sme.model.dto.user_dto import PassengerInfosDTO, PassengerEmailsDTO
 from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO, PassengerTripDTO
 from uniride_sme.service.address_service import (
     check_address_exigeance,
@@ -665,6 +665,38 @@ def get_passengers(trip_id, user_id):
     return passenger_dtos
 
 
+def get_passengers_emails(trip_id):
+    """Get passengers emails"""
+    _validate_trip_id(trip_id)
+
+    conn = connect_pg.connect()
+    query = """
+    SELECT 
+        u.u_firstname, 
+        u.u_lastname, 
+        u.u_student_email
+    FROM 
+        uniride.ur_user u
+    JOIN 
+        uniride.ur_join j ON u.u_id = j.u_id
+    WHERE 
+        j.t_id = %s AND 
+        j.j_accepted = 1;
+    """
+    passengers = connect_pg.get_query(conn, query, (trip_id,), True)
+    connect_pg.disconnect(conn)
+    passenger_dtos = []
+    for passenger in passengers:
+        passenger_dtos.append(
+            PassengerEmailsDTO(
+                firstname=passenger["u_firstname"],
+                lastname=passenger["u_lastname"],
+                email=passenger["u_student_email"],
+            )
+        )
+    return passenger_dtos
+
+
 def trips_status(status):
     """Get number status of trip"""
     conn = connect_pg.connect()
@@ -738,7 +770,7 @@ def change_trip_status(trip_id, status):
 
 
 def passenger_current_trips(user_id):
-    """Get passager current"""
+    """Get passenger current"""
     if user_id is None:
         raise MissingInputException("USER_ID_CANNOT_BE_NULL")
 

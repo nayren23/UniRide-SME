@@ -221,11 +221,11 @@ def get_bookings(user_id):
 def cancel_request_trip(user_id, trip_id):
     """Cancel request trip"""
     if user_id is None:
-        raise MissingInputException("USER_ID_CANNOT_BE_NULL")
+        raise MissingInputException("USER_ID_MISSING")
     if trip_id is None:
-        raise MissingInputException("TRIP_ID_CANNOT_BE_NULL")
+        raise MissingInputException("TRIP_ID_MISSING")
     conn = connect_pg.connect()
-    query = "DELETE FROM uniride.ur_join WHERE u_id = %s AND t_id = %s"
+    query = "UPDATE uniride.ur_join SET j_accepted=-2 WHERE u_id = %s AND t_id = %s"
     connect_pg.execute_command(conn, query, (user_id, trip_id))
     connect_pg.disconnect(conn)
 

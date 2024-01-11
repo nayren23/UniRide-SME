@@ -12,6 +12,7 @@ from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.pagination import create_pagination
 from uniride_sme.service import trip_service
+from uniride_sme.utils.email import send_cancelation_email
 
 trip = Blueprint("trip", __name__, url_prefix="/trip")
 
@@ -191,6 +192,9 @@ def cancel_trip(trip_id: int):
     try:
         user_id = get_jwt_identity()
         trip_service.cancel_trip(trip_id, user_id)
+        passengers_emails = trip_service.get_passengers_emails(trip_id)
+        for passenger in passengers_emails:
+            send_cancelation_email(passenger["email"], passenger["firstname"], trip_id)
         response = jsonify(message="TRIP_CANCELED_SUCCESSFULLY"), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code

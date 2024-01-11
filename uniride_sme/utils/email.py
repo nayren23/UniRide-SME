@@ -39,7 +39,7 @@ def send_reservation_response_email(student_email, firstname, trip_id):
     """Send reservation response email"""
     file_path = os.path.join(app.config["PATH"], "resource/email/email_reservation_response_template.html")
 
-    url = f"{app.config['FRONT_END_URL']}trip-info/{trip_id}"
+    url = f"{app.config['FRONT_END_URL']}trips/{trip_id}"
 
     with open(file_path, "r", encoding="UTF-8") as html:
         content = html.read().replace("{firstname}", firstname).replace("{url}", url)
@@ -51,7 +51,7 @@ def send_cancelation_email(student_email, firstname, trip_id):
     """Send reservation response email"""
     file_path = os.path.join(app.config["PATH"], "resource/email/email_cancelation_template.html")
 
-    url = f"{app.config['FRONT_END_URL']}trip-info/{trip_id}"
+    url = f"{app.config['FRONT_END_URL']}trips/{trip_id}"
 
     with open(file_path, "r", encoding="UTF-8") as html:
         content = html.read().replace("{firstname}", firstname).replace("{url}", url)
