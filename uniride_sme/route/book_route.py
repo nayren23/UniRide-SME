@@ -7,6 +7,7 @@ from uniride_sme.service import book_service, user_service
 from uniride_sme.utils import email
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.field import validate_fields
+from uniride_sme.model.dto.book_dto import BookResponseDTO
 
 book = Blueprint("book", __name__, url_prefix="/book")
 
@@ -140,7 +141,11 @@ def get_booking(trip_id):
     try:
         user_id = get_jwt_identity()
         booking = book_service.get_booking(trip_id, user_id)
-        response = jsonify(booking), 200
+        booking_dto = BookResponseDTO(
+            accepted=booking.accepted,
+            joined=booking.joined,
+        )
+        response = jsonify(booking_dto), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 

@@ -5,6 +5,7 @@ import psycopg2
 
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.address_bo import AddressBO
+from uniride_sme.model.bo.book_bo import BookBO
 from uniride_sme.model.dto.book_dto import BookDTO
 from uniride_sme.model.dto.trip_dto import TripShortDTO
 from uniride_sme.model.dto.user_dto import UserShortDTO
@@ -302,13 +303,13 @@ def get_booking(trip_id, user_id):
     if not booking:
         raise BookingNotFoundException()
 
-    booking_dto = BookDTO(
+    booking_dto = BookBO(
         user_id=booking[0]["u_id"],
         trip_id=booking[0]["t_id"],
         accepted=booking[0]["j_accepted"],
         passenger_count=booking[0]["j_passenger_count"],
         date_requested=booking[0]["j_date_requested"],
-        verification_code=booking[0]["j_verification_code"],
         joined=booking[0]["j_joined"],
+        verification_code=booking[0]["j_verification_code"],
     )
     return booking_dto
