@@ -42,6 +42,7 @@ class PassengerInfosDTO(TypedDict):
     firstname: str
     lastname: str
     profile_picture: str
+    joined: bool
 
 
 class InformationsVerifiedDTO(TypedDict):

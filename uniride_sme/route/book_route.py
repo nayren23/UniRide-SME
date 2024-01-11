@@ -35,7 +35,7 @@ def book_trip():
     return response
 
 
-@book.route("/respond", methods=["POST"])
+@book.route("/respond", methods=["PUT"])
 @jwt_required()
 def respond_booking():
     """Respond to a booking request endpoint"""
@@ -75,7 +75,8 @@ def get_bookings():
 
     return response
 
-@book.route("/cancel", methods=["Delete"])
+
+@book.route("/cancel", methods=["DELETE"])
 @jwt_required()
 def cancel_request_trip():
     """Cancel trip endpoint"""
@@ -87,4 +88,62 @@ def cancel_request_trip():
         response = jsonify({"message": "TRIP_CANCELED_SUCCESSFULLY"}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@book.route("/join", methods=["PUT"])
+@jwt_required()
+def join_booking():
+    """Join a booking request endpoint"""
+
+    response = jsonify({"message": "BOOKING_JOIN_SUCCESSFULLY"}), 200
+    try:
+        user_id = get_jwt_identity()
+        json_object = request.json
+
+        validate_fields(
+            json_object,
+            {
+                "trip_id": int,
+                "booker_id": int,
+                "verification_code": int,
+            },
+        )
+        book_service.join(
+            json_object["trip_id"],
+            user_id,
+            json_object["booker_id"],
+            json_object["verification_code"],
+        )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@book.route("/<trip_id>/code", methods=["GET"])
+@jwt_required()
+def get_code(trip_id):
+    """Get verification code endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        verification_code = book_service.get_verification_code(trip_id, user_id)
+        response = jsonify(verification_code=verification_code), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@book.route("/<trip_id>", methods=["GET"])
+@jwt_required()
+def get_booking(trip_id):
+    """Get booking endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        booking = book_service.get_booking(trip_id, user_id)
+        response = jsonify(booking), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
     return response

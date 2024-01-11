@@ -12,6 +12,3 @@ class DocumentVerificationDTO(TypedDict):
     full_name: str
     profile_picture: str
     last_modified_date: str
-
-
-    

@@ -1,6 +1,5 @@
 """User service module"""
 import re
-import os
 import bcrypt
 from uniride_sme.utils.file import get_encoded_file
 from uniride_sme import app
@@ -32,6 +31,7 @@ def authenticate(login, password) -> UserBO:
 
 
 def get_user_role(user_id):
+    """Get user role"""
     with connect_pg.connect() as conn:
         verify_user(user_id)
 
@@ -554,12 +554,12 @@ def user_stat_passenger(id_user):
         return {"completed_count": 0, "pending_count": 0}
 
     user_data = document[0]
-    countCompleted = user_data.count(1)
-    countPending = user_data.count(0)
+    count_completed = user_data.count(1)
+    count_pending = user_data.count(0)
 
     result = {
-        "completed_count": countCompleted,
-        "pending_count": countPending,
+        "completed_count": count_completed,
+        "pending_count": count_pending,
     }
 
     return result

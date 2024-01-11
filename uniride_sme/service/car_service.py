@@ -4,7 +4,7 @@ from uniride_sme import connect_pg
 from uniride_sme.model.bo.car_bo import CarBO
 from uniride_sme.model.dto.car_dto import CarDTO
 from uniride_sme.utils.exception.exceptions import InvalidInputException, MissingInputException
-from uniride_sme.utils.exception.car_exceptions import CarAlreadyExist,CarNotFoundException
+from uniride_sme.utils.exception.car_exceptions import CarAlreadyExist, CarNotFoundException
 
 
 def add_in_db(car: CarBO):
@@ -114,11 +114,11 @@ def get_car_info_by_user_id(user_id):
     conn = connect_pg.connect()
     info_car = connect_pg.get_query(conn, query, params, True)
     connect_pg.disconnect(conn)
-    
+
     if not info_car:
         raise CarNotFoundException("CAR_NOT_FOUND")
     info_car = info_car[0]
-    
+
     car_bo = CarBO(
         model=info_car["v_model"],
         license_plate=info_car["v_license_plate"],

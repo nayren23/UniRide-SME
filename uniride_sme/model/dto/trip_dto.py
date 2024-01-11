@@ -44,6 +44,7 @@ class TripStatusDTO(TypedDict):
     trip_completed: int
     trip_oncourse: int
 
+
 class PassengerTripDTO(TypedDict):
     """Passenger Trip DTO (Data Transfer Object)"""
 
@@ -53,5 +54,3 @@ class PassengerTripDTO(TypedDict):
     proposed_date: str
     status: int
     book_status: int
-    
-  

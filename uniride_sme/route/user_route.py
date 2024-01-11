@@ -66,7 +66,9 @@ def authenticate():
         )
 
         response = make_response(
-            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto, u_id=user_bo.id)
+            jsonify(
+                message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto, u_id=user_bo.id
+            )
         )
         access_token = create_access_token(user_bo.id)
         set_access_cookies(response, access_token)
@@ -95,17 +97,17 @@ def refresh():
 def logout():
     """Logout endpoint"""
     response = jsonify(message="LOGOUT_SUCCESSFULY")
-    # try:
-    #     verify_jwt_in_request()
-    #     revoke_token()
-    # except (ExpiredSignatureError, NoAuthorizationError):
-    #     pass
+    try:
+        verify_jwt_in_request()
+        revoke_token()
+    except (ExpiredSignatureError, NoAuthorizationError):
+        pass
 
-    # try:
-    #     verify_jwt_in_request(refresh=True)
-    #     revoke_token()
-    # except (ExpiredSignatureError, NoAuthorizationError):
-    #     pass
+    try:
+        verify_jwt_in_request(refresh=True)
+        revoke_token()
+    except (ExpiredSignatureError, NoAuthorizationError):
+        pass
 
     unset_jwt_cookies(response)
     return response, 200
@@ -128,13 +130,14 @@ def get_infos():
             phone_number=user_bo.phone_number,
             description=user_bo.description,
             role=user_bo.r_id,
-            profile_picture=get_encoded_file(user_bo.profile_picture,'PFP_UPLOAD_FOLDER')
+            profile_picture=get_encoded_file(user_bo.profile_picture, "PFP_UPLOAD_FOLDER"),
         )
         response = jsonify(user_infos_dto), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
 
     return response
+
 
 @user.route("/role", methods=["GET"])
 @jwt_required()
@@ -145,8 +148,9 @@ def get_user_id():
         user_role = user_service.get_user_role(user_id)
         response = jsonify(user_role), 200
     except ApiException as e:
-        response = jsonify(message=e.message), e.status_code    
+        response = jsonify(message=e.message), e.status_code
     return response
+
 
 @user.route("/change/password", methods=["POST"])
 @jwt_required()
@@ -241,6 +245,7 @@ def save_pfp():
 
     return response
 
+
 @user.route("documents/infos", methods=["GET"])
 @jwt_required()
 def get_user_documents_infos():
@@ -252,6 +257,7 @@ def get_user_documents_infos():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 def save_document(document_type):
     """Generalized endpoint for saving a user document."""
@@ -266,6 +272,7 @@ def save_document(document_type):
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 @user.route("/save/license", methods=["POST"])
 @jwt_required()
@@ -287,11 +294,13 @@ def save_school_certificate():
     """Save profile school certificate endpoint."""
     return save_document("school_certificate")
 
+
 @user.route("/save/insurance", methods=["POST"])
 @jwt_required()
 def insurance():
     """Save profile insurance endpoint."""
     return save_document("insurance")
+
 
 @user.route("/email-confirmation", methods=["GET"])
 @jwt_required()
@@ -457,7 +466,6 @@ def user_information_token(user_id):
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
-
 
 
 @user.route("/statistics/<user_id>", methods=["GET"])
