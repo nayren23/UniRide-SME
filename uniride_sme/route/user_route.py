@@ -530,12 +530,24 @@ def update_label():
 
 
 
-@user.route("/ranking", methods=["GET"])
-def get_ranking():
-    """ Get ranking """
+@user.route("/drivers-ranking", methods=["GET"])
+def get_ranking_drivers():
+    """ Get ranking drivers"""
     try:
-        data = user_service.users_ranking()
-        response = jsonify({"message": "RATING_CRITERIA_UPDATED_SUCCESSFULLY", "ranking": data}), 200
+        data = user_service.users_ranking(1)
+        response = jsonify({"message": "DRIVERS_RATING_CRITERIA_DISPLAYED_SUCCESSFULLY", "ranking": data}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+
+@user.route("/passengers-ranking", methods=["GET"])
+def get_ranking_passengers():
+    """ Get ranking passengers"""
+    try:
+        data = user_service.users_ranking(3)
+        response = jsonify({"message": "PASSENGERS_RATING_CRITERIA_DISPLAYED_SUCCESSFULLY", "ranking": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

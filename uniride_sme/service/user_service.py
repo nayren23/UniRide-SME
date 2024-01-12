@@ -670,20 +670,21 @@ def update_rating_criteria(data):
 
 
 
-def users_ranking():
+def users_ranking(role):
     """Get ranking information"""
     conn = connect_pg.connect()
     result = []
 
     try:
         query = """
-            SELECT DISTINCT ON (ur_user.u_id) ur_user.u_id, ur_user.r_id, ur_user.u_lastname, ur_user.u_firstname,ur_user.u_profile_picture,ur_user.u_timestamp_creation,
+            SELECT DISTINCT ON (ur_user.u_id) ur_user.u_id, ur_user.r_id, ur_user.u_lastname, ur_user.u_firstname,ur_user.u_profile_picture,
                    ur_note.rc_id, AVG(ur_note.n_value) AS n_value
             FROM uniride.ur_user
             NATURAL JOIN uniride.ur_note
+            WHERE ur_user.r_id = %s
             GROUP BY ur_user.u_id, ur_user.r_id, ur_user.u_lastname, ur_user.u_firstname, ur_note.rc_id
         """
-        ranks = connect_pg.get_query(conn, query)
+        ranks = connect_pg.get_query(conn, query, (role,))
 
         for rank in ranks:
             user_data = {
@@ -691,7 +692,6 @@ def users_ranking():
                 "profile_picture": get_encoded_file(rank[4], "PFP_UPLOAD_FOLDER"),
                 "firstname": rank[3],
                 "lastname": rank[2],
-                "dataCreationAccount": rank[5].strftime("%m/%d/%Y"),
                 "role": rank[1],
                 "Average": calculate_avg_note_by_user(rank[0]),
                 "scoreCriteria": [
