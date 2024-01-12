@@ -40,7 +40,7 @@ def add_car_information():
             color=json_object.get("color").strip(),
             brand=json_object.get("brand").strip(),
             total_places=json_object.get("total_places"),
-            user_id=get_jwt_identity(),
+            user_id=get_jwt_identity()["id"],
         )
         add_in_db(car_bo)
         response = jsonify({"message": "CAR_CREATED_SUCCESSFULLY", "id_car": car_bo.id}), 200
@@ -54,7 +54,7 @@ def add_car_information():
 def get_car_information():
     """Get information about the user's car endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         car_info = get_car_info_by_user_id(user_id)
         available_car = format_get_information_car(car_info)
         response = jsonify(available_car), 200
@@ -68,7 +68,7 @@ def get_car_information():
 def update_car_information():
     """Update information about the user's car endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         json_object = request.json
 
         # Valider les champs JSON

@@ -26,7 +26,7 @@ def propose_trip():
 
     response = jsonify({"message": "TRIP_CREATED_SUCCESSFULLY"}), 200
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         json_object = request.json
 
         validate_fields(
@@ -109,7 +109,7 @@ def get_available_trips():
 def get_current_driver_trips():
     """Get all the current trips of a driver"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         available_trips = trip_service.get_driver_trips(user_id)
         # We need to paginate the data
         meta, paginated_data = create_pagination(request, available_trips)
@@ -151,7 +151,7 @@ def trip_count():
 def passengers(trip_id: int):
     """Get trip passengers endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         passengers_list = trip_service.get_passengers(trip_id, user_id)
         response = jsonify(passengers_list), 200
     except ApiException as e:
@@ -164,7 +164,7 @@ def passengers(trip_id: int):
 def start_trip(trip_id: int):
     """Get trip passengers endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         trip_service.start_trip(trip_id, user_id)
         response = jsonify(message="TRIP_STARTED_SUCCESSFULLY"), 200
     except ApiException as e:
@@ -177,7 +177,7 @@ def start_trip(trip_id: int):
 def end_trip(trip_id: int):
     """Get trip passengers endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         trip_service.end_trip(trip_id, user_id)
         response = jsonify(message="TRIP_ENDED_SUCCESSFULLY"), 200
     except ApiException as e:
@@ -190,7 +190,7 @@ def end_trip(trip_id: int):
 def cancel_trip(trip_id: int):
     """Get trip passengers endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         trip_service.cancel_trip(trip_id, user_id)
         passengers_emails = trip_service.get_passengers_emails(trip_id)
         for passenger in passengers_emails:
@@ -206,7 +206,7 @@ def cancel_trip(trip_id: int):
 def passenger_current_trip():
     """Get passenger current trip endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         passenger_current_trips_result = trip_service.passenger_current_trips(user_id)
         response = jsonify(passenger_current_trips_result), 200
     except ApiException as e:
