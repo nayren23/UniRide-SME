@@ -527,3 +527,15 @@ def update_label():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+
+
+@user.route("/ranking", methods=["GET"])
+def get_ranking():
+    """ Get ranking """
+    try:
+        data = user_service.users_ranking()
+        response = jsonify({"message": "RATING_CRITERIA_UPDATED_SUCCESSFULLY", "ranking": data}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response

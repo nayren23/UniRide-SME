@@ -667,3 +667,93 @@ def update_rating_criteria(data):
         connect_pg.disconnect(conn)
 
     return {"message": "Rating criteria updated successfully"}
+
+
+
+def users_ranking():
+    """Get ranking information"""
+    conn = connect_pg.connect()
+    result = []
+
+    try:
+        query = """
+            SELECT DISTINCT ON (ur_user.u_id) ur_user.u_id, ur_user.r_id, ur_user.u_lastname, ur_user.u_firstname,ur_user.u_profile_picture,ur_user.u_timestamp_creation,
+                   ur_note.rc_id, AVG(ur_note.n_value) AS n_value
+            FROM uniride.ur_user
+            NATURAL JOIN uniride.ur_note
+            GROUP BY ur_user.u_id, ur_user.r_id, ur_user.u_lastname, ur_user.u_firstname, ur_note.rc_id
+        """
+        ranks = connect_pg.get_query(conn, query)
+
+        for rank in ranks:
+            user_data = {
+                "id": rank[0],
+                "profile_picture": get_encoded_file(rank[4], "PFP_UPLOAD_FOLDER"),
+                "firstname": rank[3],
+                "lastname": rank[2],
+                "dataCreationAccount": rank[5].strftime("%m/%d/%Y"),
+                "role": rank[1],
+                "Average": calculate_avg_note_by_user(rank[0]),
+                "scoreCriteria": [
+                criteria_by_id(rank[0])
+                ]
+            }
+
+            result.append(user_data)
+    finally:
+        connect_pg.disconnect(conn)
+
+    return result
+
+
+
+def calculate_avg_note_by_user(user_id):
+    """Calculate the average note value for a given user."""
+    conn = connect_pg.connect()
+
+    try:
+        query = """
+            SELECT AVG(n_value) AS avg_note
+            FROM uniride.ur_note
+            WHERE u_id = %s
+        """
+        avg_result = connect_pg.get_query(conn, query, (user_id,))
+
+        if avg_result and avg_result[0][0] is not None:
+            return round(avg_result[0][0], 2)
+        else:
+            return None  # Return None if there are no notes for the user
+
+    finally:
+        connect_pg.disconnect(conn)
+
+
+def criteria_by_id(user_id):
+    """Get criteria by id"""
+    conn = connect_pg.connect()
+    result = []
+
+    try:
+        query = """
+            SELECT rc_id, n_value, rc_name
+            FROM uniride.ur_note
+            NATURAL JOIN uniride.ur_rating_criteria
+            WHERE u_id = %s
+        """
+        criterian_result = connect_pg.get_query(conn, query, (user_id,))
+
+        print(criterian_result, "criterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_result")
+        for criteria in criterian_result:
+            user_data = {
+                "id": criteria[0],
+                "notes": criteria[1],
+                "name": criteria[2],
+            }
+
+            result.append(user_data)
+
+
+
+        return result
+    finally:
+        connect_pg.disconnect(conn)       
