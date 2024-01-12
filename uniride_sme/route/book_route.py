@@ -19,7 +19,7 @@ def book_trip():
 
     response = jsonify({"message": "TRIP_BOOKED_SUCCESSFULLY"}), 200
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         json_object = request.json
 
         validate_fields(
@@ -43,7 +43,7 @@ def respond_booking():
 
     response = jsonify({"message": "BOOKING_RESPONDED_SUCCESSFULLY"}), 200
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         json_object = request.json
 
         validate_fields(
@@ -68,7 +68,7 @@ def respond_booking():
 def get_bookings():
     """Respond to a booking request endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         bookings = book_service.get_bookings(user_id)
         response = jsonify(bookings=bookings), 200
     except ApiException as e:
@@ -82,7 +82,7 @@ def get_bookings():
 def cancel_request_trip(trip_id):
     """Cancel trip endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         book_service.cancel_request_trip(user_id, trip_id)
         response = jsonify({"message": "TRIP_CANCELED_SUCCESSFULLY"}), 200
     except ApiException as e:
@@ -97,7 +97,7 @@ def join_booking():
 
     response = jsonify({"message": "BOOKING_JOIN_SUCCESSFULLY"}), 200
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         json_object = request.json
 
         validate_fields(
@@ -125,7 +125,7 @@ def join_booking():
 def get_code(trip_id):
     """Get verification code endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         verification_code = book_service.get_verification_code(trip_id, user_id)
         response = jsonify(verification_code=verification_code), 200
     except ApiException as e:
@@ -139,7 +139,7 @@ def get_code(trip_id):
 def get_booking(trip_id):
     """Get booking endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         booking = book_service.get_booking(trip_id, user_id)
         booking_dto = BookResponseDTO(
             accepted=booking.accepted,

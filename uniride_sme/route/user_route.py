@@ -12,6 +12,7 @@ from flask_jwt_extended import (
 )
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from jwt import ExpiredSignatureError
+
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
 from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO, InformationsStatUsers
@@ -66,14 +67,13 @@ def authenticate():
         )
 
         response = make_response(
-            jsonify(
-                message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto, u_id=user_bo.id
-            )
+            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto)
         )
-        access_token = create_access_token(user_bo.id)
+
+        access_token = create_access_token({"id": user_bo.id, "role": user_bo.r_id})
         set_access_cookies(response, access_token)
         if json_object.get("keepLoggedIn", False):
-            refresh_token = create_refresh_token(user_bo.id)
+            refresh_token = create_refresh_token({"id": user_bo.id, "role": user_bo.r_id})
             set_refresh_cookies(response, refresh_token)
         response.status_code = 200
     except ApiException as e:
@@ -86,9 +86,8 @@ def authenticate():
 @jwt_required(refresh=True)
 def refresh():
     """Refresh token endpoint"""
-    user_id = get_jwt_identity()
     response = jsonify(message="REFRESHED_SUCCESSFULLY")
-    access_token = create_access_token(user_id)
+    access_token = create_access_token(get_jwt_identity())
     set_access_cookies(response, access_token)
     return response, 200
 
@@ -117,7 +116,7 @@ def logout():
 @jwt_required()
 def get_infos():
     """Get user infos endpoint"""
-    user_id = get_jwt_identity()
+    user_id = get_jwt_identity()["id"]
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_infos_dto = UserInfosDTO(
@@ -143,7 +142,7 @@ def get_infos():
 @jwt_required()
 def get_user_id():
     """Get user ID and his role ID"""
-    user_id = get_jwt_identity()
+    user_id = get_jwt_identity()["id"]
     try:
         user_role = user_service.get_user_role(user_id)
         response = jsonify(user_role), 200
@@ -157,7 +156,7 @@ def get_user_id():
 def change_password():
     """Change password endpoint"""
     response = jsonify(message="PASSWORD_CHANGED_SUCCESSFULLY"), 200
-    user_id = get_jwt_identity()
+    user_id = get_jwt_identity()["id"]
     json_object = request.json
     try:
         user_service.change_password(
@@ -174,7 +173,7 @@ def change_password():
 def change_user_attribute(attribute_name):
     """Generalized endpoint for changing a user attribute."""
     response = jsonify(message=f"{attribute_name.upper()}_CHANGED_SUCCESSFULLY"), 200
-    user_id = get_jwt_identity()
+    user_id = get_jwt_identity()["id"]
     try:
         getattr(user_service, f"change_{attribute_name}")(user_id, request.json.get(attribute_name, None))
     except ApiException as e:
@@ -236,7 +235,7 @@ def change_description():
 def save_pfp():
     """Save profil picture endpoint"""
     response = jsonify(message="PROFIL_PICTURE_SAVED_SUCCESSFULLY"), 200
-    user_id = get_jwt_identity()
+    user_id = get_jwt_identity()["id"]
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_service.save_pfp(user_id, request.files.get("pfp", None), user_bo.profile_picture)
@@ -250,7 +249,7 @@ def save_pfp():
 @jwt_required()
 def get_user_documents_infos():
     """Get user infos endpoint"""
-    user_id = get_jwt_identity()
+    user_id = get_jwt_identity()["id"]
     try:
         doc_bo_list = documents_service.document_user(user_id)
         response = jsonify({"message": "DOCUMENT_VERIFIED_SUCCESSFULLY", **doc_bo_list}), 200
@@ -262,7 +261,7 @@ def get_user_documents_infos():
 def save_document(document_type):
     """Generalized endpoint for saving a user document."""
     response = jsonify(message=f"{document_type.upper()}_SAVED_SUCCESSFULLY"), 200
-    user_id = get_jwt_identity()
+    user_id = get_jwt_identity()["id"]
     document_file = request.files.get(document_type, None)
     try:
         document_bo = documents_service.get_documents_by_user_id(user_id)
@@ -307,7 +306,7 @@ def insurance():
 def send_email_confirmation():
     """Send email verification endpoint"""
     response = jsonify(message="EMAIL_SEND_SUCCESSFULLY"), 200
-    user_id = get_jwt_identity()
+    user_id = get_jwt_identity()["id"]
     try:
         user_bo = user_service.get_user_by_id(user_id)
         if user_bo.email_verified:
