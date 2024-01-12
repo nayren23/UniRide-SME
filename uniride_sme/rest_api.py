@@ -38,7 +38,7 @@ def refresh_expiring_jwts(response):
         now = datetime.now()
         target_timestamp = datetime.timestamp(now + app.config["JWT_ACCESS_TOKEN_REFRESH"])
         if target_timestamp > exp_timestamp:
-            access_token = create_access_token(identity=get_jwt_identity())
+            access_token = create_access_token(get_jwt_identity())
             set_access_cookies(response, access_token)
         return response
     except (RuntimeError, KeyError):
