@@ -558,7 +558,7 @@ def get_actif_criterian():
     """ Get ranking passengers"""
     try:
         data = user_service.actif_criteria()
-        response = jsonify({"message": "ACTIF_CRITERIA_DISPLAYED_SUCCESSFULLY", "criterion": data}), 200
+        response = jsonify({"message": "ACTIF_CRITERIAONDISPLAYED_SUCCESSFULLY", "criterion": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
