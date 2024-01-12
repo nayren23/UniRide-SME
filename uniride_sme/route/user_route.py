@@ -529,10 +529,9 @@ def update_label():
     return response
 
 
-
 @user.route("/drivers-ranking", methods=["GET"])
 def get_ranking_drivers():
-    """ Get ranking drivers"""
+    """Get ranking drivers"""
     try:
         data = user_service.users_ranking(1)
         response = jsonify({"message": "DRIVERS_RATING_CRITERIA_DISPLAYED_SUCCESSFULLY", "ranking": data}), 200
@@ -541,10 +540,9 @@ def get_ranking_drivers():
     return response
 
 
-
 @user.route("/passengers-ranking", methods=["GET"])
 def get_ranking_passengers():
-    """ Get ranking passengers"""
+    """Get ranking passengers"""
     try:
         data = user_service.users_ranking(3)
         response = jsonify({"message": "PASSENGERS_RATING_CRITERIA_DISPLAYED_SUCCESSFULLY", "ranking": data}), 200
@@ -555,7 +553,7 @@ def get_ranking_passengers():
 
 @user.route("/actif-criterion", methods=["GET"])
 def get_actif_criterian():
-    """ Get ranking passengers"""
+    """Get ranking passengers"""
     try:
         data = user_service.actif_criteria()
         response = jsonify({"message": "ACTIF_CRITERIAONDISPLAYED_SUCCESSFULLY", "criterion": data}), 200

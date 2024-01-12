@@ -547,12 +547,12 @@ def user_stat_passenger(id_user):
         return {"completed_count": 0, "pending_count": 0}
 
     user_data = document[0]
-    countCompleted = user_data.count(1)
-    countPending = user_data.count(0)
+    countcompleted = user_data.count(1)
+    countpending = user_data.count(0)
 
     result = {
-        "completed_count": countCompleted,
-        "pending_count": countPending,
+        "completed_count": countcompleted,
+        "pending_count": countpending,
     }
 
     return result
@@ -682,7 +682,6 @@ def update_rating_criteria(data):
     return {"message": "Rating criteria updated successfully"}
 
 
-
 def users_ranking(role):
     """Get ranking information"""
     conn = connect_pg.connect()
@@ -707,17 +706,14 @@ def users_ranking(role):
                 "lastname": rank[2],
                 "role": rank[1],
                 "average": calculate_avg_note_by_user(rank[0]),
-                "scoreCriteria": 
-                criteria_by_id(rank[0])
-                
+                "scoreCriteria": criteria_by_id(rank[0]),
             }
 
-            result.append({"user":user_data})
+            result.append({"user": user_data})
     finally:
         connect_pg.disconnect(conn)
 
     return result
-
 
 
 def calculate_avg_note_by_user(user_id):
@@ -748,20 +744,19 @@ def criteria_by_id(user_id):
 
     try:
         query = """
-            SELECT rc_id, n_value, rc_name
+            SELECT rc_id, avg(n_value) as avg_value, rc_name
             FROM uniride.ur_rating
             NATURAL JOIN uniride.ur_rating_criteria
             WHERE u_id = %s and rc_status = 1
+            GROUP BY rc_id, rc_name
         """
         criterian_result = connect_pg.get_query(conn, query, (user_id,))
 
         actif_criterion = actif_criteria()
-        print(actif_criterion, "actif_criterion")
 
         for actif in actif_criterion:
             criteria_found = False
             for criteria in criterian_result:
-                print(actif["id"], "actif", criteria[0], "criteria")
                 if actif["id"] == criteria[0]:
                     user_data = {
                         "id": criteria[0],
@@ -775,7 +770,7 @@ def criteria_by_id(user_id):
             if not criteria_found:
                 # If no matching criteria found, add null values
                 user_data = {
-                    "id":  actif["id"],
+                    "id": actif["id"],
                     "name": actif["name"],
                     "value": None,
                 }
@@ -784,7 +779,7 @@ def criteria_by_id(user_id):
         return result
     finally:
         connect_pg.disconnect(conn)
- 
+
 
 
 def actif_criteria():
@@ -810,7 +805,3 @@ def actif_criteria():
         return result
     finally:
         connect_pg.disconnect(conn)
-
-
-
-       
