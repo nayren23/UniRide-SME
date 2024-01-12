@@ -12,6 +12,7 @@ from uniride_sme.route.trip_route import trip
 from uniride_sme.route.address_route import address
 from uniride_sme.route.car_route import car
 from uniride_sme.route.book_route import book
+from uniride_sme.route.about_route import about
 
 
 @app.after_request
@@ -62,6 +63,7 @@ if __name__ == "__main__":
     app.register_blueprint(address)
     app.register_blueprint(car)
     app.register_blueprint(book)
+    app.register_blueprint(about)
     # Launch Flask server0
     app.run(
         debug=app.config["FLASK_DEBUG"],
