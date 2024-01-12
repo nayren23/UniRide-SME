@@ -828,3 +828,39 @@ def passenger_current_trips(user_id):
         result_list.append(trip_dto)
 
     return result_list
+
+
+def rate_user(value_rating, trip_id, user_id, rating_criteria_id):
+    """Rate the user"""
+    validate_rating(trip_id, rating_criteria_id)
+    validate_value_rating(value_rating)
+    if user_id is None:
+        raise MissingInputException("USER_ID_CANNOT_BE_NULL")
+
+    conn = connect_pg.connect()
+    query = "INSERT INTO uniride.ur_rating( n_value, u_id, t_id, rc_id) VALUES (%s, %s, %s, %s)"
+    connect_pg.execute_command(conn, query, (value_rating, user_id, trip_id, rating_criteria_id))
+    connect_pg.disconnect(conn)
+
+
+def validate_rating(trip_id, rating_criteria_id):
+    """Validate the rating"""  
+    _validate_trip_id(trip_id)
+    if rating_criteria_id is None:
+        raise MissingInputException("RATING_CRITERIA_ID_CANNOT_BE_NULL")
+    conn = connect_pg.connect()
+    query = "SELECT * FROM uniride.ur_rating WHERE t_id = %s AND rc_id = %s"
+    rating = connect_pg.get_query(conn, query, (trip_id, rating_criteria_id))
+    connect_pg.disconnect(conn)
+    if rating:
+        raise InvalidInputException("RATING_ALREADY_EXISTS")
+
+
+def validate_value_rating(value_rating):
+    """Validate the value rating"""
+    if value_rating is None:
+        raise MissingInputException("VALUE_RATING_CANNOT_BE_NULL")
+    if value_rating < 0:
+        raise InvalidInputException("VALUE_RATING_CANNOT_BE_NEGATIVE")
+    if value_rating > 5:
+        raise InvalidInputException("VALUE_RATING_CANNOT_BE_HIGHER_THAN_5")
