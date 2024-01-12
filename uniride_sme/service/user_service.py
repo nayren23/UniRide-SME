@@ -681,7 +681,7 @@ def users_ranking(role):
                    ur_note.rc_id, AVG(ur_note.n_value) AS n_value
             FROM uniride.ur_user
             NATURAL JOIN uniride.ur_note
-            WHERE ur_user.r_id = %s
+            WHERE ur_user.r_id = %s  
             GROUP BY ur_user.u_id, ur_user.r_id, ur_user.u_lastname, ur_user.u_firstname, ur_note.rc_id
         """
         ranks = connect_pg.get_query(conn, query, (role,))
@@ -693,13 +693,13 @@ def users_ranking(role):
                 "firstname": rank[3],
                 "lastname": rank[2],
                 "role": rank[1],
-                "Average": calculate_avg_note_by_user(rank[0]),
+                "average": calculate_avg_note_by_user(rank[0]),
                 "scoreCriteria": [
                 criteria_by_id(rank[0])
                 ]
             }
 
-            result.append(user_data)
+            result.append({"user":user_data})
     finally:
         connect_pg.disconnect(conn)
 
@@ -738,21 +738,17 @@ def criteria_by_id(user_id):
             SELECT rc_id, n_value, rc_name
             FROM uniride.ur_note
             NATURAL JOIN uniride.ur_rating_criteria
-            WHERE u_id = %s
+            WHERE u_id = %s and rc_status = 1
         """
         criterian_result = connect_pg.get_query(conn, query, (user_id,))
 
-        print(criterian_result, "criterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_resultcriterian_result")
         for criteria in criterian_result:
             user_data = {
                 "id": criteria[0],
                 "notes": criteria[1],
                 "name": criteria[2],
             }
-
             result.append(user_data)
-
-
 
         return result
     finally:
