@@ -11,7 +11,6 @@ from flask_jwt_extended import (
     verify_jwt_in_request,
 )
 from flask_jwt_extended.exceptions import NoAuthorizationError
-from flask_jwt_extended.config import config
 from jwt import ExpiredSignatureError
 
 from uniride_sme import app
@@ -70,21 +69,11 @@ def authenticate():
         response = make_response(
             jsonify(message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto)
         )
+
         access_token = create_access_token({"id": user_bo.id, "role": user_bo.r_id})
-
-        response.set_cookie(
-            config.access_cookie_name,
-            value=access_token,
-            max_age=config.cookie_max_age,
-            secure=config.cookie_secure,
-            httponly=False,
-            domain=config.cookie_domain,
-            path=config.access_cookie_path,
-            samesite=config.cookie_samesite,
-        )
-
+        set_access_cookies(response, access_token)
         if json_object.get("keepLoggedIn", False):
-            refresh_token = create_refresh_token(user_bo.id)
+            refresh_token = create_refresh_token({"id": user_bo.id, "role": user_bo.r_id})
             set_refresh_cookies(response, refresh_token)
         response.status_code = 200
     except ApiException as e:
@@ -97,9 +86,8 @@ def authenticate():
 @jwt_required(refresh=True)
 def refresh():
     """Refresh token endpoint"""
-    user_id = get_jwt_identity()["id"]
     response = jsonify(message="REFRESHED_SUCCESSFULLY")
-    access_token = create_access_token(user_id)
+    access_token = create_access_token(get_jwt_identity())
     set_access_cookies(response, access_token)
     return response, 200
 
