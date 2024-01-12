@@ -212,3 +212,20 @@ def passenger_current_trip():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+
+@trip.route("/rating", methods=["POST"])
+@jwt_required()
+def rate_user():
+    """Rate user endpoint"""
+    try:
+        user_id = get_jwt_identity()
+        request_data = request.get_json()
+        validate_fields(request_data, {"trip_id": int, "value": int, "rating_criteria_id": int})
+        trip_service.rate_user(
+            request_data.get("value"), request_data.get("trip_id"), user_id, request_data.get("rating_criteria_id")
+        )
+        response = jsonify(message="USER_RATED_SUCCESSFULLY"), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
