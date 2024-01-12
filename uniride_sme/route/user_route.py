@@ -345,7 +345,7 @@ def check_document():
     return response
 
 
-@user.route("/document_user/<int:id_user>", methods=["GET"])
+@user.route("/document-user/<int:id_user>", methods=["GET"])
 def document_user_verif(id_user):
     """Get documents to verify"""
     try:
@@ -356,7 +356,7 @@ def document_user_verif(id_user):
     return response
 
 
-@user.route("/document_number", methods=["GET"])
+@user.route("/document-number", methods=["GET"])
 def count_documents_status():
     """Get documents to verify"""
     try:
@@ -370,7 +370,7 @@ def count_documents_status():
     return response
 
 
-@user.route("/user_number", methods=["GET"])
+@user.route("/user-number", methods=["GET"])
 def user_count():
     """User count"""
     try:
@@ -415,7 +415,7 @@ def get_default_profile_picture():
     )
 
 
-@user.route("/users_informations", methods=["GET"])
+@user.route("/users-informations", methods=["GET"])
 def users_informations():
     """Get users information"""
     try:
@@ -426,7 +426,7 @@ def users_informations():
     return response
 
 
-@user.route("/user_management/<user_id>", methods=["DELETE"])
+@user.route("/user-management/<user_id>", methods=["DELETE"])
 def delete_user(user_id):
     """delete user"""
     try:
@@ -530,7 +530,7 @@ def update_label():
 
 
 
-@user.route("/drivers_ranking", methods=["GET"])
+@user.route("/drivers-ranking", methods=["GET"])
 def get_ranking_drivers():
     """ Get ranking drivers"""
     try:
@@ -542,7 +542,7 @@ def get_ranking_drivers():
 
 
 
-@user.route("/passengers_ranking", methods=["GET"])
+@user.route("/passengers-ranking", methods=["GET"])
 def get_ranking_passengers():
     """ Get ranking passengers"""
     try:
@@ -553,7 +553,7 @@ def get_ranking_passengers():
     return response
 
 
-@user.route("/actif_criterion", methods=["GET"])
+@user.route("/actif-criterion", methods=["GET"])
 def get_actif_criterian():
     """ Get ranking passengers"""
     try:

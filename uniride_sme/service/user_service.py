@@ -707,9 +707,9 @@ def users_ranking(role):
                 "lastname": rank[2],
                 "role": rank[1],
                 "average": calculate_avg_note_by_user(rank[0]),
-                "scoreCriteria": [
+                "scoreCriteria": 
                 criteria_by_id(rank[0])
-                ]
+                
             }
 
             result.append({"user":user_data})
