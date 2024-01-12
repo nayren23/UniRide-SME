@@ -470,6 +470,19 @@ def verify_user(id_user):
     connect_pg.disconnect(conn)
 
 
+def verify_admin(id_user):
+    """Verify user"""
+    conn = connect_pg.connect()
+    check_query = "SELECT r_id FROM uniride.ur_user WHERE u_id = %s"
+    check_values = (id_user,)
+    result = connect_pg.get_query(conn, check_query, check_values)
+
+    if not result:
+        connect_pg.disconnect(conn)
+        raise UserNotFoundException()
+    connect_pg.disconnect(conn)
+
+
 def delete_user(id_user):
     """Delete user"""
     conn = connect_pg.connect()
@@ -752,4 +765,33 @@ def criteria_by_id(user_id):
 
         return result
     finally:
-        connect_pg.disconnect(conn)       
+        connect_pg.disconnect(conn)      
+
+
+def actif_criteria():
+    """Get active criteria"""
+    conn = connect_pg.connect()
+    result = []
+
+    try:
+        query = """
+            SELECT rc_id,rc_name
+            FROM uniride.ur_rating_criteria
+            WHERE rc_status = 1
+        """
+        criterian_result = connect_pg.get_query(conn, query)
+
+        for criteria in criterian_result:
+            user_data = {
+                "id": criteria[0],
+                "name": criteria[1],
+            }
+            result.append(user_data)
+
+        return result
+    finally:
+        connect_pg.disconnect(conn)
+
+
+
+       
