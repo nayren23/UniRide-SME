@@ -639,11 +639,11 @@ def insert_rating_criteria(data):
     conn = connect_pg.connect()
     try:
         query = """
-           INSERT INTO uniride.ur_rating_criteria (rc_name, rc_description)
-           VALUES (%s, %s)
+           INSERT INTO uniride.ur_rating_criteria (rc_name, rc_description,r_id)
+           VALUES (%s, %s,%s)
            RETURNING rc_id
         """
-        result = connect_pg.execute_command(conn, query, (data["name"], data["description"]))
+        result = connect_pg.execute_command(conn, query, (data["name"], data["description"],data["role"]))
     finally:
         connect_pg.disconnect(conn)
     return result
