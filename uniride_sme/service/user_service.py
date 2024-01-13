@@ -670,12 +670,12 @@ def update_rating_criteria(data):
     try:
         query = """
            UPDATE uniride.ur_rating_criteria
-           SET rc_name = %s, rc_description = %s
+           SET rc_name = %s, rc_description = %s, r_id = %s
            WHERE rc_id = %s
         """
 
         verify_rating_criteria(data["id_criteria"])
-        connect_pg.execute_command(conn, query, (data["name"], data["description"], data["id_criteria"]))
+        connect_pg.execute_command(conn, query, (data["name"], data["description"], data["role"], data["id_criteria"]))
 
     finally:
         connect_pg.disconnect(conn)
