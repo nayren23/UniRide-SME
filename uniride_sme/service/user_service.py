@@ -789,7 +789,7 @@ def actif_criteria():
 
     try:
         query = """
-            SELECT rc_id,rc_name
+            SELECT rc_id,rc_name,r_id
             FROM uniride.ur_rating_criteria
             WHERE rc_status = 1
         """
@@ -799,6 +799,7 @@ def actif_criteria():
             user_data = {
                 "id": criteria[0],
                 "name": criteria[1],
+                "role": criteria[2],
             }
             result.append(user_data)
 

@@ -544,7 +544,7 @@ def get_ranking_drivers():
 def get_ranking_passengers():
     """Get ranking passengers"""
     try:
-        data = user_service.users_ranking(3)
+        data = user_service.users_ranking(2)
         response = jsonify({"message": "PASSENGERS_RATING_CRITERIA_DISPLAYED_SUCCESSFULLY", "ranking": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
