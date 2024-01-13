@@ -162,7 +162,7 @@ def passengers(trip_id: int):
 @trip.route("/<trip_id>/start", methods=["PUT"])
 @jwt_required()
 def start_trip(trip_id: int):
-    """Get trip passengers endpoint"""
+    """Start trip endpoint"""
     try:
         user_id = get_jwt_identity()["id"]
         trip_service.start_trip(trip_id, user_id)
@@ -175,7 +175,7 @@ def start_trip(trip_id: int):
 @trip.route("/<trip_id>/end", methods=["PUT"])
 @jwt_required()
 def end_trip(trip_id: int):
-    """Get trip passengers endpoint"""
+    """End trip endpoint"""
     try:
         user_id = get_jwt_identity()["id"]
         trip_service.end_trip(trip_id, user_id)
@@ -188,7 +188,7 @@ def end_trip(trip_id: int):
 @trip.route("/<trip_id>/cancel", methods=["PUT"])
 @jwt_required()
 def cancel_trip(trip_id: int):
-    """Get trip passengers endpoint"""
+    """Cancel trip endpoint"""
     try:
         user_id = get_jwt_identity()["id"]
         trip_service.cancel_trip(trip_id, user_id)

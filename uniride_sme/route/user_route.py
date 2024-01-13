@@ -15,7 +15,12 @@ from jwt import ExpiredSignatureError
 
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
-from uniride_sme.model.dto.user_dto import UserInfosDTO, InformationsVerifiedDTO, DriverInfosDTO, InformationsStatUsers
+from uniride_sme.model.dto.user_dto import (
+    UserInfosDTO,
+    InformationsVerifiedDTO,
+    DriverInfosDTO,
+    InformationsStatUsers,
+)
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
