@@ -610,7 +610,7 @@ def get_rating_criteria():
 
     try:
         query = """
-            SELECT rc_id, rc_name, rc_description
+            SELECT rc_id, rc_name, rc_description,r_id
             FROM uniride.ur_rating_criteria
         """
         documents = connect_pg.get_query(conn, query)
@@ -623,6 +623,7 @@ def get_rating_criteria():
                     "id_criteria": document[0],
                     "name": document[1],
                     "description": document[2],
+                    "role": document[3],
                 }
             }
             labels.append(label_data)
