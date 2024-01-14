@@ -700,6 +700,7 @@ def users_ranking(role):
         ranks = connect_pg.get_query(conn, query, (role,))
 
         for rank in ranks:
+            print(rank[1], " ROLEROLEROLEROLEROLEROLEROLEROLEROLEROLEROLEROLE")
             user_data = {
                 "id": rank[0],
                 "profile_picture": get_encoded_file(rank[4], "PFP_UPLOAD_FOLDER"),
@@ -707,7 +708,7 @@ def users_ranking(role):
                 "lastname": rank[2],
                 "role": rank[1],
                 "average": calculate_avg_note_by_user(rank[0]),
-                "scoreCriteria": criteria_by_id(rank[0]),
+                "scoreCriteria": criteria_by_id(rank[0],rank[1]),
             }
 
             result.append({"user": user_data})
@@ -738,7 +739,7 @@ def calculate_avg_note_by_user(user_id):
         connect_pg.disconnect(conn)
 
 
-def criteria_by_id(user_id):
+def criteria_by_id(user_id,role):
     """Get criteria by id"""
     conn = connect_pg.connect()
     result = []
@@ -748,12 +749,14 @@ def criteria_by_id(user_id):
             SELECT rc_id, avg(n_value) as avg_value, rc_name
             FROM uniride.ur_rating
             NATURAL JOIN uniride.ur_rating_criteria
-            WHERE u_id = %s and rc_status = 1
+            WHERE ur_rating.u_id = %s and ur_rating_criteria.r_id = %s
             GROUP BY rc_id, rc_name
         """
-        criterian_result = connect_pg.get_query(conn, query, (user_id,))
+        criterian_result = connect_pg.get_query(conn, query, (user_id,role,))
 
-        actif_criterion = actif_criteria()
+        actif_criterion = actif_criteria(role)
+
+        print(actif_criterion, "ACTIF CRITERION")
 
         for actif in actif_criterion:
             criteria_found = False
@@ -783,7 +786,7 @@ def criteria_by_id(user_id):
 
 
 
-def actif_criteria():
+def actif_criteria(role):
     """Get active criteria"""
     conn = connect_pg.connect()
     result = []
@@ -792,9 +795,9 @@ def actif_criteria():
         query = """
             SELECT rc_id,rc_name,r_id
             FROM uniride.ur_rating_criteria
-            WHERE rc_status = 1
+            WHERE r_id = %s
         """
-        criterian_result = connect_pg.get_query(conn, query)
+        criterian_result = connect_pg.get_query(conn, query , (role,))
 
         for criteria in criterian_result:
             user_data = {

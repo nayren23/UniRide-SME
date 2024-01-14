@@ -551,12 +551,12 @@ def get_ranking_passengers():
     return response
 
 
-@user.route("/actif-criterion", methods=["GET"])
-def get_actif_criterian():
+@user.route("/actif-criterion/<r_id>", methods=["GET"])
+def get_actif_criterian(r_id):
     """Get ranking passengers"""
     try:
-        data = user_service.actif_criteria()
-        response = jsonify({"message": "ACTIF_CRITERIAONDISPLAYED_SUCCESSFULLY", "criterion": data}), 200
+        data = user_service.actif_criteria(r_id)
+        response = jsonify({"message": "ACTIF_CRITERION_DISPLAYED_SUCCESSFULLY", "criterion": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

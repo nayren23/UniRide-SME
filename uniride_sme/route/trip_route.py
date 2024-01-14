@@ -138,7 +138,7 @@ def get_trip(trip_id):
     return response
 
 
-@trip.route("/trip_number", methods=["GET"])
+@trip.route("/trip-number", methods=["GET"])
 def trip_count():
     """Trip count"""
     try:

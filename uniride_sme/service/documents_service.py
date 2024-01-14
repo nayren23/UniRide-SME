@@ -8,6 +8,7 @@ from uniride_sme.service.user_service import verify_user
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
 from uniride_sme.utils.file import get_encoded_file
+import os
 
 
 def get_documents_by_user_id(user_id):
@@ -272,11 +273,21 @@ def update_r_id_if_verified(user_id):
 
     conn = connect_pg.connect()
     query = """
-    SELECT v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified
+    SELECT v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified, d_license, d_id_card, d_school_certificate, d_insurance
     FROM uniride.ur_document_verification
+    NATURAL JOIN uniride.ur_documents
     Where u_id = %s
     """
+
+    
     documents = connect_pg.get_query(conn, query, (user_id,), True)
+
+    delete_documents(documents,"v_license_verified", "LICENSE_UPLOAD_FOLDER","d_license")
+    delete_documents(documents,"v_id_card_verified", "ID_CARD_UPLOAD_FOLDER","d_id_card")
+    delete_documents(documents,"v_school_certificate_verified", "SCHOOL_CERTIFICATE_UPLOAD_FOLDER","d_school_certificate")
+    delete_documents(documents,"v_insurance_verified", "INSURANCE_UPLOAD_FOLDER","d_insurance")
+
+        
     if documents[0].get("v_id_card_verified") == 1 and documents[0].get("v_school_certificate_verified") == 1:
         if documents[0].get("v_license_verified") == 1 and documents[0].get("v_insurance_verified") == 1:
             r_id = 1
@@ -293,6 +304,16 @@ def update_r_id_if_verified(user_id):
     connect_pg.execute_command(conn, r_id_query, (user_id,))
 
     connect_pg.disconnect(conn)
+
+
+def delete_documents(documents,folder_verified, folder_documents,id_doc):
+    """Delete documents if they are verified"""
+    print(os.path.exists(app.config[documents[0]]),"folder_documents")
+    if(os.path.exists(app.config[folder_documents])):
+        if(documents[0].get(folder_verified) == 1):
+            os.remove(os.path.join(app.config[folder_documents], documents[0].get(id_doc)))
+    else:
+        raise MissingInputException("MISSING_DOCUMENTS_FOLDER")
 
 
 def document_user(user_id):
