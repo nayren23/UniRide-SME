@@ -14,6 +14,7 @@ class UserInfosDTO(TypedDict):
     phone_number: str
     description: str
     role: int
+    profile_picture: str
 
 
 class UserShortDTO(TypedDict):
@@ -35,12 +36,20 @@ class DriverInfosDTO(TypedDict):
 
 
 class PassengerInfosDTO(TypedDict):
-    """DTO for driver's informations"""
+    """DTO for passenger's informations"""
 
     id: int
     firstname: str
     lastname: str
     profile_picture: str
+    joined: bool
+
+
+class PassengerEmailsDTO(TypedDict):
+    """DTO for passenger's email"""
+
+    firstname: str
+    email: str
 
 
 class InformationsVerifiedDTO(TypedDict):

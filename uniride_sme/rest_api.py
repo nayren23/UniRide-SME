@@ -3,15 +3,16 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from flask import jsonify
-from flask_jwt_extended import get_jwt, get_jwt_identity, create_access_token, set_access_cookies, verify_jwt_in_request
+from flask_jwt_extended import get_jwt, get_jwt_identity, create_access_token, set_access_cookies
 from uniride_sme import app
 from uniride_sme.route.user_route import user
 from uniride_sme.route.trip_route import trip
 from uniride_sme.route.address_route import address
 from uniride_sme.route.car_route import car
 from uniride_sme.route.book_route import book
+from uniride_sme.route.about_route import about
 
 
 @app.after_request
@@ -38,7 +39,7 @@ def refresh_expiring_jwts(response):
         now = datetime.now()
         target_timestamp = datetime.timestamp(now + app.config["JWT_ACCESS_TOKEN_REFRESH"])
         if target_timestamp > exp_timestamp:
-            access_token = create_access_token(identity=get_jwt_identity())
+            access_token = create_access_token(get_jwt_identity())
             set_access_cookies(response, access_token)
         return response
     except (RuntimeError, KeyError):
@@ -62,6 +63,7 @@ if __name__ == "__main__":
     app.register_blueprint(address)
     app.register_blueprint(car)
     app.register_blueprint(book)
+    app.register_blueprint(about)
     # Launch Flask server0
     app.run(
         debug=app.config["FLASK_DEBUG"],

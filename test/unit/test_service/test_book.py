@@ -14,11 +14,16 @@ from uniride_sme.service.book_service import (
     _validate_booking_status,
     respond_booking,
     get_bookings,
+    _validate_trip_availability,
+    _validate_trip_started,
+    _validate_booking,
+    join,
+    get_verification_code,
+    _check_trip_already_booked,
 )
 from uniride_sme.model.dto.trip_dto import TripDetailedDTO, TripShortDTO
 from uniride_sme.model.dto.user_dto import UserShortDTO
 from uniride_sme.model.dto.book_dto import BookDTO
-from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.utils.exception.exceptions import (
     MissingInputException,
     InvalidInputException,
@@ -119,24 +124,117 @@ def test_validate_user_id_success():
     _validate_user_id(trip, 1)
 
 
-def test_book_trip_already_booked(mock_get_trip_by_id, mock_execute_command):
+def test_trip_availability_with_wrong_status():
+    """Test _validate_trip_availability with a trip having wrong status"""
+    future_trip = {
+        "status": 0,
+        "departure_date": (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    with pytest.raises(ForbiddenException) as e:
+        _validate_trip_availability(future_trip)
+    assert "TRIP_NOT_AVAILABLE" in str(e.value)
+
+
+def test_trip_availability_with_past_trip():
+    """Test _validate_trip_availability with a past trip"""
+    past_trip = {
+        "status": 1,
+        "departure_date": (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    with pytest.raises(ForbiddenException) as e:
+        _validate_trip_availability(past_trip)
+    assert "TRIP_NOT_AVAILABLE" in str(e.value)
+
+
+def test_trip_availability_success():
+    """Test _validate_trip_availability success"""
+    future_trip = {
+        "status": 1,
+        "departure_date": (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    _validate_trip_availability(future_trip)
+
+
+def test_check_trip_already_booked_uncanceled_booking(mock_get_query):
+    """Test _check_trip_already_booked with an uncanceled booking"""
+    mock_get_query.return_value = [{"j_accepted": 1}]
+
+    with pytest.raises(TripAlreadyBookedException):
+        _check_trip_already_booked(1, 1)
+
+
+def test_check_trip_already_booked_more_than_three_canceled_booking(mock_get_query):
+    """Test _check_trip_already_booked with more than three canceled bookings"""
+    mock_get_query.return_value = [{"j_accepted": -2}, {"j_accepted": -2}, {"j_accepted": -2}, {"j_accepted": -2}]
+
+    with pytest.raises(ForbiddenException, match="BOOKED_TOO_MANY_TIMES"):
+        _check_trip_already_booked(1, 1)
+
+
+def test_check_trip_already_booked_less_than_four_canceled_booking(mock_get_query):
+    """Test _check_trip_already_booked with more than three canceled bookings"""
+    mock_get_query.return_value = [{"j_accepted": -2}, {"j_accepted": -2}, {"j_accepted": -2}]
+    _check_trip_already_booked(1, 1)
+
+
+def test_check_trip_already_booked_not_booked(mock_get_query):
+    """Test _check_trip_already_booked with no booking"""
+    mock_get_query.return_value = []
+    _check_trip_already_booked(1, 1)
+
+
+def test_book_trip_already_booked(mock_get_trip_by_id, mock_get_query):
     """Test book_trip trip already booked"""
+    mock_get_query.return_value = [{"j_accepted": 1}]
+
     mock_get_trip_by_id.return_value = TripDetailedDTO(
+        status=1,
         passenger_count=3,
         total_passenger_count=4,
         driver_id=2,
+        departure_date=str(datetime.datetime.now().replace(microsecond=0) + datetime.timedelta(days=1)),
     )
-    mock_execute_command.side_effect = psycopg2.errors.UniqueViolation()
     with pytest.raises(TripAlreadyBookedException):
+        book_trip(1, 1, 1)
+
+
+def test_book_trip_trip_started(mock_get_trip_by_id):
+    """Test book_trip trip already booked"""
+    # status error
+    mock_get_trip_by_id.return_value = TripDetailedDTO(
+        status=1,
+        passenger_count=3,
+        total_passenger_count=4,
+        driver_id=2,
+        departure_date="2024-01-09 09:00:00",
+    )
+
+    with pytest.raises(ForbiddenException):
+        book_trip(1, 1, 1)
+
+    # departure date error
+    mock_get_trip_by_id.return_value = TripDetailedDTO(
+        status=4,
+        passenger_count=3,
+        total_passenger_count=4,
+        driver_id=2,
+        departure_date="2024-01-09 09:00:00",
+    )
+
+    with pytest.raises(ForbiddenException):
         book_trip(1, 1, 1)
 
 
 def test_book_trip_success(mock_get_trip_by_id, mock_execute_command):
     """Test book_trip success"""
     mock_get_trip_by_id.return_value = TripDetailedDTO(
+        status=1,
         passenger_count=3,
         total_passenger_count=4,
         driver_id=2,
+        departure_date=str(datetime.datetime.now().replace(microsecond=0) + datetime.timedelta(days=1)),
     )
     mock_execute_command.return_value = None
     book_trip(1, 1, 1)
@@ -170,9 +268,9 @@ def test_get_booking_by_id_success(mock_get_query):
             [
                 ("u_id", 143),
                 ("t_id", 60),
-                ("r_accepted", 1),
-                ("r_passenger_count", 1),
-                ("r_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
+                ("j_accepted", 1),
+                ("j_passenger_count", 1),
+                ("j_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
             ]
         )
     ]
@@ -244,9 +342,9 @@ def test_respond_booking_success(mock_get_trip_by_id, mock_get_booking_by_id, mo
         [
             ("u_id", 143),
             ("t_id", 60),
-            ("r_accepted", 0),
-            ("r_passenger_count", 1),
-            ("r_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
+            ("j_accepted", 0),
+            ("j_passenger_count", 1),
+            ("j_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
         ]
     )
     mock_execute_command.return_value = None
@@ -265,9 +363,9 @@ def test_get_bookings_success(mock_get_query):
     mock_get_query.return_value = [
         psycopg2.extras.RealDictRow(
             [
-                ("r_accepted", 1),
-                ("r_passenger_count", 3),
-                ("r_date_requested", datetime.datetime(2023, 12, 8, 11, 11, 13, 479329)),
+                ("j_accepted", 1),
+                ("j_passenger_count", 3),
+                ("j_date_requested", datetime.datetime(2023, 12, 8, 11, 11, 13, 479329)),
                 ("t_id", 15),
                 ("t_timestamp_proposed", datetime.datetime(2023, 12, 6, 16, 22)),
                 ("departure_a_id", 1),
@@ -308,3 +406,108 @@ def test_get_bookings_success(mock_get_query):
     ]
     result = get_bookings(2)
     assert result == expected_result
+
+
+def test_validate_trip_started_with_started_trip():
+    """Test _validate_trip_started with a trip that has started"""
+    started_trip = {"status": 4}
+    _validate_trip_started(started_trip)
+
+
+def test_validate_trip_started_with_invalid_status():
+    """Test _validate_trip_started with invalid status"""
+    invalid_trip = {"status": 1}
+
+    with pytest.raises(ForbiddenException) as e:
+        _validate_trip_started(invalid_trip)
+    assert "TRIP_NOT_STARTED" in str(e.value)
+
+
+def test_validate_booking_unaccepted():
+    """Test _validate_booking with an unaccepted booking"""
+    unaccepted_booking = {"j_accepted": 0, "j_verification_code": 12345, "j_joined": False}
+    verification_code = 12345
+
+    with pytest.raises(ForbiddenException) as e:
+        _validate_booking(unaccepted_booking, verification_code)
+    assert "BOOKING_NOT_ACCEPTED" in str(e.value)
+
+
+def test_validate_booking_invalid_verification_code():
+    """Test _validate_booking with an invalid verification code"""
+    booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
+    invalid_verification_code = 54321
+
+    with pytest.raises(ForbiddenException) as e:
+        _validate_booking(booking, invalid_verification_code)
+    assert "INVALID_VERIFICATION_CODE" in str(e.value)
+
+
+def test_validate_booking_passenger_already_joined():
+    """Test _validate_booking with the passenger already joined"""
+    booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": True}
+    with pytest.raises(ForbiddenException) as e:
+        _validate_booking(booking, 12345)
+    assert "PASSENGER_AlREADY_JOINED" in str(e.value)
+
+
+def test_validate_booking_success():
+    """Test _validate_booking success"""
+    valid_booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
+    verification_code = 12345
+    _validate_booking(valid_booking, verification_code)
+
+
+def test_join_success(mock_get_booking_by_id, mock_get_trip_by_id):
+    """Test join success"""
+    mock_get_booking_by_id.return_value = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
+    mock_get_trip_by_id.return_value = {"status": 4, "driver_id": 1}
+    join(1, 1, 2, 12345)
+
+
+def test_get_verification_code_missing_trip_id():
+    """Test get_verification_code with missing trip_id"""
+    with pytest.raises(MissingInputException) as e:
+        get_verification_code(None, 1)
+    assert "TRIP_ID_MISSING" in str(e.value)
+
+
+def test_get_verification_code_status_invalid(mock_get_trip_by_id):
+    """Test get_verification_code with invalid status"""
+    mock_get_trip_by_id.return_value = {"status": 1}
+    with pytest.raises(ForbiddenException) as e:
+        get_verification_code(1, 1)
+    assert "TRIP_NOT_STARTED" in str(e.value)
+
+
+def test_get_verification_code_missing_user_id(mock_get_trip_by_id):
+    """Test get_verification_code with missing user_id"""
+    mock_get_trip_by_id.return_value = {"status": 4}
+    with pytest.raises(MissingInputException) as e:
+        get_verification_code(1, None)
+    assert "USER_ID_MISSING" in str(e.value)
+
+
+def test_get_verification_code_booking_not_found(mock_get_trip_by_id, mock_get_query):
+    """Test get_verification_code with booking not found"""
+    mock_get_trip_by_id.return_value = {"status": 4}
+    mock_get_query.return_value = None
+    with pytest.raises(BookingNotFoundException):
+        get_verification_code(1, 1)
+
+
+def test_get_verification_code_unaccepted_booking(mock_get_trip_by_id, mock_get_query):
+    """Test get_verification_code with booking not accepted"""
+    mock_get_trip_by_id.return_value = {"status": 4}
+    mock_get_query.return_value = [{"j_accepted": 0, "j_verification_code": 12345}]
+    with pytest.raises(ForbiddenException):
+        get_verification_code(1, 1)
+
+
+def test_get_verification_code_success(mock_get_trip_by_id, mock_get_query):
+    """Test get_verification_code successfully retrieves the verification code"""
+    mock_get_trip_by_id.return_value = {"status": 4}
+    expected_verification_code = 12345
+    mock_get_query.return_value = [{"j_accepted": 1, "j_verification_code": expected_verification_code}]
+    actual_verification_code = get_verification_code(1, 1)
+    assert actual_verification_code == expected_verification_code

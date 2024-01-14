@@ -1,3 +1,4 @@
+"""User business object module"""
 import dataclasses
 from datetime import datetime
 

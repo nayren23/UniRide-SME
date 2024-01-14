@@ -9,9 +9,8 @@ from uniride_sme import connect_pg
 from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO, AddressSimpleDTO
-from uniride_sme.model.dto.user_dto import PassengerInfosDTO
-from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO
-from uniride_sme.service.car_service import get_car_info_by_user_id
+from uniride_sme.model.dto.user_dto import PassengerInfosDTO, PassengerEmailsDTO
+from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO, PassengerTripDTO
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
@@ -553,7 +552,7 @@ def get_trip_by_id(trip_id):
         raise TripNotFoundException()
     trip = trip[0]
 
-    query = "SELECT SUM(r_passenger_count) FROM uniride.ur_join WHERE t_id = %s and r_accepted = 1"
+    query = "SELECT SUM(j_passenger_count) FROM uniride.ur_join WHERE t_id = %s and j_accepted = 1"
     passenger_count = connect_pg.get_query(conn, query, (trip_id,))[0][0]
     connect_pg.disconnect(conn)
     trip["passenger_count"] = passenger_count if passenger_count else 0
@@ -636,14 +635,18 @@ def get_passengers(trip_id, user_id):
     conn = connect_pg.connect()
     query = """
     SELECT 
-        u_id, 
-        u_firstname, 
-        u_lastname, 
-        u_profile_picture 
+        u.u_id, 
+        u.u_firstname, 
+        u.u_lastname, 
+        u.u_profile_picture,
+        j.j_joined
     FROM 
-        uniride.ur_user 
+        uniride.ur_user u
+    JOIN 
+        uniride.ur_join j ON u.u_id = j.u_id
     WHERE 
-        u_id IN (SELECT u_id FROM uniride.ur_join WHERE t_id = %s AND r_accepted = 1)
+        j.t_id = %s AND 
+        j.j_accepted = 1;
     """
     passengers = connect_pg.get_query(conn, query, (trip_id,), True)
     connect_pg.disconnect(conn)
@@ -655,7 +658,40 @@ def get_passengers(trip_id, user_id):
                 id=passenger["u_id"],
                 firstname=passenger["u_firstname"],
                 lastname=passenger["u_lastname"],
-                profile_picture=get_encoded_file(passenger["u_profile_picture"], "PFP_UPLOAD_FOLDER"),
+                profile_picture=get_encoded_file(passenger["u_profile_picture"], app.config["PFP_UPLOAD_FOLDER"]),
+                joined=passenger["j_joined"],
+            )
+        )
+    return passenger_dtos
+
+
+def get_passengers_emails(trip_id):
+    """Get passengers emails"""
+    _validate_trip_id(trip_id)
+
+    conn = connect_pg.connect()
+    query = """
+    SELECT 
+        u.u_firstname, 
+        u.u_lastname, 
+        u.u_student_email
+    FROM 
+        uniride.ur_user u
+    JOIN 
+        uniride.ur_join j ON u.u_id = j.u_id
+    WHERE 
+        j.t_id = %s AND 
+        j.j_accepted = 1;
+    """
+    passengers = connect_pg.get_query(conn, query, (trip_id,), True)
+    connect_pg.disconnect(conn)
+    passenger_dtos = []
+    for passenger in passengers:
+        passenger_dtos.append(
+            PassengerEmailsDTO(
+                firstname=passenger["u_firstname"],
+                lastname=passenger["u_lastname"],
+                email=passenger["u_student_email"],
             )
         )
     return passenger_dtos
@@ -668,3 +704,163 @@ def trips_status(status):
     result = connect_pg.get_query(conn, query, (status,))
     connect_pg.disconnect(conn)
     return result[0][0]
+
+
+def _validate_driver_id(driver_id, user_id):
+    if not user_id:
+        raise MissingInputException("USER_ID_MISSING")
+
+    if driver_id != user_id:
+        raise ForbiddenException("ONLY_DRIVER_ALLOWED")
+
+
+def _validate_start_time(departure_date):
+    departure_date = datetime.strptime(departure_date, "%Y-%m-%d %H:%M:%S")
+    print(departure_date)
+    if departure_date - timedelta(minutes=15) > datetime.now():
+        raise ForbiddenException("TOO_EARLY_TO_START_TRIP")
+
+    if departure_date + timedelta(minutes=15) < datetime.now():
+        raise ForbiddenException("TOO_LATE_TO_START_TRIP")
+
+
+def start_trip(trip_id, user_id):
+    """Start the trip"""
+    trip = get_trip_by_id(trip_id)
+    _validate_driver_id(trip["driver_id"], user_id)
+    _validate_start_time(trip["departure_date"])
+
+    status = TripStatus.ONCOURSE.value
+    if trip["status"] != TripStatus.PENDING.value:
+        raise ForbiddenException("TRIP_NOT_PENDING")
+
+    change_trip_status(trip_id, status)
+
+
+def end_trip(trip_id, user_id):
+    """Start the trip"""
+    trip = get_trip_by_id(trip_id)
+    _validate_driver_id(trip["driver_id"], user_id)
+
+    status = TripStatus.COMPLETED.value
+    if trip["status"] != TripStatus.ONCOURSE.value:
+        raise ForbiddenException("TRIP_NOT_STARTED")
+
+    change_trip_status(trip_id, status)
+
+
+def cancel_trip(trip_id, user_id):
+    """Start the trip"""
+    trip = get_trip_by_id(trip_id)
+    _validate_driver_id(trip["driver_id"], user_id)
+
+    status = TripStatus.CANCELED.value
+    if trip["status"] != TripStatus.PENDING.value:
+        raise ForbiddenException("TRIP_NOT_PENDING")
+
+    change_trip_status(trip_id, status)
+
+
+def change_trip_status(trip_id, status):
+    """Change the trip status"""
+    conn = connect_pg.connect()
+    query = "UPDATE uniride.ur_trip SET t_status = %s WHERE t_id = %s"
+    connect_pg.execute_command(conn, query, (status, trip_id))
+    connect_pg.disconnect(conn)
+
+
+def passenger_current_trips(user_id):
+    """Get passenger current"""
+    if user_id is None:
+        raise MissingInputException("USER_ID_CANNOT_BE_NULL")
+
+    conn = connect_pg.connect()
+    query = """
+        Select  
+                u_id, 
+                t_id, 
+                j_accepted,
+                t.t_timestamp_proposed,
+                t.t_status,
+                departure.a_id AS departure_a_id,
+                departure.a_street_number AS departure_a_street_number,
+                departure.a_street_name AS departure_a_street_name,
+                departure.a_city AS departure_a_city,
+                arrival.a_id AS arrival_a_id,
+                arrival.a_street_number AS arrival_a_street_number,
+                arrival.a_street_name AS arrival_a_street_name,
+                arrival.a_city AS arrival_a_city,
+                arrival.a_postal_code AS arrival_a_postal_code,
+                departure.a_postal_code AS departure_a_postal_code
+        FROM 
+            uniride.ur_join 
+        INNER JOIN
+            uniride.ur_trip as t using (t_id)
+        INNER JOIN
+            uniride.ur_address departure ON t.t_address_departure_id = departure.a_id
+        INNER JOIN
+            uniride.ur_address arrival ON t.t_address_arrival_id = arrival.a_id
+        WHERE 
+            u_id=%s;
+        """
+    conn = connect_pg.connect()
+    passenger_trips = connect_pg.get_query(conn, query, (user_id,), True)
+    if not passenger_trips:
+        raise TripNotFoundException()
+    connect_pg.disconnect(conn)
+    result_list = []
+
+    for trip_data in passenger_trips:
+        trip_dto = PassengerTripDTO(
+            trip_id=trip_data["t_id"],
+            departure_address=(
+                f"{trip_data['departure_a_street_number']} {trip_data['departure_a_street_name']},"
+                f" {trip_data['departure_a_city']}"
+            ),
+            arrival_address=(
+                f"{trip_data['arrival_a_street_number']} {trip_data['arrival_a_street_name']}"
+                f", {trip_data['arrival_a_city']}"
+            ),
+            proposed_date=str(trip_data["t_timestamp_proposed"]),
+            status=trip_data["t_status"],
+            book_status=trip_data["j_accepted"],
+        )
+        result_list.append(trip_dto)
+
+    return result_list
+
+
+def rate_user(value_rating, trip_id, user_id, rating_criteria_id):
+    """Rate the user"""
+    validate_rating(trip_id, rating_criteria_id)
+    validate_value_rating(value_rating)
+    if user_id is None:
+        raise MissingInputException("USER_ID_CANNOT_BE_NULL")
+
+    conn = connect_pg.connect()
+    query = "INSERT INTO uniride.ur_rating( n_value, u_id, t_id, rc_id) VALUES (%s, %s, %s, %s)"
+    connect_pg.execute_command(conn, query, (value_rating, user_id, trip_id, rating_criteria_id))
+    connect_pg.disconnect(conn)
+
+
+def validate_rating(trip_id, rating_criteria_id):
+    """Validate the rating"""  
+    _validate_trip_id(trip_id)
+    if rating_criteria_id is None:
+        raise MissingInputException("RATING_CRITERIA_ID_CANNOT_BE_NULL")
+    conn = connect_pg.connect()
+    query = "SELECT * FROM uniride.ur_rating WHERE t_id = %s AND rc_id = %s"
+    rating = connect_pg.get_query(conn, query, (trip_id, rating_criteria_id))
+    connect_pg.disconnect(conn)
+    if rating:
+        raise InvalidInputException("RATING_ALREADY_EXISTS")
+
+
+def validate_value_rating(value_rating):
+    """Validate the value rating"""
+    if value_rating is None:
+        raise MissingInputException("VALUE_RATING_CANNOT_BE_NULL")
+    if value_rating < 0:
+        raise InvalidInputException("VALUE_RATING_CANNOT_BE_NEGATIVE")
+    if value_rating > 5:
+        raise InvalidInputException("VALUE_RATING_CANNOT_BE_HIGHER_THAN_5")

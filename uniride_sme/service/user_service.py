@@ -32,6 +32,27 @@ def authenticate(login, password) -> UserBO:
     return user_bo
 
 
+def get_user_role(user_id):
+    """Get user role"""
+    with connect_pg.connect() as conn:
+        verify_user(user_id)
+
+        query = """
+        SELECT r_id, u_id
+        FROM uniride.ur_user
+        WHERE u_id = %s
+        """
+
+        r_id = connect_pg.get_query(conn, query, (user_id,))
+
+    if not r_id:
+        raise UserNotFoundException
+
+    document = r_id[0]
+
+    return {"role": document[0], "id": user_id}
+
+
 def get_user_by_id(user_id) -> UserBO:
     """Get user infos from db using the id"""
     return _get_user_by_identifier(user_id, "u_id")
@@ -537,7 +558,7 @@ def user_stat_passenger(id_user):
         verify_user(id_user)
 
         query = """
-        SELECT r_accepted
+        SELECT j_accepted
         FROM uniride.ur_join
         WHERE u_id = %s
         """
@@ -548,12 +569,12 @@ def user_stat_passenger(id_user):
         return {"completed_count": 0, "pending_count": 0}
 
     user_data = document[0]
-    countcompleted = user_data.count(1)
-    countpending = user_data.count(0)
+    count_completed = user_data.count(1)
+    count_pending = user_data.count(0)
 
     result = {
-        "completed_count": countcompleted,
-        "pending_count": countpending,
+        "completed_count": count_completed,
+        "pending_count": count_pending,
     }
 
     return result

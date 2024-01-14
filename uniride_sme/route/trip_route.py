@@ -11,16 +11,8 @@ from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.pagination import create_pagination
-from uniride_sme.service.trip_service import (
-    add_trip,
-    get_driver_trips,
-    get_available_trips_to,
-    get_trip_by_id,
-    format_get_current_driver_trips,
-    count_trip,
-    get_passengers,
-    trips_status,
-)
+from uniride_sme.service import trip_service
+from uniride_sme.utils.email import send_cancelation_email
 
 trip = Blueprint("trip", __name__, url_prefix="/trip")
 
@@ -34,7 +26,7 @@ def propose_trip():
 
     response = jsonify({"message": "TRIP_CREATED_SUCCESSFULLY"}), 200
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         json_object = request.json
 
         validate_fields(
@@ -55,7 +47,7 @@ def propose_trip():
             arrival_address_bo=AddressBO(id=json_object.get("address_arrival_id", None)),
             status=TripStatus.PENDING.value,
         )
-        add_trip(trip_bo)
+        trip_service.add_trip(trip_bo)
         response = jsonify({"message": "CREATED_SUCCESSFULLY", "trip_id": trip_bo.id}), 200
 
     except ApiException as e:
@@ -101,7 +93,7 @@ def get_available_trips():
         trip_bo.departure_address = departure_address_bo
         trip_bo.arrival_address = address_arrival_bo
 
-        available_trips = get_available_trips_to(trip_bo)
+        available_trips = trip_service.get_available_trips_to(trip_bo)
 
         # We need to paginate the data
         meta, paginated_data = create_pagination(request, available_trips)
@@ -117,8 +109,8 @@ def get_available_trips():
 def get_current_driver_trips():
     """Get all the current trips of a driver"""
     try:
-        user_id = get_jwt_identity()
-        available_trips = get_driver_trips(user_id)
+        user_id = get_jwt_identity()["id"]
+        available_trips = trip_service.get_driver_trips(user_id)
         # We need to paginate the data
         meta, paginated_data = create_pagination(request, available_trips)
         response = jsonify({"trips": paginated_data, "meta": meta}), 200
@@ -131,7 +123,7 @@ def get_current_driver_trips():
 def get_trip(trip_id):
     """Get a trip by id endpoint"""
     try:
-        trip_detailed_dto = get_trip_by_id(trip_id)
+        trip_detailed_dto = trip_service.get_trip_by_id(trip_id)
         response = jsonify(trip_detailed_dto), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
@@ -142,12 +134,11 @@ def get_trip(trip_id):
 def trip_count():
     """Trip count"""
     try:
-
         trip_count_status = TripStatusDTO(
-            trip_pending=trips_status(1),
-            trip_canceled=trips_status(2),
-            trip_completed=trips_status(3),
-            trip_oncourse=trips_status(4),
+            trip_pending=trip_service.trips_status(1),
+            trip_canceled=trip_service.trips_status(2),
+            trip_completed=trip_service.trips_status(3),
+            trip_oncourse=trip_service.trips_status(4),
         )
         response = jsonify({"message": "TRIP_NUMBER_DISPLAYED_SUCCESSFULLY", "trip_infos": trip_count_status}), 200
     except ApiException as e:
@@ -160,9 +151,81 @@ def trip_count():
 def passengers(trip_id: int):
     """Get trip passengers endpoint"""
     try:
+        user_id = get_jwt_identity()["id"]
+        passengers_list = trip_service.get_passengers(trip_id, user_id)
+        response = jsonify(passengers_list), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@trip.route("/<trip_id>/start", methods=["PUT"])
+@jwt_required()
+def start_trip(trip_id: int):
+    """Start trip endpoint"""
+    try:
+        user_id = get_jwt_identity()["id"]
+        trip_service.start_trip(trip_id, user_id)
+        response = jsonify(message="TRIP_STARTED_SUCCESSFULLY"), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@trip.route("/<trip_id>/end", methods=["PUT"])
+@jwt_required()
+def end_trip(trip_id: int):
+    """End trip endpoint"""
+    try:
+        user_id = get_jwt_identity()["id"]
+        trip_service.end_trip(trip_id, user_id)
+        response = jsonify(message="TRIP_ENDED_SUCCESSFULLY"), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@trip.route("/<trip_id>/cancel", methods=["PUT"])
+@jwt_required()
+def cancel_trip(trip_id: int):
+    """Cancel trip endpoint"""
+    try:
+        user_id = get_jwt_identity()["id"]
+        trip_service.cancel_trip(trip_id, user_id)
+        passengers_emails = trip_service.get_passengers_emails(trip_id)
+        for passenger in passengers_emails:
+            send_cancelation_email(passenger["email"], passenger["firstname"], trip_id)
+        response = jsonify(message="TRIP_CANCELED_SUCCESSFULLY"), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@trip.route("/passenger/current", methods=["GET"])
+@jwt_required()
+def passenger_current_trip():
+    """Get passenger current trip endpoint"""
+    try:
+        user_id = get_jwt_identity()["id"]
+        passenger_current_trips_result = trip_service.passenger_current_trips(user_id)
+        response = jsonify(passenger_current_trips_result), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@trip.route("/rating", methods=["POST"])
+@jwt_required()
+def rate_user():
+    """Rate user endpoint"""
+    try:
         user_id = get_jwt_identity()
-        passengers = get_passengers(trip_id, user_id)
-        response = jsonify(passengers), 200
+        request_data = request.get_json()
+        validate_fields(request_data, {"trip_id": int, "value": int, "rating_criteria_id": int})
+        trip_service.rate_user(
+            request_data.get("value"), request_data.get("trip_id"), user_id, request_data.get("rating_criteria_id")
+        )
+        response = jsonify(message="USER_RATED_SUCCESSFULLY"), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

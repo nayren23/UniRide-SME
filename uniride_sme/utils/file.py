@@ -29,7 +29,11 @@ def delete_file(file, directory):
 def get_encoded_file(file_name, file_location):
     """Get encoded file
     :param file_name: file name
-    :param file_location: file location, either "PFP_UPLOAD_FOLDER" or "LICENSE_UPLOAD_FOLDER or ID_CARD_UPLOAD_FOLDER or SCHOOL_CERTIFICATE_UPLOAD_FOLDER,INSURANCE_UPLOAD_FOLDER "
+    :param file_location: file location,
+    either "PFP_UPLOAD_FOLDER"
+    or "LICENSE_UPLOAD_FOLDER
+    or ID_CARD_UPLOAD_FOLDER
+    or SCHOOL_CERTIFICATE_UPLOAD_FOLDER,INSURANCE_UPLOAD_FOLDER "
     :return: encoded file
     """
     if not file_name:
@@ -39,10 +43,15 @@ def get_encoded_file(file_name, file_location):
     if not os.path.isfile(file_path):
         return ""
 
-    with open(file_path, "rb") as file:
-        file_data = file.read()
+    file_extension_part = os.path.splitext(file_name)[1].lstrip(".")
 
-        file_name_part, file_extension_part = os.path.splitext(file_name)
-        file_extension_part = file_extension_part.lstrip(".")
-        prefix_url = "data:image/" + file_extension_part + ";base64,"
-        return prefix_url + base64.b64encode(file_data).decode("utf-8")
+    if file_extension_part.lower() == "pdf":
+        prefix_url = "data:application/"
+    else:
+        prefix_url = "data:image/"
+
+    with open(file_path, "rb") as file:
+        file_data = base64.b64encode(file.read()).decode("utf-8")
+
+    prefix_url = prefix_url + file_extension_part + ";base64,"
+    return prefix_url + file_data

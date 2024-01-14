@@ -13,3 +13,5 @@ class BookBO:  # pylint: disable=too-many-instance-attributes
     accepted: Optional[int] = None
     passenger_count: Optional[int] = None
     date_requested: Optional[datetime] = None
+    joined: Optional[bool] = None
+    verification_code: Optional[int] = None
