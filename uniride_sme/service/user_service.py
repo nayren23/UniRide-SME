@@ -637,13 +637,15 @@ def get_rating_criteria():
 def insert_rating_criteria(data):
     """Insert new rating criteria"""
     conn = connect_pg.connect()
+    if(count_role(data["role"]) >= 5):
+        raise InvalidInputException("TOO_MANY_CRITERIA")
     try:
         query = """
            INSERT INTO uniride.ur_rating_criteria (rc_name, rc_description,r_id)
            VALUES (%s, %s,%s)
            RETURNING rc_id
         """
-        result = connect_pg.execute_command(conn, query, (data["name"], data["description"],data["role"]))
+        result = connect_pg.execute_command(conn, query, (data["name"], data["description"], data["role"]))
     finally:
         connect_pg.disconnect(conn)
     return result
@@ -666,7 +668,8 @@ def delete_rating_criteria(id_criteria):
 def update_rating_criteria(data):
     """Update rating criteria"""
     conn = connect_pg.connect()
-
+    if(count_role(data["role"]) >= 5):
+        raise InvalidInputException("TOO_MANY_CRITERIA_FOR_THIS_ROLE")
     try:
         query = """
            UPDATE uniride.ur_rating_criteria
@@ -700,7 +703,6 @@ def users_ranking(role):
         ranks = connect_pg.get_query(conn, query, (role,))
 
         for rank in ranks:
-            print(rank[1], " ROLEROLEROLEROLEROLEROLEROLEROLEROLEROLEROLEROLE")
             user_data = {
                 "id": rank[0],
                 "profile_picture": get_encoded_file(rank[4], "PFP_UPLOAD_FOLDER"),
@@ -708,7 +710,7 @@ def users_ranking(role):
                 "lastname": rank[2],
                 "role": rank[1],
                 "average": calculate_avg_note_by_user(rank[0]),
-                "scoreCriteria": criteria_by_id(rank[0],rank[1]),
+                "scoreCriteria": criteria_by_id(rank[0], rank[1]),
             }
 
             result.append({"user": user_data})
@@ -739,7 +741,7 @@ def calculate_avg_note_by_user(user_id):
         connect_pg.disconnect(conn)
 
 
-def criteria_by_id(user_id,role):
+def criteria_by_id(user_id, role):
     """Get criteria by id"""
     conn = connect_pg.connect()
     result = []
@@ -752,7 +754,14 @@ def criteria_by_id(user_id,role):
             WHERE ur_rating.u_id = %s and ur_rating_criteria.r_id = %s
             GROUP BY rc_id, rc_name
         """
-        criterian_result = connect_pg.get_query(conn, query, (user_id,role,))
+        criterian_result = connect_pg.get_query(
+            conn,
+            query,
+            (
+                user_id,
+                role,
+            ),
+        )
 
         actif_criterion = actif_criteria(role)
 
@@ -785,7 +794,6 @@ def criteria_by_id(user_id,role):
         connect_pg.disconnect(conn)
 
 
-
 def actif_criteria(role):
     """Get active criteria"""
     conn = connect_pg.connect()
@@ -797,7 +805,7 @@ def actif_criteria(role):
             FROM uniride.ur_rating_criteria
             WHERE r_id = %s
         """
-        criterian_result = connect_pg.get_query(conn, query , (role,))
+        criterian_result = connect_pg.get_query(conn, query, (role,))
 
         for criteria in criterian_result:
             user_data = {
@@ -810,3 +818,12 @@ def actif_criteria(role):
         return result
     finally:
         connect_pg.disconnect(conn)
+
+
+def count_role(role):
+    """Get number of user by role"""
+    conn = connect_pg.connect()
+    query = "SELECT COUNT(*) FROM uniride.ur_rating_criteria WHERE r_id = %s"
+    result = connect_pg.get_query(conn, query, (role,))
+    connect_pg.disconnect(conn)
+    return result[0][0]

@@ -256,6 +256,8 @@ def document_check(data):
 
     query += " WHERE u_id = %s"
 
+    print(status_column,"OUIIIIII", user_id)
+
     if description_column:
         connect_pg.execute_command(conn, query, (status, description, user_id))
     else:
@@ -263,12 +265,12 @@ def document_check(data):
 
     connect_pg.disconnect(conn)
 
-    update_r_id_if_verified(user_id)
+    update_r_id_if_verified(user_id, status_column)
 
     return {"message": "DOCUMENT_STATUS_UPDATED"}
 
 
-def update_r_id_if_verified(user_id):
+def update_r_id_if_verified(user_id, column):
     """Update r_id to 1 if both v_license_verified and v_id_card_verified are 1"""
 
     conn = connect_pg.connect()
@@ -277,17 +279,21 @@ def update_r_id_if_verified(user_id):
     FROM uniride.ur_document_verification
     NATURAL JOIN uniride.ur_documents
     Where u_id = %s
-    """
+    """ 
+    documents = connect_pg.get_query(conn, query, (user_id,), True)    
+    if documents[0].get(column) == 1:
+        match column:
+            case "v_license_verified":
+                delete_documents(documents,"LICENSE_UPLOAD_FOLDER","d_license")
+            case "v_id_card_verified":
+                delete_documents(documents,"ID_CARD_UPLOAD_FOLDER","d_id_card")
+            case "v_school_certificate_verified":
+                delete_documents(documents,"SCHOOL_CERTIFICATE_UPLOAD_FOLDER","d_school_certificate")
+            case "v_insurance_verified":
+                delete_documents(documents,"INSURANCE_UPLOAD_FOLDER","d_insurance")
+            case _:
+                pass
 
-    
-    documents = connect_pg.get_query(conn, query, (user_id,), True)
-
-    delete_documents(documents,"v_license_verified", "LICENSE_UPLOAD_FOLDER","d_license")
-    delete_documents(documents,"v_id_card_verified", "ID_CARD_UPLOAD_FOLDER","d_id_card")
-    delete_documents(documents,"v_school_certificate_verified", "SCHOOL_CERTIFICATE_UPLOAD_FOLDER","d_school_certificate")
-    delete_documents(documents,"v_insurance_verified", "INSURANCE_UPLOAD_FOLDER","d_insurance")
-
-        
     if documents[0].get("v_id_card_verified") == 1 and documents[0].get("v_school_certificate_verified") == 1:
         if documents[0].get("v_license_verified") == 1 and documents[0].get("v_insurance_verified") == 1:
             r_id = 1
@@ -306,14 +312,14 @@ def update_r_id_if_verified(user_id):
     connect_pg.disconnect(conn)
 
 
-def delete_documents(documents,folder_verified, folder_documents,id_doc):
+def delete_documents(documents, folder_documents,id_doc):
     """Delete documents if they are verified"""
-    print(os.path.exists(app.config[documents[0]]),"folder_documents")
-    if(os.path.exists(app.config[folder_documents])):
-        if(documents[0].get(folder_verified) == 1):
-            os.remove(os.path.join(app.config[folder_documents], documents[0].get(id_doc)))
+    if(os.path.exists(os.path.join(app.config[folder_documents], documents[0].get(id_doc)))):
+        os.remove(os.path.join(app.config[folder_documents], documents[0].get(id_doc)))
     else:
         raise MissingInputException("MISSING_DOCUMENTS_FOLDER")
+    
+
 
 
 def document_user(user_id):
@@ -377,10 +383,4 @@ def document_user(user_id):
     }
 
 
-def count_users():
-    """Get number of users"""
-    conn = connect_pg.connect()
-    query = "SELECT COUNT(*) FROM uniride.ur_user"
-    result = connect_pg.get_query(conn, query)
-    connect_pg.disconnect(conn)
-    return result[0][0]
+
