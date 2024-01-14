@@ -750,7 +750,7 @@ def criteria_by_id(user_id, role):
 
     try:
         query = """
-            SELECT rc_id, avg(n_value) as avg_value, rc_name
+            SELECT rc_id, ROUND(avg(n_value),2) as avg_value, rc_name
             FROM uniride.ur_rating
             NATURAL JOIN uniride.ur_rating_criteria
             WHERE ur_rating.u_id = %s and ur_rating_criteria.r_id = %s
