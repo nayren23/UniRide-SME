@@ -16,6 +16,7 @@ from uniride_sme.utils.exception.user_exceptions import (
     AttributeUnchangedException,
     RatingNotFoundException,
 )
+from uniride_sme.utils.exception.criteria_exceptions import TooManyCriteriaException
 
 
 def authenticate(login, password) -> UserBO:
@@ -638,7 +639,7 @@ def insert_rating_criteria(data):
     """Insert new rating criteria"""
     conn = connect_pg.connect()
     if(count_role(data["role"]) >= 5):
-        raise InvalidInputException("TOO_MANY_CRITERIA")
+        raise TooManyCriteriaException
     try:
         query = """
            INSERT INTO uniride.ur_rating_criteria (rc_name, rc_description,r_id)
@@ -709,15 +710,16 @@ def users_ranking(role):
                 "firstname": rank[3],
                 "lastname": rank[2],
                 "role": rank[1],
-                "average": calculate_avg_note_by_user(rank[0]),
-                "scoreCriteria": criteria_by_id(rank[0], rank[1]),
             }
 
-            result.append({"user": user_data})
+            score_criteria = criteria_by_id(rank[0], rank[1])
+            average = calculate_avg_note_by_user(rank[0])
+            result.append({"user": user_data, "average":average,"scoreCriteria": score_criteria})
     finally:
         connect_pg.disconnect(conn)
 
     return result
+
 
 
 def calculate_avg_note_by_user(user_id):

@@ -256,7 +256,6 @@ def document_check(data):
 
     query += " WHERE u_id = %s"
 
-    print(status_column,"OUIIIIII", user_id)
 
     if description_column:
         connect_pg.execute_command(conn, query, (status, description, user_id))
