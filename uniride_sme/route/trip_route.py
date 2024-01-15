@@ -1,7 +1,6 @@
 """Trip related routes"""
 
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
 
 from uniride_sme.model.bo.trip_bo import TripBO
@@ -13,12 +12,13 @@ from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.pagination import create_pagination
 from uniride_sme.service import trip_service
 from uniride_sme.utils.email import send_cancelation_email
+from uniride_sme.utils.role_user import RoleUser, role_required
 
 trip = Blueprint("trip", __name__, url_prefix="/trip")
 
 
 @trip.route("/propose", methods=["POST"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def propose_trip():
     """Propose a trip endpoint
     "We define the  price of the trip and the status of the trip as pending
@@ -57,6 +57,7 @@ def propose_trip():
 
 
 @trip.route("", methods=["POST"])
+@role_required()
 def get_available_trips():
     """Get all the available trips endpoint"""
 
@@ -105,7 +106,7 @@ def get_available_trips():
 
 
 @trip.route("/driver/current", methods=["GET"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def get_current_driver_trips():
     """Get all the current trips of a driver"""
     try:
@@ -120,6 +121,7 @@ def get_current_driver_trips():
 
 
 @trip.route("/<trip_id>", methods=["GET"])
+@role_required()
 def get_trip(trip_id):
     """Get a trip by id endpoint"""
     try:
@@ -130,7 +132,8 @@ def get_trip(trip_id):
     return response
 
 
-@trip.route("/trip-number", methods=["GET"])
+@trip.route("/trip_number", methods=["GET"])
+@role_required(RoleUser.ADMINISTRATOR)
 def trip_count():
     """Trip count"""
     try:
@@ -147,7 +150,7 @@ def trip_count():
 
 
 @trip.route("/<trip_id>/passengers", methods=["GET"])
-@jwt_required()
+@role_required()
 def passengers(trip_id: int):
     """Get trip passengers endpoint"""
     try:
@@ -160,7 +163,7 @@ def passengers(trip_id: int):
 
 
 @trip.route("/<trip_id>/start", methods=["PUT"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def start_trip(trip_id: int):
     """Start trip endpoint"""
     try:
@@ -173,7 +176,7 @@ def start_trip(trip_id: int):
 
 
 @trip.route("/<trip_id>/end", methods=["PUT"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def end_trip(trip_id: int):
     """End trip endpoint"""
     try:
@@ -186,7 +189,7 @@ def end_trip(trip_id: int):
 
 
 @trip.route("/<trip_id>/cancel", methods=["PUT"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def cancel_trip(trip_id: int):
     """Cancel trip endpoint"""
     try:
@@ -202,7 +205,7 @@ def cancel_trip(trip_id: int):
 
 
 @trip.route("/passenger/current", methods=["GET"])
-@jwt_required()
+@role_required()
 def passenger_current_trip():
     """Get passenger current trip endpoint"""
     try:
@@ -215,7 +218,7 @@ def passenger_current_trip():
 
 
 @trip.route("/rating", methods=["POST"])
-@jwt_required()
+@role_required()
 def rate_user():
     """Rate user endpoint"""
     try:
