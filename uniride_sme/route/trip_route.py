@@ -235,9 +235,9 @@ def rate_user():
 
 
 @trip.route("/daily-trip", methods=["POST"])
-@jwt_required()
-def daily_trip():
-    """Get daily trip endpoint"""
+@role_required(RoleUser.DRIVER)
+def create_daily_trip():
+    """create a daily trip endpoint"""
     try:
         user_id = get_jwt_identity()["id"]
         json_object = request.json
