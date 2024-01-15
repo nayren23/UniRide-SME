@@ -5,6 +5,7 @@ from uniride_sme.utils.file import get_encoded_file
 from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.user_bo import UserBO
+from uniride_sme.service.documents_service import update_role
 from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
@@ -156,7 +157,6 @@ def add_user(  # pylint: disable=too-many-arguments, too-many-locals
 
 def _validate_login(login):
     """Check if the login is valid"""
-
     # check if exist
     if not login:
         raise MissingInputException("LOGIN_MISSING")
@@ -250,7 +250,7 @@ def verify_student_email(student_email):
 
     conn = connect_pg.connect()
 
-    query = "select u_email_verified from uniride.ur_user where u_student_email = %s"
+    query = "select u_email_verified, u_id from uniride.ur_user where u_student_email = %s"
     email_verified = connect_pg.get_query(conn, query, (student_email,))
     # check if the email belongs to a user
     if not email_verified:
@@ -263,6 +263,8 @@ def verify_student_email(student_email):
 
     connect_pg.execute_command(conn, query, (student_email,))
     connect_pg.disconnect(conn)
+
+    update_role(email_verified[0][1])
 
 
 def _validate_firstname(firstname):
@@ -304,9 +306,18 @@ def _validate_gender(gender):
 
 def _validate_phone_number(phone_number):
     """Check if the phone number is valid"""
+    if not phone_number:
+        raise MissingInputException("PHONE_NUMBER_MISSING")
+
     # check if the format is valid
-    if phone_number and not (phone_number.isdigit() and len(phone_number) == 10):
+    if not phone_number.isdigit() or len(phone_number) != 10:
         raise InvalidInputException("PHONE_NUMBER_INVALID")
+
+    query = "select count(*) from uniride.ur_user where u_phone_number = %s"
+    conn = connect_pg.connect()
+    count = connect_pg.get_query(conn, query, (phone_number,))[0][0]
+    if count:
+        raise InvalidInputException("PHONE_NUMBER_TAKEN")
 
 
 def _validate_description(description):
@@ -625,7 +636,6 @@ def verify_rating_criteria(id_criteria):
         raise RatingNotFoundException()
     connect_pg.disconnect(conn)
     return result
-    
 
 
 def get_rating_criteria():
@@ -661,7 +671,7 @@ def get_rating_criteria():
 def insert_rating_criteria(data):
     """Insert new rating criteria"""
     conn = connect_pg.connect()
-    if(count_role(data["role"]) >= 5):
+    if count_role(data["role"]) >= 5:
         raise TooManyCriteriaException
     try:
         query = """
@@ -694,7 +704,7 @@ def update_rating_criteria(data):
     conn = connect_pg.connect()
     id_role_ongoing = verify_rating_criteria(data["id_criteria"])
 
-    if(count_role(data["role"]) > 4 and id_role_ongoing[0][0] != data["role"]):
+    if count_role(data["role"]) > 4 and id_role_ongoing[0][0] != data["role"]:
         raise InvalidInputException("TOO_MANY_CRITERIA_FOR_THIS_ROLE")
     try:
         query = """
@@ -738,12 +748,11 @@ def users_ranking(role):
 
             score_criteria = criteria_by_id(rank[0], rank[1])
             average = calculate_avg_note_by_user(rank[0])
-            result.append({"user": user_data, "average":average,"scoreCriteria": score_criteria})
+            result.append({"user": user_data, "average": average, "scoreCriteria": score_criteria})
     finally:
         connect_pg.disconnect(conn)
 
     return result
-
 
 
 def calculate_avg_note_by_user(user_id):
