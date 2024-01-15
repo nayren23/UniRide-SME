@@ -11,6 +11,7 @@ from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.dto.address_dto import AddressDTO, AddressSimpleDTO
 from uniride_sme.model.dto.user_dto import PassengerInfosDTO, PassengerEmailsDTO
 from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO, PassengerTripDTO
+from psycopg2.extras import execute_values
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
@@ -78,7 +79,7 @@ def validate_total_passenger_count(total_passenger_count):
     """Check if the total passenger count is valid"""
     if total_passenger_count is None:
         raise MissingInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NULL")
-    if total_passenger_count < 0:
+    if total_passenger_count <= 0:
         raise InvalidInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NEGATIVE")
     # info_car = get_car_info_by_user_id(user_id)
     # if total_passenger_count > info_car[0].get("v_total_places"):
@@ -844,7 +845,7 @@ def rate_user(value_rating, trip_id, user_id, rating_criteria_id):
 
 
 def validate_rating(trip_id, rating_criteria_id):
-    """Validate the rating"""  
+    """Validate the rating"""
     _validate_trip_id(trip_id)
     if rating_criteria_id is None:
         raise MissingInputException("RATING_CRITERIA_ID_CANNOT_BE_NULL")
@@ -864,3 +865,73 @@ def validate_value_rating(value_rating):
         raise InvalidInputException("VALUE_RATING_CANNOT_BE_NEGATIVE")
     if value_rating > 5:
         raise InvalidInputException("VALUE_RATING_CANNOT_BE_HIGHER_THAN_5")
+
+
+def create_daily_trips(
+    address_departure_id, address_arrival_id, date_start, date_end, hour, passenger_number, days, user_id, status
+):
+    """Create daily trips"""
+    date_start = datetime.strptime(date_start, "%Y-%m-%d")
+    date_end = datetime.strptime(date_end, "%Y-%m-%d")
+    validate_total_passenger_count(passenger_number)
+    validate_user_id(user_id)
+    if date_start < datetime.now():
+        raise InvalidInputException("DATE_START_CANNOT_BE_LOWER_THAN_TODAY")
+    if date_start > date_end:
+        raise InvalidInputException("DATE_START_CANNOT_BE_HIGHER_THAN_DATE_END")
+    if days is None:
+        raise MissingInputException("DAYS_CANNOT_BE_NULL")
+    if days != [0, 1, 2, 3, 4, 5, 6]:
+        raise InvalidInputException("DAYS_MUST_BE_ALL_DAYS")
+
+    values_list = []
+
+    current_date = date_start
+    while current_date <= date_end:
+        if current_date.weekday() in days:
+            timestamp_proposed_str = current_date.strftime("%Y-%m-%d") + f" {hour}:00"
+            timestamp_proposed = datetime.strptime(timestamp_proposed_str, "%Y-%m-%d %H:%M:%S")
+
+            trip_bo = TripBO(
+                total_passenger_count=passenger_number,
+                timestamp_proposed=timestamp_proposed,
+                status=status,
+                user_id=user_id,
+                departure_address_bo=AddressBO(id=address_departure_id),
+                arrival_address_bo=AddressBO(id=address_arrival_id),
+            )
+            trip_exists(trip_bo)
+            check_address_existence(trip_bo.departure_address)
+            check_address_existence(trip_bo.arrival_address)
+            validate_address_departure_id_equals_address_arrival_id(trip_bo.departure_address, trip_bo.arrival_address)
+
+            # Ajouter les valeurs de l'enregistrement à la liste
+            values_list.append(
+                (
+                    trip_bo.total_passenger_count,
+                    trip_bo.timestamp_proposed,
+                    trip_bo.status,
+                    trip_bo.user_id,
+                    trip_bo.departure_address.id,
+                    trip_bo.arrival_address.id,
+                )
+            )
+
+        # Passer au jour suivant
+        current_date += timedelta(days=1)
+
+    # Créer la requête SQL avec plusieurs enregistrements
+    query = (
+        "INSERT INTO uniride.ur_trip (t_total_passenger_count, t_timestamp_proposed, t_status, "
+        "t_user_id, t_address_departure_id, t_address_arrival_id) VALUES %s RETURNING t_id"
+    )
+
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+
+    # Utiliser execute_values pour insérer plusieurs enregistrements
+    execute_values(cursor, query, values_list)
+
+    # Commit pour sauvegarder les changements
+    conn.commit()
+    connect_pg.disconnect(conn)
