@@ -22,7 +22,7 @@ from uniride_sme.model.dto.user_dto import (
     InformationsStatUsers,
 )
 from uniride_sme.utils.exception.exceptions import ApiException
-from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
+from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException,UserNotAUTHORIZED
 from uniride_sme.utils import email
 from uniride_sme.utils.file import get_encoded_file
 from uniride_sme.utils.jwt_token import revoke_token
@@ -458,9 +458,14 @@ def users_informations():
 @role_required(RoleUser.ADMINISTRATOR)
 def delete_user(user_id):
     """delete user"""
+    user_id_token = get_jwt_identity()["id"]
+    role = user_service.get_user_role(user_id)
+
     try:
+        if(user_id_token == user_id or role['role']== 0):
+            raise UserNotAUTHORIZED
         user_deleted = user_service.delete_user(user_id)
-        response = jsonify({"message": "USER_DELETED_SUCESSFULLY", "user_id : ": user_deleted}), 200
+        response = jsonify({"message": "USER_DELETED_SUCESSFULLY","user_id : ": user_deleted}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
@@ -488,6 +493,7 @@ def user_stat_id(user_id):
     try:
         user_stat_passenger = user_service.user_stat_passenger(user_id)
         user_stat_driver = user_service.user_stat_driver(user_id)
+        average_rating = user_service.average_rating_user_id(user_id)
         response_data = {
             "statistics": [
                 {
@@ -497,7 +503,7 @@ def user_stat_id(user_id):
                     "passenger_trip": user_stat_passenger,
                 },
                 {
-                    "average_rating": 0,
+                    "average_rating": average_rating,
                 },
             ]
         }
@@ -506,6 +512,88 @@ def user_stat_id(user_id):
             jsonify({"message": "USER_STATS_DISPLAYED_SUCESSFULLY", **response_data}),
             200,
         )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/label", methods=["GET"])
+def get_rating_criteria():
+    """Get rating criteria"""
+    try:
+        user_information = user_service.get_rating_criteria()
+        return jsonify({"message": "USER_INFORMATIONS_DISPLAYED_SUCCESSFULLY", "labels": user_information}), 200
+    except ApiException as e:
+        return jsonify(message=e.message), e.status_code
+
+
+@user.route("/label", methods=["POST"])
+def insert_label():
+    """Insert rating criteria"""
+    data = request.get_json()
+    try:
+        user_information = user_service.insert_rating_criteria(data)
+        response = (
+            jsonify({"message": "RATING_CRITERIA_INSERTED_SUCCESSFULLY", "user_information": user_information}),
+            201,
+        )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
+
+@user.route("/label/<id_criteria>", methods=["DELETE"])
+def delete_label(id_criteria):
+    """Delete rating criteria"""
+    try:
+        user_information = user_service.delete_rating_criteria(id_criteria)
+        return jsonify({"message": "RATING_CRITERIA_DELETED_SUCCESSFULLY", "id_criteria": user_information}), 200
+    except ApiException as e:
+        return jsonify(message=e.message), e.status_code
+
+
+@user.route("/label", methods=["PUT"])
+def update_label():
+    """Update rating criteria"""
+    data = request.get_json()
+
+    try:
+        user_service.update_rating_criteria(data)
+        response = jsonify({"message": "RATING_CRITERIA_UPDATED_SUCCESSFULLY"}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/drivers-ranking", methods=["GET"])
+def get_ranking_drivers():
+    """Get ranking drivers"""
+    try:
+        data = user_service.users_ranking(1)
+        response = jsonify({"message": "DRIVERS_RATING_CRITERIA_DISPLAYED_SUCCESSFULLY", "ranking": data}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/passengers-ranking", methods=["GET"])
+def get_ranking_passengers():
+    """Get ranking passengers"""
+    try:
+        data = user_service.users_ranking(2)
+        response = jsonify({"message": "PASSENGERS_RATING_CRITERIA_DISPLAYED_SUCCESSFULLY", "ranking": data}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/actif-criterion/<r_id>", methods=["GET"])
+def get_actif_criterian(r_id):
+    """Get ranking passengers"""
+    try:
+        data = user_service.actif_criteria(r_id)
+        response = jsonify({"message": "ACTIF_CRITERION_DISPLAYED_SUCCESSFULLY", "criterion": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
