@@ -84,7 +84,7 @@ def _get_document_type(document_type):
     """Get string for document validation email"""
     documents = {
         "license": {"translation": "permis de conduire", "masculin": True},
-        "id_card": {"translation": "carte d'identité", "masculin": True},
+        "card": {"translation": "carte d'identité", "masculin": True},
         "school_certificate": {"translation": "certificat de scolarité", "masculin": False},
         "insurance": {"translation": "assurance", "masculin": False},
     }

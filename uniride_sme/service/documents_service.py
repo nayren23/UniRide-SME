@@ -126,19 +126,20 @@ def document_to_verify():
     result = []
 
     for document in documents:
-        formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
-        profile_picture_url = get_encoded_file(document[4], "PFP_UPLOAD_FOLDER")
-        request_data = {
-            "request_number": document[1],
-            "documents_to_verify": count_zero_and_minus_one(document),
-            "person": {
-                "id_user": document[0],
-                "first_name": document[2],
-                "last_name": document[3],
-                "last_modified_date": formatted_last_modified_date,
-                "profile_picture": profile_picture_url,
-            },
-        }
+        if(count_zero_and_minus_one(document) > 0):
+            formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
+            profile_picture_url = get_encoded_file(document[4], "PFP_UPLOAD_FOLDER")
+            request_data = {
+                "request_number": document[1],
+                "documents_to_verify": count_zero_and_minus_one(document),
+                "person": {
+                    "id_user": document[0],
+                    "first_name": document[2],
+                    "last_name": document[3],
+                    "last_modified_date": formatted_last_modified_date,
+                    "profile_picture": profile_picture_url,
+                },
+            }
 
         result.append(request_data)
 
