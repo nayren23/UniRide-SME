@@ -448,6 +448,7 @@ def users_informations():
 
 
 @user.route("/user-management/<user_id>", methods=["DELETE"])
+@jwt_required()
 def delete_user(user_id):
     """delete user"""
     user_id_token = get_jwt_identity()["id"]
