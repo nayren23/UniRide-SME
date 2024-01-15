@@ -879,7 +879,7 @@ def create_daily_trips(
         raise InvalidInputException("DATE_START_CANNOT_BE_HIGHER_THAN_DATE_END")
     if days is None:
         raise MissingInputException("DAYS_CANNOT_BE_NULL")
-    if days != [0, 1, 2, 3, 4, 5, 6]:
+    if not set(days).issubset([0, 1, 2, 3, 4, 5, 6]):
         raise InvalidInputException("DAYS_MUST_BE_ALL_DAYS")
 
     values_list = []
