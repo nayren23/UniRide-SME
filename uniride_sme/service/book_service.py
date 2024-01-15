@@ -1,7 +1,6 @@
 """Book service module"""
 import random
 from datetime import datetime
-import psycopg2
 
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.address_bo import AddressBO
@@ -124,15 +123,14 @@ def respond_booking(trip_id, driver_id, booker_id, response):
     trip = trip_service.get_trip_by_id(trip_id)
 
     _validate_driver_id(trip, driver_id)
-
+    _validate_trip_availability(trip)
     booking = get_booking_by_id(trip_id, booker_id)
     _validate_booking_status(booking["j_accepted"])
 
     query = "UPDATE uniride.ur_join SET"
 
-    if response == -1:
+    if response == 1:
         _validate_passenger_count(trip, booking["j_passenger_count"])
-    else:
         query += " j_verification_code = %s,"
         values = (random.randint(1000, 9999),)
 
