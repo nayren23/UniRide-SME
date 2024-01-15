@@ -853,3 +853,12 @@ def count_role(role):
     result = connect_pg.get_query(conn, query, (role,))
     connect_pg.disconnect(conn)
     return result[0][0]
+
+
+def average_rating_user_id(id_user):
+    """Get average rating"""
+    conn = connect_pg.connect()
+    query = "SELECT ROUND(avg(n_value),2) FROM uniride.ur_rating WHERE u_id = %s"
+    result = connect_pg.get_query(conn, query, (id_user,))
+    connect_pg.disconnect(conn)
+    return result[0][0]

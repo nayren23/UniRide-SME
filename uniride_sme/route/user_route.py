@@ -484,6 +484,7 @@ def user_stat_id(user_id):
     try:
         user_stat_passenger = user_service.user_stat_passenger(user_id)
         user_stat_driver = user_service.user_stat_driver(user_id)
+        average_rating = user_service.average_rating_user_id(user_id)
         response_data = {
             "statistics": [
                 {
@@ -493,7 +494,7 @@ def user_stat_id(user_id):
                     "passenger_trip": user_stat_passenger,
                 },
                 {
-                    "average_rating": 0,
+                    "average_rating": average_rating,
                 },
             ]
         }
