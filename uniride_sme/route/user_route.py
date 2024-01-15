@@ -26,6 +26,7 @@ from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedExce
 from uniride_sme.utils import email
 from uniride_sme.utils.file import get_encoded_file
 from uniride_sme.utils.jwt_token import revoke_token
+from uniride_sme.utils.role_user import RoleUser, role_required
 
 user = Blueprint("user", __name__, url_prefix="/user")
 
@@ -336,6 +337,7 @@ def verify_email(token):
 
 
 @user.route("/verify/document", methods=["GET"])
+@role_required(RoleUser.ADMINISTRATOR)
 def verify_document():
     """Get documents to verify"""
     try:
@@ -347,6 +349,7 @@ def verify_document():
 
 
 @user.route("/check", methods=["PUT"])
+@role_required(RoleUser.ADMINISTRATOR)
 def check_document():
     """Check document"""
     try:
@@ -366,7 +369,8 @@ def check_document():
     return response
 
 
-@user.route("/document_user/<int:id_user>", methods=["GET"])
+@user.route("/document-user/<int:id_user>", methods=["GET"])
+@role_required(RoleUser.ADMINISTRATOR)
 def document_user_verif(id_user):
     """Get documents to verify"""
     try:
@@ -377,7 +381,8 @@ def document_user_verif(id_user):
     return response
 
 
-@user.route("/document_number", methods=["GET"])
+@user.route("/document-number", methods=["GET"])
+@role_required(RoleUser.ADMINISTRATOR)
 def count_documents_status():
     """Get documents to verify"""
     try:
@@ -391,7 +396,8 @@ def count_documents_status():
     return response
 
 
-@user.route("/user_number", methods=["GET"])
+@user.route("/user-number", methods=["GET"])
+@role_required(RoleUser.ADMINISTRATOR)
 def user_count():
     """User count"""
     try:
@@ -409,7 +415,7 @@ def user_count():
 
 
 @user.route("/driver/infos/<user_id>", methods=["GET"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def get_driver_infos(user_id):
     """Get user infos endpoint"""
     try:
@@ -436,7 +442,8 @@ def get_default_profile_picture():
     )
 
 
-@user.route("/users_informations", methods=["GET"])
+@user.route("/users-informations", methods=["GET"])
+@role_required(RoleUser.ADMINISTRATOR)
 def users_informations():
     """Get users information"""
     try:
@@ -447,7 +454,8 @@ def users_informations():
     return response
 
 
-@user.route("/user_management/<user_id>", methods=["DELETE"])
+@user.route("/user-management/<user_id>", methods=["DELETE"])
+@role_required(RoleUser.ADMINISTRATOR)
 def delete_user(user_id):
     """delete user"""
     try:
@@ -459,6 +467,7 @@ def delete_user(user_id):
 
 
 @user.route("/infos/<user_id>", methods=["GET"])
+@role_required(RoleUser.ADMINISTRATOR)
 def user_information_token(user_id):
     """Informations user by token"""
     try:
@@ -473,6 +482,7 @@ def user_information_token(user_id):
 
 
 @user.route("/statistics/<user_id>", methods=["GET"])
+@role_required(RoleUser.ADMINISTRATOR)
 def user_stat_id(user_id):
     """Informations user by token"""
     try:
