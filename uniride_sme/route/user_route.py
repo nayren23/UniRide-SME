@@ -454,7 +454,7 @@ def delete_user(user_id):
     user_id_token = get_jwt_identity()["id"]
 
     try:
-        if(user_id_token == user_id | user_service.get_user_role(user_id) == 0):
+        if(user_id_token == user_id or user_service.get_user_role(user_id) == 0):
             raise UserNotAUTHORIZED
         user_deleted = user_service.delete_user(user_id)
         response = jsonify({"message": "USER_DELETED_SUCESSFULLY", "user_id : ": user_deleted}), 200
