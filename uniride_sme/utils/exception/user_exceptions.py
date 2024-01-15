@@ -36,3 +36,10 @@ class RatingNotFoundException(ApiException):
 
     def __init__(self):
         super().__init__("RATING_NOT_FOUND", 422)
+
+
+class UserNotAUTHORIZED(ApiException):
+    """Exception for when the user isn't authorized"""
+
+    def __init__(self):
+        super().__init__("USER_NOT_AUTHORIZED", 422)
