@@ -132,7 +132,7 @@ def get_trip(trip_id):
     return response
 
 
-@trip.route("/trip_number", methods=["GET"])
+@trip.route("/trip-number", methods=["GET"])
 @role_required(RoleUser.ADMINISTRATOR)
 def trip_count():
     """Trip count"""
