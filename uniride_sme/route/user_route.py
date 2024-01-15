@@ -22,7 +22,7 @@ from uniride_sme.model.dto.user_dto import (
     InformationsStatUsers,
 )
 from uniride_sme.utils.exception.exceptions import ApiException
-from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException,UserNotAUTHORIZED
+from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException, UserNotAUTHORIZED
 from uniride_sme.utils import email
 from uniride_sme.utils.file import get_encoded_file
 from uniride_sme.utils.jwt_token import revoke_token
@@ -462,10 +462,10 @@ def delete_user(user_id):
     role = user_service.get_user_role(user_id)
 
     try:
-        if(user_id_token == user_id or role['role']== 0):
+        if user_id_token == user_id or role["role"] == 0:
             raise UserNotAUTHORIZED
         user_deleted = user_service.delete_user(user_id)
-        response = jsonify({"message": "USER_DELETED_SUCESSFULLY","user_id : ": user_deleted}), 200
+        response = jsonify({"message": "USER_DELETED_SUCESSFULLY", "user_id : ": user_deleted}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

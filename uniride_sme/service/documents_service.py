@@ -49,11 +49,31 @@ def add_documents(user_id, files):
     connect_pg.disconnect(conn)
     try:
         save_license(user_id, files.get("license", None))
+    except MissingInputException:
+        pass
+    try:
+        save_id_card(user_id, files.get("id_card", None))
+    except MissingInputException:
+        pass
+
+    try:
+        save_school_certificate(user_id, files.get("school_certificate", None))
+    except MissingInputException:
+        pass
+
+    try:
+        save_insurance(user_id, files.get("insurance", None))
+    except MissingInputException:
+        pass
+
+    try:
+        save_license(user_id, files.get("license", None))
         save_id_card(user_id, files.get("id_card", None))
         save_school_certificate(user_id, files.get("school_certificate", None))
         save_insurance(user_id, files.get("insurance", None))
     except MissingInputException:
         pass
+
 
 
 def save_license(user_id, file, old_file_name=None):
