@@ -28,7 +28,10 @@ def authenticate(login, password) -> UserBO:
     if not password:
         raise MissingInputException("PASSWORD_MISSING")
 
-    user_bo = get_user_by_login(login)
+    try:
+        user_bo = get_user_by_login(login)
+    except UserNotFoundException:
+        user_bo = get_user_by_email(login)
     _verify_password(password, user_bo.password)
     return user_bo
 
@@ -62,6 +65,11 @@ def get_user_by_id(user_id) -> UserBO:
 def get_user_by_login(login) -> UserBO:
     """Get user infos from db using the login"""
     return _get_user_by_identifier(login, "u_login")
+
+
+def get_user_by_email(student_email) -> UserBO:
+    """Get user infos from db using the student_email"""
+    return _get_user_by_identifier(student_email, "u_student_email")
 
 
 def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
