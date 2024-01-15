@@ -143,6 +143,29 @@ def get_infos():
 
     return response
 
+@user.route("/infos/<int:user_id>", methods=["GET"])
+def get_infos_by_id(user_id):
+    """Get user infos by ID endpoint"""
+    try:
+        user_bo = user_service.get_user_by_id(user_id)
+        user_infos_dto = UserInfosDTO(
+            id=user_id,
+            login=user_bo.login,
+            student_email=user_bo.student_email,
+            firstname=user_bo.firstname,
+            lastname=user_bo.lastname,
+            gender=user_bo.gender,
+            phone_number=user_bo.phone_number,
+            description=user_bo.description,
+            role=user_bo.r_id,
+            profile_picture=get_encoded_file(user_bo.profile_picture, "PFP_UPLOAD_FOLDER"),
+        )
+        response = jsonify(user_infos_dto), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+
+    return response
+
 
 @user.route("/role", methods=["GET"])
 @jwt_required()
