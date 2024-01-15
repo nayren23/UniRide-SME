@@ -887,7 +887,7 @@ def create_daily_trips(
     current_date = date_start
     while current_date <= date_end:
         if current_date.weekday() in days:
-            timestamp_proposed_str = current_date.strftime("%Y-%m-%d") + f" {hour}:00"
+            timestamp_proposed_str = current_date.strftime("%Y-%m-%d") + f" {hour}"
             timestamp_proposed = datetime.strptime(timestamp_proposed_str, "%Y-%m-%d %H:%M:%S")
 
             trip_bo = TripBO(
