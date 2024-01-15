@@ -337,6 +337,8 @@ def test_respond_booking_success(mock_get_trip_by_id, mock_get_booking_by_id, mo
         passenger_count=3,
         total_passenger_count=4,
         driver_id=2,
+        status=1,
+        departure_date=str(datetime.datetime.now().replace(microsecond=0) + datetime.timedelta(days=1)),
     )
     mock_get_booking_by_id.return_value = psycopg2.extras.RealDictRow(
         [

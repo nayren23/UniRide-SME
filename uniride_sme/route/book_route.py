@@ -8,12 +8,13 @@ from uniride_sme.utils import email
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.field import validate_fields
 from uniride_sme.model.dto.book_dto import BookResponseDTO
+from uniride_sme.utils.role_user import RoleUser, role_required
 
 book = Blueprint("book", __name__, url_prefix="/book")
 
 
 @book.route("", methods=["POST"])
-@jwt_required()
+@role_required()
 def book_trip():
     """Book a trip endpoint"""
 
@@ -37,7 +38,7 @@ def book_trip():
 
 
 @book.route("/respond", methods=["PUT"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def respond_booking():
     """Respond to a booking request endpoint"""
 
@@ -64,9 +65,9 @@ def respond_booking():
 
 
 @book.route("/requests", methods=["GET"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def get_bookings():
-    """Respond to a booking request endpoint"""
+    """Get bookings endpoint"""
     try:
         user_id = get_jwt_identity()["id"]
         bookings = book_service.get_bookings(user_id)
@@ -78,7 +79,7 @@ def get_bookings():
 
 
 @book.route("/<trip_id>/cancel", methods=["DELETE"])
-@jwt_required()
+@role_required()
 def cancel_request_trip(trip_id):
     """Cancel trip endpoint"""
     try:
@@ -91,7 +92,7 @@ def cancel_request_trip(trip_id):
 
 
 @book.route("/join", methods=["PUT"])
-@jwt_required()
+@role_required()
 def join_booking():
     """Join a booking request endpoint"""
 
@@ -121,7 +122,7 @@ def join_booking():
 
 
 @book.route("/<trip_id>/code", methods=["GET"])
-@jwt_required()
+@role_required()
 def get_code(trip_id):
     """Get verification code endpoint"""
     try:
@@ -135,7 +136,7 @@ def get_code(trip_id):
 
 
 @book.route("/<trip_id>", methods=["GET"])
-@jwt_required()
+@role_required()
 def get_booking(trip_id):
     """Get booking endpoint"""
     try:

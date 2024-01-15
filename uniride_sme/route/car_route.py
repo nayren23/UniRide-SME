@@ -1,8 +1,6 @@
 """Car related routes"""
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt_identity
-
 
 from uniride_sme.model.bo.car_bo import CarBO
 
@@ -12,12 +10,13 @@ from uniride_sme.service.car_service import add_in_db
 from uniride_sme.service.car_service import get_car_info_by_user_id
 from uniride_sme.service.car_service import format_get_information_car
 from uniride_sme.service.car_service import update_car_information_in_db
+from uniride_sme.utils.role_user import RoleUser, role_required
 
 car = Blueprint("car", __name__)
 
 
 @car.route("/car/add", methods=["POST"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def add_car_information():
     """Add information car endpoint"""
     try:
@@ -50,7 +49,7 @@ def add_car_information():
 
 
 @car.route("/car/info", methods=["GET"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def get_car_information():
     """Get information about the user's car endpoint"""
     try:
@@ -64,7 +63,7 @@ def get_car_information():
 
 
 @car.route("/car/update", methods=["PUT"])
-@jwt_required()
+@role_required(RoleUser.DRIVER)
 def update_car_information():
     """Update information about the user's car endpoint"""
     try:
