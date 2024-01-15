@@ -806,8 +806,6 @@ def passenger_current_trips(user_id):
         """
     conn = connect_pg.connect()
     passenger_trips = connect_pg.get_query(conn, query, (user_id,), True)
-    if not passenger_trips:
-        raise TripNotFoundException()
     connect_pg.disconnect(conn)
     result_list = []
 
