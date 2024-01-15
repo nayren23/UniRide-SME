@@ -232,3 +232,42 @@ def rate_user():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+
+@trip.route("/daily-trip", methods=["POST"])
+@role_required(RoleUser.DRIVER)
+def create_daily_trip():
+    """create a daily trip endpoint"""
+    try:
+        user_id = get_jwt_identity()["id"]
+        json_object = request.json
+
+        validate_fields(
+            json_object,
+            {
+                "total_passenger_count": int,
+                "date_start": str,
+                "date_end": str,
+                "hour": str,
+                "address_departure_id": int,
+                "address_arrival_id": int,
+                "days": list,
+            },
+        )
+
+        trip_service.create_daily_trips(
+            json_object.get("address_departure_id", None),
+            json_object.get("address_arrival_id", None),
+            json_object.get("date_start", None),
+            json_object.get("date_end", None),
+            json_object.get("hour", None),
+            json_object.get("total_passenger_count", None),
+            json_object.get("days", None),
+            user_id,
+            TripStatus.PENDING.value,
+        )
+
+        response = jsonify(message="DAILY_TRIP_CREATED_SUCCESSFULLY"), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
