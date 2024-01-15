@@ -119,7 +119,7 @@ def logout():
 
 
 @user.route("/infos", methods=["GET"])
-@role_required(RoleUser.PENDING)
+@jwt_required()
 def get_infos():
     """Get user infos endpoint"""
     user_id = get_jwt_identity()["id"]
@@ -145,7 +145,7 @@ def get_infos():
 
 
 @user.route("/role", methods=["GET"])
-@role_required(RoleUser.PENDING)
+@jwt_required()
 def get_user_id():
     """Get user ID and his role ID"""
     user_id = get_jwt_identity()["id"]
