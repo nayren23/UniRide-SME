@@ -4,7 +4,7 @@ from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.documents_bo import DocumentsBO
 from uniride_sme.utils.file import save_file, delete_file
-from uniride_sme.service.user_service import verify_user
+from uniride_sme.service import user_service
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
 from uniride_sme.utils.file import get_encoded_file
@@ -17,7 +17,7 @@ def get_documents_by_user_id(user_id):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
-    verify_user(user_id)
+    user_service.verify_user(user_id)
 
     query = "SELECT * FROM uniride.ur_documents natural join uniride.ur_document_verification where u_id = %s"
     params = (user_id,)
@@ -37,7 +37,7 @@ def add_documents(user_id, files):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
-    verify_user(user_id)
+    user_service.verify_user(user_id)
 
     query = """
     WITH first_insert AS (
@@ -220,7 +220,7 @@ def document_check(data):
 
     conn = connect_pg.connect()
     connect_pg.disconnect(conn)
-    verify_user(user_id)
+    user_service.verify_user(user_id)
 
     document_type = document_data.get("type")
     status = document_data.get("status")
@@ -265,13 +265,15 @@ def document_check(data):
 
     connect_pg.disconnect(conn)
 
-    update_r_id_if_verified(user_id, status_column)
+    update_role(user_id, status_column)
 
     return {"message": "DOCUMENT_STATUS_UPDATED"}
 
 
-def update_r_id_if_verified(user_id, column):
+def update_role(user_id, column=None):
     """Update r_id to 1 if both v_license_verified and v_id_card_verified are 1"""
+
+    user_bo = user_service.get_user_by_id(user_id)
 
     conn = connect_pg.connect()
     query = """
@@ -281,7 +283,7 @@ def update_r_id_if_verified(user_id, column):
     Where u_id = %s
     """ 
     documents = connect_pg.get_query(conn, query, (user_id,), True)    
-    if documents[0].get(column) == 1:
+    if column and documents[0].get(column) == 1:
         match column:
             case "v_license_verified":
                 delete_documents(documents,"LICENSE_UPLOAD_FOLDER","d_license")
@@ -294,7 +296,7 @@ def update_r_id_if_verified(user_id, column):
             case _:
                 pass
 
-    if documents[0].get("v_id_card_verified") == 1 and documents[0].get("v_school_certificate_verified") == 1:
+    if user_bo.email_verified and documents[0].get("v_id_card_verified") == 1 and documents[0].get("v_school_certificate_verified") == 1:
         if documents[0].get("v_license_verified") == 1 and documents[0].get("v_insurance_verified") == 1:
             r_id = 1
         else:
@@ -325,7 +327,7 @@ def delete_documents(documents, folder_documents,id_doc):
 def document_user(user_id):
     """Get documents by user id"""
     conn = connect_pg.connect()
-    verify_user(user_id)
+    user_service.verify_user(user_id)
 
     query = """
         SELECT u_id, d_license, d_id_card, d_school_certificate, d_insurance, v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified, v_license_description, v_card_description, v_school_certificate_description, v_insurance_description 
