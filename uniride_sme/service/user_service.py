@@ -616,7 +616,7 @@ def user_stat_driver(id_user):
 def verify_rating_criteria(id_criteria):
     """Verify criteria"""
     conn = connect_pg.connect()
-    check_query = "SELECT * FROM uniride.ur_rating_criteria WHERE rc_id = %s"
+    check_query = "SELECT r_id FROM uniride.ur_rating_criteria WHERE rc_id = %s"
     check_values = (id_criteria,)
     result = connect_pg.get_query(conn, check_query, check_values)
 
@@ -624,6 +624,8 @@ def verify_rating_criteria(id_criteria):
         connect_pg.disconnect(conn)
         raise RatingNotFoundException()
     connect_pg.disconnect(conn)
+    return result
+    
 
 
 def get_rating_criteria():
@@ -690,7 +692,9 @@ def delete_rating_criteria(id_criteria):
 def update_rating_criteria(data):
     """Update rating criteria"""
     conn = connect_pg.connect()
-    if(count_role(data["role"]) >= 5):
+    id_role_ongoing = verify_rating_criteria(data["id_criteria"])
+
+    if(count_role(data["role"]) > 4 and id_role_ongoing[0][0] != data["role"]):
         raise InvalidInputException("TOO_MANY_CRITERIA_FOR_THIS_ROLE")
     try:
         query = """
@@ -698,7 +702,6 @@ def update_rating_criteria(data):
            SET rc_name = %s, rc_description = %s, r_id = %s
            WHERE rc_id = %s
         """
-
         verify_rating_criteria(data["id_criteria"])
         connect_pg.execute_command(conn, query, (data["name"], data["description"], data["role"], data["id_criteria"]))
 
