@@ -872,14 +872,14 @@ def create_daily_trips(
     date_start = datetime.strptime(date_start, "%Y-%m-%d")
     date_end = datetime.strptime(date_end, "%Y-%m-%d")
     validate_total_passenger_count(passenger_number)
-    validate_user_id(user_id)
-    if date_start < datetime.now():
+    validate_user_id(user_id)  
+    if date_start.date() < datetime.today().date():
         raise InvalidInputException("DATE_START_CANNOT_BE_LOWER_THAN_TODAY")
     if date_start > date_end:
         raise InvalidInputException("DATE_START_CANNOT_BE_HIGHER_THAN_DATE_END")
     if days is None:
         raise MissingInputException("DAYS_CANNOT_BE_NULL")
-    if days != [0, 1, 2, 3, 4, 5, 6]:
+    if not set(days).issubset([0, 1, 2, 3, 4, 5, 6]):
         raise InvalidInputException("DAYS_MUST_BE_ALL_DAYS")
 
     values_list = []
@@ -887,7 +887,7 @@ def create_daily_trips(
     current_date = date_start
     while current_date <= date_end:
         if current_date.weekday() in days:
-            timestamp_proposed_str = current_date.strftime("%Y-%m-%d") + f" {hour}:00"
+            timestamp_proposed_str = current_date.strftime("%Y-%m-%d") + f" {hour}"
             timestamp_proposed = datetime.strptime(timestamp_proposed_str, "%Y-%m-%d %H:%M:%S")
 
             trip_bo = TripBO(
