@@ -103,7 +103,6 @@ def delete_user(id_user):
 def user_information_id(id_user):
     """Get user information"""
     conn = connect_pg.connect()
-
     verify_user(id_user)
 
     query = """

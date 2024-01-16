@@ -101,7 +101,6 @@ def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
         timestamp_creation=infos["u_timestamp_creation"],
         timestamp_modification=infos["u_timestamp_modification"],
         email_verified=infos["u_email_verified"],
-        status=infos["u_status"],
         home_address_id=infos["u_home_address_id"],
         work_address_id=infos["u_work_address_id"],
         r_id=infos["r_id"],
