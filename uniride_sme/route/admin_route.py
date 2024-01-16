@@ -49,9 +49,9 @@ def users_informations():
 def delete_user(user_id):
     """delete user"""
     user_id_token = get_jwt_identity()["id"]
-    role = user_service.get_user_role(user_id)
 
     try:
+        role = user_service.get_user_role(user_id)
         if user_id_token == user_id or role["role"] == 0:
             raise UserNotAUTHORIZED
         user_deleted = admin_service.delete_user(user_id)
