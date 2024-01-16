@@ -18,7 +18,7 @@ def get_conditions():
     return response
 
 @about.route("/privacy", methods=["GET"])
-def get_conditions():
+def get_privacy():
     """Get conditions of use"""
     try:
         conditions = about_utils.get_privacy()
