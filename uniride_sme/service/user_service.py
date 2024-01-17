@@ -881,11 +881,12 @@ def average_rating_user_id(id_user):
     connect_pg.disconnect(conn)
     return result[0][0]
 
-def get_label(trip_id,user_id):
+
+def get_label(trip_id, user_id):
     """Get passenger label"""
     conn = connect_pg.connect()
     current_trip = get_trip_by_id(trip_id)
-    if user_id == current_trip.get('driver_id'):
+    if user_id == current_trip.get("driver_id"):
         query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 2"
     else:
         query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 1"

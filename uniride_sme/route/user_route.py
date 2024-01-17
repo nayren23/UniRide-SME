@@ -144,6 +144,7 @@ def get_infos():
 
     return response
 
+
 @user.route("/role", methods=["GET"])
 @jwt_required()
 def get_user_id():
@@ -597,15 +598,16 @@ def get_actif_criterian(r_id):
         response = jsonify(message=e.message), e.status_code
     return response
 
+
 @user.route("/label/info", methods=["POST"])
 @jwt_required()
 def get_label():
-    """Get label """
+    """Get label"""
     try:
-        user_id=get_jwt_identity()["id"]
-        json_object=request.get_json()
+        user_id = get_jwt_identity()["id"]
+        json_object = request.get_json()
         validate_fields(json_object, {"trip_id": int})
-        data = user_service.get_label(json_object.get("trip_id", None),user_id)
+        data = user_service.get_label(json_object.get("trip_id", None), user_id)
         response = jsonify({"message": "LABEL_DISPLAYED_SUCCESSFULLY", "label": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code

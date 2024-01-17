@@ -872,7 +872,7 @@ def create_daily_trips(
     date_start = datetime.strptime(date_start, "%Y-%m-%d")
     date_end = datetime.strptime(date_end, "%Y-%m-%d")
     validate_total_passenger_count(passenger_number)
-    validate_user_id(user_id)  
+    validate_user_id(user_id)
     if date_start.date() < datetime.today().date():
         raise InvalidInputException("DATE_START_CANNOT_BE_LOWER_THAN_TODAY")
     if date_start > date_end:
