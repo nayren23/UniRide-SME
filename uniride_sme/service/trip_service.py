@@ -830,16 +830,15 @@ def passenger_current_trips(user_id):
     return result_list
 
 
-def rate_user(value_rating, trip_id, user_id, rating_criteria_id):
+def rate_user(value_rating, trip_id,rating_criteria_id):
     """Rate the user"""
     validate_rating(trip_id, rating_criteria_id)
     validate_value_rating(value_rating)
-    if user_id is None:
-        raise MissingInputException("USER_ID_CANNOT_BE_NULL")
-
     conn = connect_pg.connect()
+    query_trip_user_id = "SELECT t_user_id FROM uniride.ur_trip WHERE t_id = %s"
+    user_id_trip = connect_pg.get_query(conn, query_trip_user_id, (trip_id,))
     query = "INSERT INTO uniride.ur_rating( n_value, u_id, t_id, rc_id) VALUES (%s, %s, %s, %s)"
-    connect_pg.execute_command(conn, query, (value_rating, user_id, trip_id, rating_criteria_id))
+    connect_pg.execute_command(conn, query, (value_rating, user_id_trip[0][0], trip_id, rating_criteria_id))
     connect_pg.disconnect(conn)
 
 
