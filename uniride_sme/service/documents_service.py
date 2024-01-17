@@ -161,7 +161,7 @@ def document_to_verify():
                 },
             }
 
-        result.append(request_data)
+            result.append(request_data)
 
     return result
 
