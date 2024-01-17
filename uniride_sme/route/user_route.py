@@ -337,6 +337,35 @@ def verify_email(token):
     return response
 
 
+@user.route("/change/password/<token>", methods=["POST"])
+def change_forgotten_password(token):
+    """Change password endpoint"""
+    response = jsonify(message="PASSWORD_CHANGED_SUCCESSFULLY"), 200
+    json_object = request.json
+    try:
+        user_id = email.confirm_token(token)
+        user_service.change_forgotten_password(
+            user_id,
+            json_object.get("new_password", None),
+            json_object.get("new_password_confirmation", None),
+        )
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/request-password-change", methods=["POST"])
+def send_password_change():
+    """Send email password change endpoint"""
+    response = jsonify(message="EMAIL_SEND_SUCCESSFULLY"), 200
+    try:
+        user_bo = user_service.get_user_by_email(request.json.get("student_email", None))
+        email.send_password_change_email(user_bo.student_email, user_bo.firstname)
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
 @user.route("/driver/infos/<user_id>", methods=["GET"])
 @role_required(RoleUser.PASSENGER)
 def get_driver_infos(user_id):
