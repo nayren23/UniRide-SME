@@ -103,7 +103,7 @@ def _get_document_type(document_type):
 
 def _get_status(document_type, status):
     """Get title for document validation email"""
-    if status == 1:
+    if status == "1":
         return "accepté" if document_type["masculin"] else "acceptée"
     return "refusé" if document_type["masculin"] else "refusée"
 
