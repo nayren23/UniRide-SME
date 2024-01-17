@@ -16,3 +16,14 @@ def get_conditions():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
+
+@about.route("/privacy", methods=["GET"])
+def get_privacy():
+    """Get conditions of use"""
+    try:
+        privacy = about_utils.get_privacy()
+        response = jsonify(privacy=privacy), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response

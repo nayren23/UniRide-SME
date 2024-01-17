@@ -8,6 +8,7 @@ from flask import jsonify
 from flask_jwt_extended import get_jwt, get_jwt_identity, create_access_token, set_access_cookies
 from uniride_sme import app
 from uniride_sme.route.user_route import user
+from uniride_sme.route.admin_route import admin
 from uniride_sme.route.trip_route import trip
 from uniride_sme.route.address_route import address
 from uniride_sme.route.car_route import car
@@ -59,6 +60,7 @@ if __name__ == "__main__":
     context = (cert, key)  # certificate and key files
 
     app.register_blueprint(user)
+    app.register_blueprint(admin)
     app.register_blueprint(trip)
     app.register_blueprint(address)
     app.register_blueprint(car)

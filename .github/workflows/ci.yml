@@ -6,7 +6,6 @@ on:
     pull_request:
       branches:
         - main
-        - develop
 
 env: #we need to set the tag to the latest tag
   LATEST_TAG: uniride1/uniride_back:latest
@@ -38,11 +37,11 @@ jobs:
           push: true
           tags: ${{ env.LATEST_TAG }}   
           build-args: | #we need to pass the secrets to the dockerfile
-          CACHE_REDIS_DB=${{ secrets.CACHE_REDIS_DB }}
-          CACHE_TYPE=${{ secrets.CACHE_TYPE}}
-          FLASK_DEBUG=${{ secrets.FLASK_DEBUG }}
-          PFP_UPLOAD_FOLDER=${{ secrets.PFP_UPLOAD_FOLDER }}
-          LICENSE_UPLOAD_FOLDER=${{ secrets.LICENSE_UPLOAD_FOLDER }}
-          ID_CARD_UPLOAD_FOLDER=${{ secrets.ID_CARD_UPLOAD_FOLDER }}
-          SCHOOL_CERTIFICATE_UPLOAD_FOLDER=${{ secrets.SCHOOL_CERTIFICATE_UPLOAD_FOLDER }}
-          INSURANCE_UPLOAD_FOLDER=${{ secrets.INSURANCE_UPLOAD_FOLDER }}
+            CACHE_REDIS_DB=${{ secrets.CACHE_REDIS_DB }}
+            CACHE_TYPE=${{ secrets.CACHE_TYPE}}
+            FLASK_DEBUG=${{ secrets.FLASK_DEBUG }}
+            PFP_UPLOAD_FOLDER=${{ secrets.PFP_UPLOAD_FOLDER }}
+            LICENSE_UPLOAD_FOLDER=${{ secrets.LICENSE_UPLOAD_FOLDER }}
+            ID_CARD_UPLOAD_FOLDER=${{ secrets.ID_CARD_UPLOAD_FOLDER }}
+            SCHOOL_CERTIFICATE_UPLOAD_FOLDER=${{ secrets.SCHOOL_CERTIFICATE_UPLOAD_FOLDER }}
+            INSURANCE_UPLOAD_FOLDER=${{ secrets.INSURANCE_UPLOAD_FOLDER }}
