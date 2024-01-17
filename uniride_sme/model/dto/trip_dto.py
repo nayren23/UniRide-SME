@@ -6,6 +6,7 @@ class TripDTO(TypedDict):
     """Trip DTO (Data Transfer Object)"""
 
     trip_id: int
+    status: int
     address: dict
     driver_id: int
     price: float

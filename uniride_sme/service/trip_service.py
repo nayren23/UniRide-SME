@@ -331,6 +331,7 @@ def get_driver_trips(user_id):
     query = """
         SELECT 
             t_id, 
+            t_status,
             t_price, 
             t_timestamp_proposed,
             t.t_user_id, 
@@ -356,9 +357,8 @@ def get_driver_trips(user_id):
         JOIN 
             uniride.ur_address arrival ON t.t_address_arrival_id = arrival.a_id
         WHERE t_user_id = %s
-        AND t_status = %s
     """
-    values = (user_id, TripStatus.PENDING.value)
+    values = (user_id,)
     conn = connect_pg.connect()
     driver_current_trips = connect_pg.get_query(conn, query, values, True)
 
@@ -387,6 +387,7 @@ def format_get_current_driver_trips(driver_current_trips):
         }
         trip_dto = TripDTO(
             trip_id=trip_bo.id,
+            status=trip_bo.status,
             address=address_dtos,
             driver_id=trip_bo.user_id,
             proposed_date=str(trip_bo.timestamp_proposed),
