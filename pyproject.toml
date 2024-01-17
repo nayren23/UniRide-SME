@@ -1,6 +1,6 @@
 [project]
 name = "uniride-sme"
-version = "3.0.0"
+version = "4.0.0"
 description = "Backend of UniRide"
 authors = [
     {name = "Gregoire FAURE"},
@@ -11,7 +11,7 @@ authors = [
 
 readme = "README.md"
 
-requires-python = ">3.7"
+requires-python = ">3.10"
 
 dependencies = [
   "flask",
@@ -30,13 +30,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "bandit[toml]==1.7.4",
-    "black==22.10.0",
-    "coverage[toml]==7.2.6",
-    "pycodestyle==2.10.0",
-    "pylint>=2.15.16",]
-
-tests = [
     "pytest==7.4.3",
     "bandit[toml]==1.7.4",
     "black==22.10.0",

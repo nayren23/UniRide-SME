@@ -5,6 +5,7 @@ from typing import TypedDict
 class UserInfosDTO(TypedDict):
     """DTO for user's informations"""
 
+    id: int
     login: str
     student_email: str
     firstname: str
@@ -12,6 +13,8 @@ class UserInfosDTO(TypedDict):
     gender: str
     phone_number: str
     description: str
+    role: int
+    profile_picture: str
 
 
 class UserShortDTO(TypedDict):
@@ -32,6 +35,23 @@ class DriverInfosDTO(TypedDict):
     description: str
 
 
+class PassengerInfosDTO(TypedDict):
+    """DTO for passenger's informations"""
+
+    id: int
+    firstname: str
+    lastname: str
+    profile_picture: str
+    joined: bool
+
+
+class PassengerEmailsDTO(TypedDict):
+    """DTO for passenger's email"""
+
+    firstname: str
+    email: str
+
+
 class InformationsVerifiedDTO(TypedDict):
     """DTO to check if user's informations are verified"""
 
@@ -39,3 +59,12 @@ class InformationsVerifiedDTO(TypedDict):
     license_verified: bool
     id_card_verified: bool
     school_certificate_verified: bool
+
+
+class InformationsStatUsers(TypedDict):
+    """DTO to take statistics about users informations"""
+
+    user_count: int
+    drivers_count: int
+    passengers_count: int
+    pending_count: int

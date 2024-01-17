@@ -29,3 +29,17 @@ class AttributeUnchangedException(ApiException):
 
     def __init__(self, message):
         super().__init__(message + "_NEW_OLD_SAME", 422)
+
+
+class RatingNotFoundException(ApiException):
+    """Exception for when the rating isn't found"""
+
+    def __init__(self):
+        super().__init__("RATING_NOT_FOUND", 422)
+
+
+class UserNotAUTHORIZED(ApiException):
+    """Exception for when the user isn't authorized"""
+
+    def __init__(self):
+        super().__init__("USER_NOT_AUTHORIZED", 422)

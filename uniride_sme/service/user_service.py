@@ -1,10 +1,13 @@
 """User service module"""
 import re
 import bcrypt
-
+from uniride_sme.utils.file import get_encoded_file
 from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.user_bo import UserBO
+from uniride_sme.service.documents_service import update_role
+from uniride_sme.service.trip_service import get_trip_by_id
+from uniride_sme.service import admin_service
 from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
@@ -25,9 +28,33 @@ def authenticate(login, password) -> UserBO:
     if not password:
         raise MissingInputException("PASSWORD_MISSING")
 
-    user_bo = get_user_by_login(login)
-    _verify_password(password, user_bo.u_password)
+    try:
+        user_bo = get_user_by_login(login)
+    except UserNotFoundException:
+        user_bo = get_user_by_email(login)
+    _verify_password(password, user_bo.password)
     return user_bo
+
+
+def get_user_role(user_id):
+    """Get user role"""
+    with connect_pg.connect() as conn:
+        admin_service.verify_user(user_id)
+
+        query = """
+        SELECT r_id, u_id
+        FROM uniride.ur_user
+        WHERE u_id = %s
+        """
+
+        r_id = connect_pg.get_query(conn, query, (user_id,))
+
+    if not r_id:
+        raise UserNotFoundException
+
+    document = r_id[0]
+
+    return {"role": document[0], "id": user_id}
 
 
 def get_user_by_id(user_id) -> UserBO:
@@ -35,9 +62,14 @@ def get_user_by_id(user_id) -> UserBO:
     return _get_user_by_identifier(user_id, "u_id")
 
 
-def get_user_by_login(u_login) -> UserBO:
+def get_user_by_login(login) -> UserBO:
     """Get user infos from db using the login"""
-    return _get_user_by_identifier(u_login, "u_login")
+    return _get_user_by_identifier(login, "u_login")
+
+
+def get_user_by_email(student_email) -> UserBO:
+    """Get user infos from db using the student_email"""
+    return _get_user_by_identifier(student_email, "u_student_email")
 
 
 def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
@@ -56,7 +88,22 @@ def _get_user_by_identifier(identifier, identifier_type) -> UserBO:
         raise UserNotFoundException()
     infos = infos[0]
 
-    user_bo = UserBO(**infos)
+    user_bo = UserBO(
+        id=infos["u_id"],
+        login=infos["u_login"],
+        firstname=infos["u_firstname"],
+        lastname=infos["u_lastname"],
+        student_email=infos["u_student_email"],
+        password=infos["u_password"],
+        gender=infos["u_gender"],
+        phone_number=infos["u_phone_number"],
+        description=infos["u_description"],
+        profile_picture=infos["u_profile_picture"],
+        timestamp_creation=infos["u_timestamp_creation"],
+        timestamp_modification=infos["u_timestamp_modification"],
+        email_verified=infos["u_email_verified"],
+        r_id=infos["r_id"],
+    )
     return user_bo
 
 
@@ -115,7 +162,6 @@ def add_user(  # pylint: disable=too-many-arguments, too-many-locals
 
 def _validate_login(login):
     """Check if the login is valid"""
-
     # check if exist
     if not login:
         raise MissingInputException("LOGIN_MISSING")
@@ -180,7 +226,7 @@ def _verify_password(password, hashed_password) -> bool:
         raise PasswordIncorrectException()
 
 
-def save_pfp(user_id, pfp_file, u_profile_picture=None):
+def save_pfp(user_id, pfp_file, profile_picture=None):
     """Save profil picture"""
     if not pfp_file:
         raise MissingInputException("MISSING_PFP_FILE")
@@ -191,8 +237,8 @@ def save_pfp(user_id, pfp_file, u_profile_picture=None):
     allowed_extensions = ["png", "jpg", "jpeg"]
     file_name = save_file(pfp_file, app.config["PFP_UPLOAD_FOLDER"], allowed_extensions, user_id)
     try:
-        if u_profile_picture and file_name != u_profile_picture:
-            delete_file(u_profile_picture, app.config["PFP_UPLOAD_FOLDER"])
+        if profile_picture and file_name != profile_picture:
+            delete_file(profile_picture, app.config["PFP_UPLOAD_FOLDER"])
     except FileNotFoundError:
         pass
     query = "UPDATE uniride.ur_user SET u_profile_picture=%s, u_timestamp_modification=CURRENT_TIMESTAMP WHERE u_id=%s"
@@ -209,7 +255,7 @@ def verify_student_email(student_email):
 
     conn = connect_pg.connect()
 
-    query = "select u_email_verified from uniride.ur_user where u_student_email = %s"
+    query = "select u_email_verified, u_id from uniride.ur_user where u_student_email = %s"
     email_verified = connect_pg.get_query(conn, query, (student_email,))
     # check if the email belongs to a user
     if not email_verified:
@@ -222,6 +268,8 @@ def verify_student_email(student_email):
 
     connect_pg.execute_command(conn, query, (student_email,))
     connect_pg.disconnect(conn)
+
+    update_role(email_verified[0][1])
 
 
 def _validate_firstname(firstname):
@@ -263,9 +311,18 @@ def _validate_gender(gender):
 
 def _validate_phone_number(phone_number):
     """Check if the phone number is valid"""
+    if not phone_number:
+        raise MissingInputException("PHONE_NUMBER_MISSING")
+
     # check if the format is valid
-    if phone_number and not (phone_number.isdigit() and len(phone_number) == 10):
+    if not phone_number.isdigit() or len(phone_number) != 10:
         raise InvalidInputException("PHONE_NUMBER_INVALID")
+
+    query = "select count(*) from uniride.ur_user where u_phone_number = %s"
+    conn = connect_pg.connect()
+    count = connect_pg.get_query(conn, query, (phone_number,))[0][0]
+    if count:
+        raise InvalidInputException("PHONE_NUMBER_TAKEN")
 
 
 def _validate_description(description):
@@ -311,7 +368,7 @@ def change_password(user_id, old_password, new_password, new_password_confirmati
     if not old_password:
         raise MissingInputException("PASSWORD_MISSING")
 
-    _verify_password(old_password, user_bo.u_password)
+    _verify_password(old_password, user_bo.password)
 
     if old_password == new_password:
         raise AttributeUnchangedException("PASSWORD")
@@ -324,12 +381,25 @@ def change_password(user_id, old_password, new_password, new_password_confirmati
     values = (hashed_password, user_id)
     conn = connect_pg.connect()
     connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
+
+
+def change_forgotten_password(studen_email, new_password, new_password_confirmation):
+    """Change forgotten password"""
+    _validate_password(new_password, new_password_confirmation)
+
+    hashed_password = _hash_password(new_password)
+
+    query = "UPDATE uniride.ur_user SET u_password=%s WHERE u_student_email=%s"
+    values = (hashed_password, studen_email)
+    conn = connect_pg.connect()
+    connect_pg.execute_command(conn, query, values)
 
 
 def change_student_email(user_id, student_email):
     """Change student email"""
     user_bo = get_user_by_id(user_id)
-    if user_bo.u_student_email == student_email:
+    if user_bo.student_email == student_email:
         raise AttributeUnchangedException("STUDENT_EMAIL")
 
     _validate_student_email(student_email)
@@ -347,13 +417,13 @@ def update_user_attribute(user_id, attribute_name, new_value, validation_func):
 
     # Check if the new value is the same as the old value
     if getattr(user_bo, attribute_name) == new_value:
-        raise AttributeUnchangedException(attribute_name[2:].upper())
+        raise AttributeUnchangedException(attribute_name.upper())
 
     # Validate the new value
     validation_func(new_value)
 
     # Construct the query dynamically
-    query = f"UPDATE uniride.ur_user SET {attribute_name}=%s WHERE u_id=%s"
+    query = f"UPDATE uniride.ur_user SET u_{attribute_name}=%s WHERE u_id=%s"
     values = (new_value, user_id)
     conn = connect_pg.connect()
     connect_pg.execute_command(conn, query, values)
@@ -362,29 +432,49 @@ def update_user_attribute(user_id, attribute_name, new_value, validation_func):
 
 def change_login(user_id, login):
     """Change login"""
-    update_user_attribute(user_id, "u_login", login, _validate_login)
+    update_user_attribute(user_id, "login", login, _validate_login)
 
 
 def change_firstname(user_id, firstname):
     """Change firstname"""
-    update_user_attribute(user_id, "u_firstname", firstname, lambda name: _validate_name(name, "FIRSTNAME"))
+    update_user_attribute(user_id, "firstname", firstname, lambda name: _validate_name(name, "FIRSTNAME"))
 
 
 def change_lastname(user_id, lastname):
     """Change lastname"""
-    update_user_attribute(user_id, "u_lastname", lastname, lambda name: _validate_name(name, "LASTNAME"))
+    update_user_attribute(user_id, "lastname", lastname, lambda name: _validate_name(name, "LASTNAME"))
 
 
 def change_phone_number(user_id, phone_number):
     """Change phone number"""
-    update_user_attribute(user_id, "u_phone_number", phone_number, _validate_phone_number)
+    update_user_attribute(user_id, "phone_number", phone_number, _validate_phone_number)
 
 
 def change_gender(user_id, gender):
     """Change gender"""
-    update_user_attribute(user_id, "u_gender", gender, _validate_gender)
+    update_user_attribute(user_id, "gender", gender, _validate_gender)
 
 
 def change_description(user_id, description):
     """Change description"""
-    update_user_attribute(user_id, "u_description", description, _validate_description)
+    update_user_attribute(user_id, "description", description, _validate_description)
+
+
+def get_label(trip_id, user_id):
+    """Get passenger label"""
+    result = []
+    conn = connect_pg.connect()
+    current_trip = get_trip_by_id(trip_id)
+    if user_id == current_trip.get("driver_id"):
+        query = "SELECT rc_id, rc_name FROM uniride.ur_rating_criteria WHERE r_id = 2"
+    else:
+        query = "SELECT rc_id, rc_name FROM uniride.ur_rating_criteria WHERE r_id = 1"
+    result_label = connect_pg.get_query(conn, query)
+    for label in result_label:
+        user_data = {
+            "id": label[0],
+            "name": label[1],
+        }
+        result.append(user_data)
+    connect_pg.disconnect(conn)
+    return result

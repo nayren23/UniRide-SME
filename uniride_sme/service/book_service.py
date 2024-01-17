@@ -1,8 +1,10 @@
 """Book service module"""
-import psycopg2
+import random
+from datetime import datetime
 
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.address_bo import AddressBO
+from uniride_sme.model.bo.book_bo import BookBO
 from uniride_sme.model.dto.book_dto import BookDTO
 from uniride_sme.model.dto.trip_dto import TripShortDTO
 from uniride_sme.model.dto.user_dto import UserShortDTO
@@ -39,21 +41,40 @@ def _validate_user_id(trip, user_id):
         raise ForbiddenException("DRIVER_CANNOT_BOOK_HIS_OWN_TRIP")
 
 
+def _validate_trip_availability(trip):
+    departure_date = datetime.strptime(trip["departure_date"], "%Y-%m-%d %H:%M:%S")
+    if trip["status"] != 1 or departure_date < datetime.now():
+        raise ForbiddenException("TRIP_NOT_AVAILABLE")
+
+
+def _check_trip_already_booked(trip_id, user_id):
+    conn = connect_pg.connect()
+    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s"
+    values = (trip_id, user_id)
+    bookings = connect_pg.get_query(conn, query, values, True)
+    connect_pg.disconnect(conn)
+    for booking in bookings:
+        if booking["j_accepted"] != -2:
+            raise TripAlreadyBookedException()
+    if len(bookings) > 3:
+        raise ForbiddenException("BOOKED_TOO_MANY_TIMES")
+
+
 def book_trip(trip_id, user_id, passenger_count):
     """Book a trip"""
     trip = trip_service.get_trip_by_id(trip_id)
 
+    _validate_trip_availability(trip)
     _validate_user_id(trip, user_id)
     _validate_passenger_count(trip, passenger_count)
 
-    query = "INSERT INTO uniride.ur_join(u_id, t_id, r_passenger_count) VALUES (%s, %s, %s);"
+    _check_trip_already_booked(trip_id, user_id)
+
+    query = "INSERT INTO uniride.ur_join(u_id, t_id, j_passenger_count) VALUES (%s, %s, %s);"
     values = (user_id, trip_id, passenger_count)
-    try:
-        conn = connect_pg.connect()
-        connect_pg.execute_command(conn, query, values)
-        connect_pg.disconnect(conn)
-    except psycopg2.errors.UniqueViolation as e:
-        raise TripAlreadyBookedException() from e
+    conn = connect_pg.connect()
+    connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
 
 
 def get_booking_by_id(trip_id, user_id):
@@ -102,13 +123,20 @@ def respond_booking(trip_id, driver_id, booker_id, response):
     trip = trip_service.get_trip_by_id(trip_id)
 
     _validate_driver_id(trip, driver_id)
-
+    _validate_trip_availability(trip)
     booking = get_booking_by_id(trip_id, booker_id)
-    _validate_booking_status(booking["r_accepted"])
-    _validate_passenger_count(trip, booking["r_passenger_count"])
+    _validate_booking_status(booking["j_accepted"])
 
-    query = "UPDATE uniride.ur_join SET r_accepted = %s WHERE t_id = %s AND u_id = %s"
-    values = (response, trip_id, booker_id)
+    query = "UPDATE uniride.ur_join SET"
+
+    if response == 1:
+        _validate_passenger_count(trip, booking["j_passenger_count"])
+        query += " j_verification_code = %s,"
+        values = (random.randint(1000, 9999),)
+
+    query += " j_accepted = %s WHERE t_id = %s AND u_id = %s"
+    values += (response, trip_id, booker_id)
+
     conn = connect_pg.connect()
     connect_pg.execute_command(conn, query, values)
     connect_pg.disconnect(conn)
@@ -121,9 +149,9 @@ def get_bookings(user_id):
 
     query = """
         SELECT 
-            j.r_accepted, 
-            j.r_passenger_count, 
-            j.r_date_requested,
+            j.j_accepted, 
+            j.j_passenger_count, 
+            j.j_date_requested,
             t.t_id,
             t.t_timestamp_proposed,
             departure.a_id AS departure_a_id,
@@ -158,14 +186,13 @@ def get_bookings(user_id):
     conn = connect_pg.connect()
     result = connect_pg.get_query(conn, query, values, True)
     connect_pg.disconnect(conn)
-    print(result)
     bookings = []
     for booking in result:
         user = UserShortDTO(
             id=booking["u_id"],
             firstname=booking["u_firstname"],
             lastname=booking["u_lastname"],
-            profile_picture=get_encoded_file(booking["u_profile_picture"]),
+            profile_picture=get_encoded_file(booking["u_profile_picture"], "PFP_UPLOAD_FOLDER"),
         )
         departure_address = AddressBO(
             id=booking["departure_a_id"],
@@ -194,10 +221,105 @@ def get_bookings(user_id):
             BookDTO(
                 user=user,
                 trip=trip,
-                accepted=booking["r_accepted"],
-                passenger_count=booking["r_passenger_count"],
-                date_requested=booking["r_date_requested"],
+                accepted=booking["j_accepted"],
+                passenger_count=booking["j_passenger_count"],
+                date_requested=booking["j_date_requested"],
             )
         )
-        print(bookings)
     return bookings
+
+
+def cancel_request_trip(user_id, trip_id):
+    """Cancel request trip"""
+    if user_id is None:
+        raise MissingInputException("USER_ID_MISSING")
+    if trip_id is None:
+        raise MissingInputException("TRIP_ID_MISSING")
+    conn = connect_pg.connect()
+    query = "UPDATE uniride.ur_join SET j_accepted=-2 WHERE u_id = %s AND t_id = %s"
+    connect_pg.execute_command(conn, query, (user_id, trip_id))
+    connect_pg.disconnect(conn)
+
+
+def _validate_trip_started(trip):
+    if trip["status"] != 4:
+        raise ForbiddenException("TRIP_NOT_STARTED")
+
+
+def _validate_booking(booking, verification_code):
+    if not booking:
+        raise BookingNotFoundException()
+
+    if booking["j_joined"]:
+        raise ForbiddenException("PASSENGER_AlREADY_JOINED")
+
+    if booking["j_accepted"] != 1:
+        raise ForbiddenException("BOOKING_NOT_ACCEPTED")
+
+    if booking["j_verification_code"] != verification_code:
+        raise ForbiddenException("INVALID_VERIFICATION_CODE")
+
+
+def join(trip_id, driver_id, booker_id, verification_code):
+    """Respond to a booking request"""
+    trip = trip_service.get_trip_by_id(trip_id)
+    _validate_trip_started(trip)
+    _validate_driver_id(trip, driver_id)
+
+    booking = get_booking_by_id(trip_id, booker_id)
+    _validate_booking(booking, verification_code)
+
+    conn = connect_pg.connect()
+    query = "UPDATE uniride.ur_join SET j_joined = true WHERE t_id = %s AND u_id = %s"
+    values = (trip_id, booker_id)
+    connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
+
+
+def get_verification_code(trip_id, user_id):
+    """Get verification code"""
+    trip = trip_service.get_trip_by_id(trip_id)
+    _validate_trip_started(trip)
+    if not user_id:
+        raise MissingInputException("USER_ID_MISSING")
+
+    conn = connect_pg.connect()
+    query = "SELECT j_accepted, j_verification_code FROM uniride.ur_join WHERE t_id = %s AND u_id = %s"
+    values = (trip_id, user_id)
+    booking = connect_pg.get_query(conn, query, values, True)
+    connect_pg.disconnect(conn)
+
+    if not booking:
+        raise BookingNotFoundException()
+    if booking[0]["j_accepted"] != 1:
+        raise ForbiddenException("BOOKING_NOT_ACCEPTED")
+
+    return booking[0]["j_verification_code"]
+
+
+def get_booking(trip_id, user_id):
+    """Get booking by id"""
+    if not trip_id:
+        raise MissingInputException("TRIP_ID_MISSING")
+    if not user_id:
+        raise MissingInputException("USER_ID_MISSING")
+
+    conn = connect_pg.connect()
+    query = "SELECT * FROM uniride.ur_join WHERE t_id = %s AND u_id = %s ORDER BY j_date_requested DESC"
+    values = (trip_id, user_id)
+    booking = connect_pg.get_query(conn, query, values, True)
+    connect_pg.disconnect(conn)
+
+    if not booking:
+        raise BookingNotFoundException()
+
+    booking_dto = BookBO(
+        user_id=booking[0]["u_id"],
+        trip_id=booking[0]["t_id"],
+        accepted=booking[0]["j_accepted"],
+        passenger_count=booking[0]["j_passenger_count"],
+        date_requested=booking[0]["j_date_requested"],
+        joined=booking[0]["j_joined"],
+        verification_code=booking[0]["j_verification_code"],
+    )
+    return booking_dto

@@ -90,6 +90,6 @@ class OpenStreetMapRouteChecker(RouteChecker):
             return initial_distance
         return None
 
-    def get_duration(self, origin, destination):
+    def get_duration(self, origin, destination, departure_time):
         """Get the duration between two points"""
         # TODO : implement this method
