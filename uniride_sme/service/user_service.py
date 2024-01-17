@@ -892,4 +892,3 @@ def get_label(trip_id,user_id):
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
     return result
-
