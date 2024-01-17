@@ -108,7 +108,10 @@ def _save_document(user_id, file, old_file_name, document_type):
     file_name = save_file(file, directory, allowed_extensions, user_id)
 
     if old_file_name and file_name != old_file_name:
-        delete_file(old_file_name, directory)
+        try:
+            delete_file(old_file_name, directory)
+        except FileNotFoundError:
+            pass
 
     if not old_file_name or file_name != old_file_name:
         conn = connect_pg.connect()
