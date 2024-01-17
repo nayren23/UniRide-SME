@@ -17,6 +17,7 @@ def get_conditions():
         response = jsonify(message=e.message), e.status_code
     return response
 
+
 @about.route("/privacy", methods=["GET"])
 def get_privacy():
     """Get conditions of use"""

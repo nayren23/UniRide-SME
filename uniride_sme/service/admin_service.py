@@ -12,7 +12,6 @@ from uniride_sme.utils.exception.user_exceptions import (
 from uniride_sme.utils.exception.criteria_exceptions import TooManyCriteriaException
 
 
-
 def count_users():
     """Get number of users"""
     conn = connect_pg.connect()
@@ -91,7 +90,7 @@ def delete_user(id_user):
     """Delete user"""
     conn = connect_pg.connect()
     verify_user(id_user)
-    
+
     delete_query = "DELETE FROM uniride.ur_user WHERE u_id = %s"
     delete_values = (id_user,)
     connect_pg.execute_command(conn, delete_query, delete_values)

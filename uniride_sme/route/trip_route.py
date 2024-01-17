@@ -132,9 +132,6 @@ def get_trip(trip_id):
     return response
 
 
-
-
-
 @trip.route("/<trip_id>/passengers", methods=["GET"])
 @role_required()
 def passengers(trip_id: int):

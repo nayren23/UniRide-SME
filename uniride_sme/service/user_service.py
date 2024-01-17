@@ -449,7 +449,6 @@ def change_description(user_id, description):
     update_user_attribute(user_id, "description", description, _validate_description)
 
 
-
 def get_label(trip_id, user_id):
     """Get passenger label"""
     conn = connect_pg.connect()

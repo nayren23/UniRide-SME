@@ -14,7 +14,7 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 from jwt import ExpiredSignatureError
 from uniride_sme.model.dto.trip_dto import TripStatusDTO
 from uniride_sme import app
-from uniride_sme.service import admin_service, documents_service, user_service,trip_service
+from uniride_sme.service import admin_service, documents_service, user_service, trip_service
 from uniride_sme.model.dto.user_dto import (
     UserInfosDTO,
     InformationsVerifiedDTO,
@@ -29,7 +29,6 @@ from uniride_sme.utils.jwt_token import revoke_token
 from uniride_sme.utils.role_user import RoleUser, role_required
 
 admin = Blueprint("admin", __name__, url_prefix="/admin")
-
 
 
 @admin.route("/users-informations", methods=["GET"])
@@ -106,6 +105,7 @@ def user_stat_id(user_id):
         response = jsonify(message=e.message), e.status_code
     return response
 
+
 @admin.route("/trip-number", methods=["GET"])
 @role_required(RoleUser.ADMINISTRATOR)
 def trip_count():
@@ -121,6 +121,7 @@ def trip_count():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 @admin.route("/user-number", methods=["GET"])
 @role_required(RoleUser.ADMINISTRATOR)
@@ -138,6 +139,7 @@ def user_count():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 @admin.route("/verify/document", methods=["GET"])
 @role_required(RoleUser.ADMINISTRATOR)
@@ -197,6 +199,7 @@ def count_documents_status():
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
+
 
 @admin.route("/label", methods=["GET"])
 @role_required(RoleUser.ADMINISTRATOR)
