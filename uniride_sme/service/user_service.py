@@ -449,12 +449,19 @@ def change_description(user_id, description):
 
 def get_label(trip_id, user_id):
     """Get passenger label"""
+    result = []
     conn = connect_pg.connect()
     current_trip = get_trip_by_id(trip_id)
     if user_id == current_trip.get("driver_id"):
-        query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 2"
+        query = "SELECT rc_id, rc_name FROM uniride.ur_rating_criteria WHERE r_id = 2"
     else:
-        query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 1"
-    result = connect_pg.get_query(conn, query)
+        query = "SELECT rc_id, rc_name FROM uniride.ur_rating_criteria WHERE r_id = 1"
+    result_label = connect_pg.get_query(conn, query)
+    for label in result_label:
+        user_data = {
+            "id": label[0],
+            "name": label[1],
+        }
+        result.append(user_data)
     connect_pg.disconnect(conn)
     return result
