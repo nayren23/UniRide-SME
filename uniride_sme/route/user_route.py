@@ -599,16 +599,14 @@ def get_actif_criterian(r_id):
     return response
 
 
-@user.route("/label/info", methods=["POST"])
+@user.route("/label/info/<trip_id>", methods=["GET"])
 @jwt_required()
-def get_label():
+def get_label(trip_id):
     """Get label"""
     try:
         user_id = get_jwt_identity()["id"]
-        json_object = request.get_json()
-        validate_fields(json_object, {"trip_id": int})
-        data = user_service.get_label(json_object.get("trip_id", None), user_id)
-        response = jsonify({"message": "LABEL_DISPLAYED_SUCCESSFULLY", "label": data}), 200
+        data = user_service.get_label(trip_id, user_id)
+        response = jsonify({"label": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
