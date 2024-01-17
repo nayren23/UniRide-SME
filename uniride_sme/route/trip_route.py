@@ -205,7 +205,7 @@ def passenger_current_trip():
 def rate_user():
     """Rate user endpoint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity()["id"]
         request_data = request.get_json()
         validate_fields(request_data, {"trip_id": int, "value": int, "rating_criteria_id": int})
         trip_service.rate_user(
