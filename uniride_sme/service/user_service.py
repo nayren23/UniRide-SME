@@ -879,3 +879,19 @@ def average_rating_user_id(id_user):
     result = connect_pg.get_query(conn, query, (id_user,))
     connect_pg.disconnect(conn)
     return result[0][0]
+
+def get_passenger_label():
+    """Get passenger label"""
+    conn = connect_pg.connect()
+    query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 2"
+    result = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+    return result
+
+def get_driver_label():
+    """Get driver label"""
+    conn = connect_pg.connect()
+    query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 1"
+    result = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+    return result
