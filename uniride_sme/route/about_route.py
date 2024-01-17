@@ -21,8 +21,8 @@ def get_conditions():
 def get_privacy():
     """Get conditions of use"""
     try:
-        conditions = about_utils.get_privacy()
-        response = jsonify(conditions=conditions), 200
+        privacy = about_utils.get_privacy()
+        response = jsonify(privacy=privacy), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
