@@ -26,6 +26,7 @@ from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedExce
 from uniride_sme.utils import email
 from uniride_sme.utils.file import get_encoded_file
 from uniride_sme.utils.jwt_token import revoke_token
+from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.role_user import RoleUser, role_required
 
 user = Blueprint("user", __name__, url_prefix="/user")
@@ -596,22 +597,16 @@ def get_actif_criterian(r_id):
         response = jsonify(message=e.message), e.status_code
     return response
 
-@user.route("/label-passenger", methods=["GET"])
-def get_label_passenger():
-    """Get label passengers"""
+@user.route("/label/info", methods=["POST"])
+@jwt_required()
+def get_label():
+    """Get label """
     try:
-        data = user_service.get_passenger_label()
-        response = jsonify({"message": "LABEL_PASSENGER_DISPLAYED_SUCCESSFULLY", "label": data}), 200
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-    return response
-
-@user.route("/label-driver", methods=["GET"])
-def get_label_driver():
-    """Get label drivers"""
-    try:
-        data = user_service.get_driver_label()
-        response = jsonify({"message": "LABEL_DRIVER_DISPLAYED_SUCCESSFULLY", "label": data}), 200
+        user_id=get_jwt_identity()["id"]
+        json_object=request.get_json()
+        validate_fields(json_object, {"trip_id": int})
+        data = user_service.get_label(json_object.get("trip_id", None),user_id)
+        response = jsonify({"message": "LABEL_DISPLAYED_SUCCESSFULLY", "label": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

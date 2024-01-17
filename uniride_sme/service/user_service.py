@@ -6,6 +6,7 @@ from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.user_bo import UserBO
 from uniride_sme.service.documents_service import update_role
+from uniride_sme.service.trip_service import get_trip_by_id
 from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
@@ -880,18 +881,15 @@ def average_rating_user_id(id_user):
     connect_pg.disconnect(conn)
     return result[0][0]
 
-def get_passenger_label():
+def get_label(trip_id,user_id):
     """Get passenger label"""
     conn = connect_pg.connect()
-    query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 2"
+    current_trip = get_trip_by_id(trip_id)
+    if user_id == current_trip.get('driver_id'):
+        query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 2"
+    else:
+        query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 1"
     result = connect_pg.get_query(conn, query)
     connect_pg.disconnect(conn)
     return result
 
-def get_driver_label():
-    """Get driver label"""
-    conn = connect_pg.connect()
-    query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 1"
-    result = connect_pg.get_query(conn, query)
-    connect_pg.disconnect(conn)
-    return result
