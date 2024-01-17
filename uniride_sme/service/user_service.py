@@ -6,6 +6,7 @@ from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.user_bo import UserBO
 from uniride_sme.service.documents_service import update_role
+from uniride_sme.service.trip_service import get_trip_by_id
 from uniride_sme.service import admin_service
 from uniride_sme.utils.file import save_file, delete_file
 from uniride_sme.utils.exception.exceptions import (
@@ -448,3 +449,15 @@ def change_description(user_id, description):
     update_user_attribute(user_id, "description", description, _validate_description)
 
 
+
+def get_label(trip_id, user_id):
+    """Get passenger label"""
+    conn = connect_pg.connect()
+    current_trip = get_trip_by_id(trip_id)
+    if user_id == current_trip.get("driver_id"):
+        query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 2"
+    else:
+        query = "SELECT rc_id, rc_name, rc_description FROM uniride.ur_rating_criteria WHERE r_id = 1"
+    result = connect_pg.get_query(conn, query)
+    connect_pg.disconnect(conn)
+    return result

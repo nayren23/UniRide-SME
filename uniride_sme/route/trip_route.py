@@ -112,8 +112,9 @@ def get_current_driver_trips():
         user_id = get_jwt_identity()["id"]
         available_trips = trip_service.get_driver_trips(user_id)
         # We need to paginate the data
+        # TODO : add pagination
         meta, paginated_data = create_pagination(request, available_trips)
-        response = jsonify({"trips": paginated_data, "meta": meta}), 200
+        response = jsonify({"trips": available_trips, "meta": meta}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
