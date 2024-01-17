@@ -26,6 +26,7 @@ from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedExce
 from uniride_sme.utils import email
 from uniride_sme.utils.file import get_encoded_file
 from uniride_sme.utils.jwt_token import revoke_token
+from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.role_user import RoleUser, role_required
 
 user = Blueprint("user", __name__, url_prefix="/user")
@@ -123,29 +124,6 @@ def logout():
 def get_infos():
     """Get user infos endpoint"""
     user_id = get_jwt_identity()["id"]
-    try:
-        user_bo = user_service.get_user_by_id(user_id)
-        user_infos_dto = UserInfosDTO(
-            id=user_id,
-            login=user_bo.login,
-            student_email=user_bo.student_email,
-            firstname=user_bo.firstname,
-            lastname=user_bo.lastname,
-            gender=user_bo.gender,
-            phone_number=user_bo.phone_number,
-            description=user_bo.description,
-            role=user_bo.r_id,
-            profile_picture=get_encoded_file(user_bo.profile_picture, "PFP_UPLOAD_FOLDER"),
-        )
-        response = jsonify(user_infos_dto), 200
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-
-    return response
-
-@user.route("/infos/<int:user_id>", methods=["GET"])
-def get_infos_by_id(user_id):
-    """Get user infos by ID endpoint"""
     try:
         user_bo = user_service.get_user_by_id(user_id)
         user_infos_dto = UserInfosDTO(
@@ -495,7 +473,6 @@ def delete_user(user_id):
 
 
 @user.route("/infos/<user_id>", methods=["GET"])
-@role_required(RoleUser.ADMINISTRATOR)
 def user_information_token(user_id):
     """Informations user by token"""
     try:
@@ -617,6 +594,21 @@ def get_actif_criterian(r_id):
     try:
         data = user_service.actif_criteria(r_id)
         response = jsonify({"message": "ACTIF_CRITERION_DISPLAYED_SUCCESSFULLY", "criterion": data}), 200
+    except ApiException as e:
+        response = jsonify(message=e.message), e.status_code
+    return response
+
+
+@user.route("/label/info", methods=["POST"])
+@jwt_required()
+def get_label():
+    """Get label"""
+    try:
+        user_id = get_jwt_identity()["id"]
+        json_object = request.get_json()
+        validate_fields(json_object, {"trip_id": int})
+        data = user_service.get_label(json_object.get("trip_id", None), user_id)
+        response = jsonify({"message": "LABEL_DISPLAYED_SUCCESSFULLY", "label": data}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response
