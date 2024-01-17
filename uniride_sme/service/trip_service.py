@@ -660,7 +660,7 @@ def get_passengers(trip_id, user_id):
                 id=passenger["u_id"],
                 firstname=passenger["u_firstname"],
                 lastname=passenger["u_lastname"],
-                profile_picture=get_encoded_file(passenger["u_profile_picture"], app.config["PFP_UPLOAD_FOLDER"]),
+                profile_picture=get_encoded_file(passenger["u_profile_picture"], "PFP_UPLOAD_FOLDER"),
                 joined=passenger["j_joined"],
             )
         )
