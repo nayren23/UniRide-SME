@@ -381,6 +381,19 @@ def change_password(user_id, old_password, new_password, new_password_confirmati
     values = (hashed_password, user_id)
     conn = connect_pg.connect()
     connect_pg.execute_command(conn, query, values)
+    connect_pg.disconnect(conn)
+
+
+def change_forgotten_password(studen_email, new_password, new_password_confirmation):
+    """Change forgotten password"""
+    _validate_password(new_password, new_password_confirmation)
+
+    hashed_password = _hash_password(new_password)
+
+    query = "UPDATE uniride.ur_user SET u_password=%s WHERE u_student_email=%s"
+    values = (hashed_password, studen_email)
+    conn = connect_pg.connect()
+    connect_pg.execute_command(conn, query, values)
 
 
 def change_student_email(user_id, student_email):
