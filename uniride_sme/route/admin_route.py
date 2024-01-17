@@ -255,7 +255,6 @@ def update_label():
 
 
 @admin.route("/drivers-ranking", methods=["GET"])
-@role_required(RoleUser.ADMINISTRATOR)
 def get_ranking_drivers():
     """Get ranking drivers"""
     try:
@@ -267,7 +266,6 @@ def get_ranking_drivers():
 
 
 @admin.route("/passengers-ranking", methods=["GET"])
-@role_required(RoleUser.ADMINISTRATOR)
 def get_ranking_passengers():
     """Get ranking passengers"""
     try:
