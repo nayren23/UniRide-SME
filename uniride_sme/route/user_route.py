@@ -338,7 +338,7 @@ def verify_email(token):
 
 
 @user.route("/driver/infos/<user_id>", methods=["GET"])
-@role_required(RoleUser.DRIVER)
+@role_required(RoleUser.PASSENGER)
 def get_driver_infos(user_id):
     """Get user infos endpoint"""
     try:
