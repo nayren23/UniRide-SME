@@ -4,7 +4,7 @@ from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.model.bo.documents_bo import DocumentsBO
 from uniride_sme.utils.file import save_file, delete_file
-from uniride_sme.service import user_service
+from uniride_sme.service import user_service, admin_service
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
 from uniride_sme.utils.file import get_encoded_file
@@ -17,7 +17,7 @@ def get_documents_by_user_id(user_id):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
-    user_service.verify_user(user_id)
+    admin_service.verify_user(user_id)
 
     query = "SELECT * FROM uniride.ur_documents natural join uniride.ur_document_verification where u_id = %s"
     params = (user_id,)
@@ -37,7 +37,7 @@ def add_documents(user_id, files):
         raise MissingInputException("USER_ID_MISSING")
 
     conn = connect_pg.connect()
-    user_service.verify_user(user_id)
+    admin_service.verify_user(user_id)
 
     query = """
     WITH first_insert AS (
@@ -161,7 +161,7 @@ def document_to_verify():
                 },
             }
 
-        result.append(request_data)
+            result.append(request_data)
 
     return result
 
@@ -240,7 +240,7 @@ def document_check(data):
 
     conn = connect_pg.connect()
     connect_pg.disconnect(conn)
-    user_service.verify_user(user_id)
+    admin_service.verify_user(user_id)
 
     document_type = document_data.get("type")
     status = document_data.get("status")
@@ -347,7 +347,7 @@ def delete_documents(documents, folder_documents,id_doc):
 def document_user(user_id):
     """Get documents by user id"""
     conn = connect_pg.connect()
-    user_service.verify_user(user_id)
+    admin_service.verify_user(user_id)
 
     query = """
         SELECT u_id, d_license, d_id_card, d_school_certificate, d_insurance, v_license_verified, v_id_card_verified, v_school_certificate_verified, v_insurance_verified, v_license_description, v_card_description, v_school_certificate_description, v_insurance_description 

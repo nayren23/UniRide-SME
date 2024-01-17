@@ -5,7 +5,6 @@ from flask_jwt_extended import get_jwt_identity
 
 from uniride_sme.model.bo.trip_bo import TripBO
 from uniride_sme.model.bo.address_bo import AddressBO
-from uniride_sme.model.dto.trip_dto import TripStatusDTO
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.trip_status import TripStatus
 from uniride_sme.utils.field import validate_fields
@@ -128,23 +127,6 @@ def get_trip(trip_id):
     try:
         trip_detailed_dto = trip_service.get_trip_by_id(trip_id)
         response = jsonify(trip_detailed_dto), 200
-    except ApiException as e:
-        response = jsonify(message=e.message), e.status_code
-    return response
-
-
-@trip.route("/trip-number", methods=["GET"])
-@role_required(RoleUser.ADMINISTRATOR)
-def trip_count():
-    """Trip count"""
-    try:
-        trip_count_status = TripStatusDTO(
-            trip_pending=trip_service.trips_status(1),
-            trip_canceled=trip_service.trips_status(2),
-            trip_completed=trip_service.trips_status(3),
-            trip_oncourse=trip_service.trips_status(4),
-        )
-        response = jsonify({"message": "TRIP_NUMBER_DISPLAYED_SUCCESSFULLY", "trip_infos": trip_count_status}), 200
     except ApiException as e:
         response = jsonify(message=e.message), e.status_code
     return response

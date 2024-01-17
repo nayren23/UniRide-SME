@@ -66,7 +66,7 @@ def send_document_validation_email(student_email, firstname, document_type, stat
     document_type = _get_document_type(document_type)
     status = _get_status(document_type, status)
 
-    url = f"{app.config['FRONT_END_URL']}"  # TODO: add url to document page
+    url = f"{app.config['FRONT_END_URL']}/profil-information"
 
     with open(file_path, "r", encoding="UTF-8") as html:
         content = (
