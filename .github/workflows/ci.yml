@@ -36,10 +36,26 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ env.LATEST_TAG }}   
-          build-args: | #we need to pass the secrets to the dockerfile
+          build-args: | #we need to pass default values to the build
+            ROUTE_CHECKER=${{ secrets.ROUTE_CHECKER }}
+
+            RATE_PER_KM=${{ secrets.RATE_PER_KM }}
+            COST_PER_KM=${{ secrets.COST_PER_KM }}
+            BASE_RATE=${{ secrets.BASE_RATE }}
+            ACCEPT_TIME_DIFFERENCE_MINUTES=${{ secrets.ACCEPT_TIME_DIFFERENCE_MINUTES }}
+
+            MAIL_EXPIRATION=${{ secrets.MAIL_EXPIRATION }}
+            MAX_CONTENT_LENGTH=${{ secrets.MAX_CONTENT_LENGTH }}
+
+            JWT_ACCESS_TOKEN_EXPIRES=${{ secrets.JWT_ACCESS_TOKEN_EXPIRES }}
+            JWT_ACCESS_TOKEN_REFRESH=${{ secrets.JWT_ACCESS_TOKEN_REFRESH }}
+            JWT_REFRESH_TOKEN_EXPIRES=${{ secrets.JWT_REFRESH_TOKEN_EXPIRES }}
+
+            CACHE_TYPE=${{ secrets.CACHE_TYPE }}
             CACHE_REDIS_DB=${{ secrets.CACHE_REDIS_DB }}
-            CACHE_TYPE=${{ secrets.CACHE_TYPE}}
+
             FLASK_DEBUG=${{ secrets.FLASK_DEBUG }}
+            
             PFP_UPLOAD_FOLDER=${{ secrets.PFP_UPLOAD_FOLDER }}
             LICENSE_UPLOAD_FOLDER=${{ secrets.LICENSE_UPLOAD_FOLDER }}
             ID_CARD_UPLOAD_FOLDER=${{ secrets.ID_CARD_UPLOAD_FOLDER }}
