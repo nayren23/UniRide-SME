@@ -49,6 +49,8 @@ COPY . .
 
 RUN pip install -e .
 
+RUN echo "Europe/Paris" > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata
+
 EXPOSE 5050
 
 ENTRYPOINT [ "python3" ]
