@@ -1,5 +1,6 @@
 """Contains the business object of the trip"""
 import dataclasses
+from datetime import datetime
 
 from uniride_sme import app
 from uniride_sme.model.bo.address_bo import AddressBO
@@ -13,8 +14,8 @@ class TripBO:  # pylint: disable=too-many-instance-attributes
     id: int = None
     passenger_count: int = None
     total_passenger_count: int = None
-    timestamp_creation: str = None
-    timestamp_proposed: str = None
+    timestamp_creation: datetime = None
+    timestamp_proposed: datetime = None
     status: int = None  # En cours en attente annulé terminé
     price: float = None
     user_id: int = None

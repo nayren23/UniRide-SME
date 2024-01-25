@@ -1,4 +1,4 @@
-"""User related endpoints"""
+"""Admin route"""
 from flask import Blueprint, request, jsonify
 from uniride_sme.model.dto.trip_dto import TripStatusDTO
 from uniride_sme.service import admin_service, documents_service, user_service, trip_service
