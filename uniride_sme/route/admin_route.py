@@ -1,31 +1,10 @@
 """User related endpoints"""
-from flask import Blueprint, request, jsonify, send_file, make_response
-from flask_jwt_extended import (
-    get_jwt_identity,
-    jwt_required,
-    create_access_token,
-    set_access_cookies,
-    create_refresh_token,
-    set_refresh_cookies,
-    unset_jwt_cookies,
-    verify_jwt_in_request,
-)
-from flask_jwt_extended.exceptions import NoAuthorizationError
-from jwt import ExpiredSignatureError
+from flask import Blueprint, request, jsonify
 from uniride_sme.model.dto.trip_dto import TripStatusDTO
-from uniride_sme import app
 from uniride_sme.service import admin_service, documents_service, user_service, trip_service
-from uniride_sme.model.dto.user_dto import (
-    UserInfosDTO,
-    InformationsVerifiedDTO,
-    DriverInfosDTO,
-    InformationsStatUsers,
-)
+from uniride_sme.model.dto.user_dto import InformationsStatUsers
 from uniride_sme.utils.exception.exceptions import ApiException
-from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException, UserNotAUTHORIZED
 from uniride_sme.utils import email
-from uniride_sme.utils.file import get_encoded_file
-from uniride_sme.utils.jwt_token import revoke_token
 from uniride_sme.utils.role_user import RoleUser, role_required
 
 admin = Blueprint("admin", __name__, url_prefix="/admin")
@@ -47,12 +26,7 @@ def users_informations():
 @role_required(RoleUser.ADMINISTRATOR)
 def delete_user(user_id):
     """delete user"""
-    user_id_token = get_jwt_identity()["id"]
-
     try:
-        role = user_service.get_user_role(user_id)
-        if user_id_token == user_id or role["role"] == 0:
-            raise UserNotAUTHORIZED
         user_deleted = admin_service.delete_user(user_id)
         response = jsonify({"message": "USER_DELETED_SUCESSFULLY", "user_id : ": user_deleted}), 200
     except ApiException as e:

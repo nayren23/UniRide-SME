@@ -15,18 +15,12 @@ from jwt import ExpiredSignatureError
 
 from uniride_sme import app
 from uniride_sme.service import user_service, documents_service
-from uniride_sme.model.dto.user_dto import (
-    UserInfosDTO,
-    InformationsVerifiedDTO,
-    DriverInfosDTO,
-    InformationsStatUsers,
-)
+from uniride_sme.model.dto.user_dto import UserInfosDTO, DriverInfosDTO
 from uniride_sme.utils.exception.exceptions import ApiException
-from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException, UserNotAUTHORIZED
+from uniride_sme.utils.exception.user_exceptions import EmailAlreadyVerifiedException
 from uniride_sme.utils import email
 from uniride_sme.utils.file import get_encoded_file
 from uniride_sme.utils.jwt_token import revoke_token
-from uniride_sme.utils.field import validate_fields
 from uniride_sme.utils.role_user import RoleUser, role_required
 
 user = Blueprint("user", __name__, url_prefix="/user")
@@ -64,18 +58,7 @@ def authenticate():
     json_object = request.json
     try:
         user_bo = user_service.authenticate(json_object.get("login", None), json_object.get("password", None))
-        documents_bo = documents_service.get_documents_by_user_id(user_bo.id)
-        informations_verified_dto = InformationsVerifiedDTO(
-            email_verified=user_bo.email_verified,
-            license_verified=documents_bo.v_license_verified,
-            id_card_verified=documents_bo.v_id_card_verified,
-            school_certificate_verified=documents_bo.v_school_certificate_verified,
-            insurance_verified=documents_bo.v_insurance_verified,
-        )
-
-        response = make_response(
-            jsonify(message="AUTHENTIFIED_SUCCESSFULLY", informations_verified=informations_verified_dto)
-        )
+        response = make_response(jsonify(message="AUTHENTIFIED_SUCCESSFULLY"))
 
         access_token = create_access_token({"id": user_bo.id, "role": user_bo.r_id})
         set_access_cookies(response, access_token)

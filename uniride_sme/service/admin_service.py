@@ -1,6 +1,4 @@
 """Admin service module"""
-from uniride_sme.utils.file import get_encoded_file
-from uniride_sme import app
 from uniride_sme import connect_pg
 from uniride_sme.utils.exception.exceptions import (
     InvalidInputException,
@@ -10,9 +8,10 @@ from uniride_sme.utils.exception.user_exceptions import (
     RatingNotFoundException,
 )
 from uniride_sme.utils.exception.criteria_exceptions import TooManyCriteriaException
+from uniride_sme.utils.file import get_encoded_file
 
 
-def count_users():
+def count_users() -> int:
     """Get number of users"""
     conn = connect_pg.connect()
     query = "SELECT COUNT(*) FROM uniride.ur_user"
@@ -21,7 +20,7 @@ def count_users():
     return result[0][0]
 
 
-def count_role_user(role):
+def count_role_user(role) -> int:
     """Get number of user by role"""
     conn = connect_pg.connect()
     query = "SELECT COUNT(*) FROM uniride.ur_user WHERE r_id = %s"
@@ -60,7 +59,7 @@ def users_information():
     return result
 
 
-def verify_user(id_user):
+def verify_user(id_user) -> None:
     """Verify user"""
     conn = connect_pg.connect()
     check_query = "SELECT * FROM uniride.ur_user WHERE u_id = %s"
@@ -73,7 +72,7 @@ def verify_user(id_user):
     connect_pg.disconnect(conn)
 
 
-def verify_admin(id_user):
+def verify_admin(id_user) -> None:
     """Verify user"""
     conn = connect_pg.connect()
     check_query = "SELECT r_id FROM uniride.ur_user WHERE u_id = %s"
@@ -86,7 +85,7 @@ def verify_admin(id_user):
     connect_pg.disconnect(conn)
 
 
-def delete_user(id_user):
+def delete_user(id_user) -> int:
     """Delete user"""
     conn = connect_pg.connect()
     verify_user(id_user)
@@ -195,7 +194,7 @@ def user_stat_driver(id_user):
     return result
 
 
-def verify_rating_criteria(id_criteria):
+def verify_rating_criteria(id_criteria) -> None:
     """Verify criteria"""
     conn = connect_pg.connect()
     check_query = "SELECT r_id FROM uniride.ur_rating_criteria WHERE rc_id = %s"
@@ -239,7 +238,7 @@ def get_rating_criteria():
     return labels
 
 
-def insert_rating_criteria(data):
+def insert_rating_criteria(data) -> int:
     """Insert new rating criteria"""
     conn = connect_pg.connect()
     if count_role(data["role"]) >= 5:
@@ -256,7 +255,7 @@ def insert_rating_criteria(data):
     return result
 
 
-def delete_rating_criteria(id_criteria):
+def delete_rating_criteria(id_criteria) -> int:
     """Delete rating criteria"""
     conn = connect_pg.connect()
     verify_rating_criteria(id_criteria)
@@ -326,7 +325,7 @@ def users_ranking(role):
     return result
 
 
-def calculate_avg_note_by_user(user_id):
+def calculate_avg_note_by_user(user_id) -> float:
     """Calculate the average note value for a given user."""
     conn = connect_pg.connect()
 
@@ -340,8 +339,7 @@ def calculate_avg_note_by_user(user_id):
 
         if avg_result and avg_result[0][0] is not None:
             return round(avg_result[0][0], 2)
-        else:
-            return None  # Return None if there are no notes for the user
+        return None  # Return None if there are no notes for the user
 
     finally:
         connect_pg.disconnect(conn)
@@ -426,7 +424,7 @@ def actif_criteria(role):
         connect_pg.disconnect(conn)
 
 
-def count_role(role):
+def count_role(role) -> int:
     """Get number of user by role"""
     conn = connect_pg.connect()
     query = "SELECT COUNT(*) FROM uniride.ur_rating_criteria WHERE r_id = %s"
@@ -435,7 +433,7 @@ def count_role(role):
     return result[0][0]
 
 
-def average_rating_user_id(id_user):
+def average_rating_user_id(id_user) -> float:
     """Get average rating"""
     conn = connect_pg.connect()
     query = "SELECT ROUND(avg(n_value),2) FROM uniride.ur_rating WHERE u_id = %s"
