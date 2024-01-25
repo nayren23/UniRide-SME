@@ -20,7 +20,7 @@ def get_conditions():
 
 @about.route("/privacy", methods=["GET"])
 def get_privacy():
-    """Get conditions of use"""
+    """Get privacy policy"""
     try:
         privacy = about_utils.get_privacy()
         response = jsonify(privacy=privacy), 200

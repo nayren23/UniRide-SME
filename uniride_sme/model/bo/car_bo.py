@@ -1,33 +1,21 @@
 """ This module contains the CarBO class. """
 
-
 import dataclasses
+from typing import Optional
+from datetime import datetime
 
 
 @dataclasses.dataclass
 class CarBO:  # pylint: disable=too-many-instance-attributes
     """Car business object"""
 
-    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
-        self,
-        car_id: int = None,
-        model: str = None,
-        license_plate: str = None,
-        country_license_plate: str = None,
-        color: str = None,
-        brand: str = None,
-        timestamp_addition=None,
-        timestamp_modification=None,
-        user_id: int = None,
-        total_places: int = None,
-    ):
-        self.id = car_id
-        self.model = model
-        self.license_plate = license_plate
-        self.country_license_plate = country_license_plate
-        self.color = color
-        self.brand = brand
-        self.timestamp_addition = timestamp_addition
-        self.timestamp_modification = timestamp_modification
-        self.user_id = user_id
-        self.total_places = total_places
+    id: Optional[int] = None
+    model: Optional[str] = None
+    license_plate: Optional[str] = None
+    country_license_plate: Optional[str] = None
+    color: Optional[str] = None
+    brand: Optional[str] = None
+    timestamp_addition: Optional[datetime] = None
+    timestamp_modification: Optional[datetime] = None
+    user_id: Optional[int] = None
+    total_places: Optional[int] = None

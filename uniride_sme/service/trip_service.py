@@ -3,15 +3,14 @@
 from datetime import datetime, timedelta
 from math import ceil
 from typing import List
+from psycopg2.extras import execute_values
 
-from uniride_sme import app
-from uniride_sme import connect_pg
-from uniride_sme.model.bo.address_bo import AddressBO
+from uniride_sme import app, connect_pg
 from uniride_sme.model.bo.trip_bo import TripBO
+from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO, PassengerTripDTO
+from uniride_sme.model.bo.address_bo import AddressBO
 from uniride_sme.model.dto.address_dto import AddressDTO, AddressSimpleDTO
 from uniride_sme.model.dto.user_dto import PassengerInfosDTO, PassengerEmailsDTO
-from uniride_sme.model.dto.trip_dto import TripDTO, TripDetailedDTO, PassengerTripDTO
-from psycopg2.extras import execute_values
 from uniride_sme.service.address_service import (
     check_address_exigeance,
     set_latitude_longitude_from_address,
@@ -33,7 +32,7 @@ from uniride_sme.utils.maths_formulas import haversine
 from uniride_sme.utils.file import get_encoded_file
 
 
-def add_trip(trip: TripBO):
+def add_trip(trip: TripBO) -> None:
     """Insert the trip in the database"""
 
     # Check if the address already exists
@@ -75,7 +74,7 @@ def add_trip(trip: TripBO):
     trip.id = trip_id
 
 
-def validate_total_passenger_count(total_passenger_count):
+def validate_total_passenger_count(total_passenger_count) -> None:
     """Check if the total passenger count is valid"""
     if total_passenger_count is None:
         raise MissingInputException("TOTAL_PASSENGER_COUNT_CANNOT_BE_NULL")
@@ -87,7 +86,7 @@ def validate_total_passenger_count(total_passenger_count):
         raise InvalidInputException("TOTAL_PASSENGER_COUNT_TOO_HIGH")
 
 
-def validate_timestamp_proposed(timestamp_proposed):
+def validate_timestamp_proposed(timestamp_proposed) -> None:
     """Check if the timestamp proposed is valid"""
     if timestamp_proposed is None:
         raise MissingInputException("TIMESTAMP_PROPOSED_CANNOT_BE_NULL")
@@ -100,7 +99,7 @@ def validate_timestamp_proposed(timestamp_proposed):
         raise InvalidInputException("INVALID_TIMESTAMP_PROPOSED")
 
 
-def validate_status(status):
+def validate_status(status) -> None:
     """Check if the status is valid"""
     if status is None:
         raise MissingInputException("STATUS_CANNOT_BE_NULL")
@@ -108,7 +107,7 @@ def validate_status(status):
         raise InvalidInputException("STATUS_CANNOT_BE_NEGATIVE")
 
 
-def validate_price(price):
+def validate_price(price) -> None:
     """Check if the price is valid"""
     if price is None:
         raise MissingInputException("PRICE_CANNOT_BE_NULL")
@@ -116,7 +115,7 @@ def validate_price(price):
         raise InvalidInputException("PRICE_CANNOT_BE_NEGATIVE")
 
 
-def validate_user_id(user_id):
+def validate_user_id(user_id) -> None:
     """Check if the user id is valid"""
     if user_id is None:
         raise MissingInputException("USER_ID_CANNOT_BE_NULL")
@@ -124,7 +123,9 @@ def validate_user_id(user_id):
         raise InvalidInputException("USER_ID_CANNOT_BE_NEGATIVE")
 
 
-def validate_address_departure_id_equals_address_arrival_id(departure_address: AddressBO, arrival_address: AddressBO):
+def validate_address_departure_id_equals_address_arrival_id(
+    departure_address: AddressBO, arrival_address: AddressBO
+) -> None:
     """Check if the address departure id is not equal to the address arrival id"""
     if departure_address.id == arrival_address.id:
         raise InvalidInputException("ADDRESS_DEPARTURE_ID_CANNOT_BE_EQUALS_TO_ADDRESS_ARRIVAL_ID")
@@ -148,7 +149,7 @@ def validate_address_departure_id_equals_address_arrival_id(departure_address: A
         raise InvalidInputException("ADDRESS_DEPARTURE_OR_ADDRESS_ARRIVAL_MUST_BE_EQUALS_TO_UNIVERSITY_ADDRESS")
 
 
-def calculate_price(trip: TripBO):
+def calculate_price(trip: TripBO) -> None:
     """Calculate the price of the trip"""
 
     origin = (trip.departure_address.latitude, trip.departure_address.longitude)
@@ -171,7 +172,7 @@ def calculate_price(trip: TripBO):
     trip.price = final_price
 
 
-def trip_exists(trip: TripBO):
+def trip_exists(trip: TripBO) -> None:
     """Check if the trip with address already exists in the database"""
 
     query = """
@@ -198,7 +199,9 @@ def trip_exists(trip: TripBO):
         raise TripAlreadyExistsException()
 
 
-def get_trips(trip: TripBO, departure_or_arrived_latitude, departure__or_arrived_longitude, condition_where):
+def get_trips(
+    trip: TripBO, departure_or_arrived_latitude, departure__or_arrived_longitude, condition_where
+) -> List[dict]:
     """Get the trips from the database"""
 
     query = f"""
@@ -259,7 +262,9 @@ def get_trips(trip: TripBO, departure_or_arrived_latitude, departure__or_arrived
     return trips
 
 
-def get_trips_for_university_address(trip_bo: TripBO, departure_address_bo, address_arrival_bo, university_address_bo):
+def get_trips_for_university_address(
+    trip_bo: TripBO, departure_address_bo, address_arrival_bo, university_address_bo
+) -> List[TripDTO]:
     """Get the trips for the university address"""
     intermediate_point_departure = (departure_address_bo.latitude, departure_address_bo.longitude)
     intermediate_point_arrival = (address_arrival_bo.latitude, address_arrival_bo.longitude)
@@ -419,11 +424,11 @@ def format_trip(raw_trip: dict) -> TripBO:
         longitude=raw_trip["arrival_a_longitude"],
     )
     trip = TripBO(
-        trip_id=raw_trip["t_id"],
+        id=raw_trip["t_id"],
         price=raw_trip["t_price"],
         timestamp_proposed=raw_trip["t_timestamp_proposed"],
-        departure_address_bo=departure_address,
-        arrival_address_bo=arrival_address,
+        departure_address=departure_address,
+        arrival_address=arrival_address,
         user_id=raw_trip["t_user_id"],
         passenger_count=raw_trip.get("passenger_count", None),
         total_passenger_count=raw_trip.get("t_total_passenger_count", None),
@@ -459,7 +464,7 @@ def check_if_trip_exists(trip_bo: TripBO):
     raise TripNotFoundException()
 
 
-def get_available_trips_to(trip: TripBO):
+def get_available_trips_to(trip: TripBO) -> List[TripDTO]:
     """Get the available trips"""
 
     # We check if the address is valid
@@ -490,7 +495,7 @@ def get_available_trips_to(trip: TripBO):
     return available_trips
 
 
-def get_trip_by_id(trip_id):
+def get_trip_by_id(trip_id) -> TripDetailedDTO:
     """Get the formatted trip by id"""
     if not trip_id:
         raise MissingInputException("TRIP_ID_MISSING")
@@ -592,7 +597,7 @@ def get_trip_by_id(trip_id):
     return trip_dto
 
 
-def count_trip():
+def count_trip() -> int:
     """Get number of trip"""
     conn = connect_pg.connect()
     query = "SELECT COUNT(*) FROM uniride.ur_trip"
@@ -601,7 +606,7 @@ def count_trip():
     return result[0][0]
 
 
-def _validate_trip_id(trip_id):
+def _validate_trip_id(trip_id) -> int:
     """Validate the trip id"""
     conn = connect_pg.connect()
 
@@ -622,7 +627,7 @@ def _validate_trip_id(trip_id):
     return driver_id[0][0]
 
 
-def _verify_user_id(user_id, driver_id, passengers):
+def _verify_user_id(user_id, driver_id, passengers) -> None:
     """Verify the user id"""
     user_ids = [passenger["u_id"] for passenger in passengers]
     user_ids.append(driver_id)
@@ -630,7 +635,7 @@ def _verify_user_id(user_id, driver_id, passengers):
         raise ForbiddenException("ONLY_DRIVER_AND_PASSENGERS_ALLOWED")
 
 
-def get_passengers(trip_id, user_id):
+def get_passengers(trip_id, user_id) -> List[PassengerTripDTO]:
     """Get passengers"""
     driver_id = _validate_trip_id(trip_id)
 
@@ -667,7 +672,7 @@ def get_passengers(trip_id, user_id):
     return passenger_dtos
 
 
-def get_passengers_emails(trip_id):
+def get_passengers_emails(trip_id) -> List[PassengerEmailsDTO]:
     """Get passengers emails"""
     _validate_trip_id(trip_id)
 
@@ -699,7 +704,7 @@ def get_passengers_emails(trip_id):
     return passenger_dtos
 
 
-def trips_status(status):
+def trips_status(status) -> int:
     """Get number status of trip"""
     conn = connect_pg.connect()
     query = "SELECT COUNT(*) FROM uniride.ur_trip WHERE t_status = %s"
@@ -708,7 +713,7 @@ def trips_status(status):
     return result[0][0]
 
 
-def _validate_driver_id(driver_id, user_id):
+def _validate_driver_id(driver_id, user_id) -> None:
     if not user_id:
         raise MissingInputException("USER_ID_MISSING")
 
@@ -716,9 +721,8 @@ def _validate_driver_id(driver_id, user_id):
         raise ForbiddenException("ONLY_DRIVER_ALLOWED")
 
 
-def _validate_start_time(departure_date):
+def _validate_start_time(departure_date) -> None:
     departure_date = datetime.strptime(departure_date, "%Y-%m-%d %H:%M:%S")
-    print(departure_date)
     if departure_date - timedelta(minutes=15) > datetime.now():
         raise ForbiddenException("TOO_EARLY_TO_START_TRIP")
 
@@ -726,7 +730,7 @@ def _validate_start_time(departure_date):
         raise ForbiddenException("TOO_LATE_TO_START_TRIP")
 
 
-def start_trip(trip_id, user_id):
+def start_trip(trip_id, user_id) -> None:
     """Start the trip"""
     trip = get_trip_by_id(trip_id)
     _validate_driver_id(trip["driver_id"], user_id)
@@ -739,8 +743,8 @@ def start_trip(trip_id, user_id):
     change_trip_status(trip_id, status)
 
 
-def end_trip(trip_id, user_id):
-    """Start the trip"""
+def end_trip(trip_id, user_id) -> None:
+    """End the trip"""
     trip = get_trip_by_id(trip_id)
     _validate_driver_id(trip["driver_id"], user_id)
 
@@ -751,8 +755,8 @@ def end_trip(trip_id, user_id):
     change_trip_status(trip_id, status)
 
 
-def cancel_trip(trip_id, user_id):
-    """Start the trip"""
+def cancel_trip(trip_id, user_id) -> None:
+    """Cancel the trip"""
     trip = get_trip_by_id(trip_id)
     _validate_driver_id(trip["driver_id"], user_id)
 
@@ -763,7 +767,7 @@ def cancel_trip(trip_id, user_id):
     change_trip_status(trip_id, status)
 
 
-def change_trip_status(trip_id, status):
+def change_trip_status(trip_id, status) -> None:
     """Change the trip status"""
     conn = connect_pg.connect()
     query = "UPDATE uniride.ur_trip SET t_status = %s WHERE t_id = %s"
@@ -771,8 +775,8 @@ def change_trip_status(trip_id, status):
     connect_pg.disconnect(conn)
 
 
-def passenger_current_trips(user_id):
-    """Get passenger current"""
+def passenger_current_trips(user_id) -> List[PassengerTripDTO]:
+    """Get the current trips for the passenger"""
     if user_id is None:
         raise MissingInputException("USER_ID_CANNOT_BE_NULL")
 
@@ -830,7 +834,7 @@ def passenger_current_trips(user_id):
     return result_list
 
 
-def rate_user(value_rating, trip_id,rating_criteria_id):
+def rate_user(value_rating, trip_id, rating_criteria_id) -> None:
     """Rate the user"""
     validate_rating(trip_id, rating_criteria_id)
     validate_value_rating(value_rating)
@@ -842,7 +846,7 @@ def rate_user(value_rating, trip_id,rating_criteria_id):
     connect_pg.disconnect(conn)
 
 
-def validate_rating(trip_id, rating_criteria_id):
+def validate_rating(trip_id, rating_criteria_id) -> None:
     """Validate the rating"""
     _validate_trip_id(trip_id)
     if rating_criteria_id is None:
@@ -855,7 +859,7 @@ def validate_rating(trip_id, rating_criteria_id):
         raise InvalidInputException("RATING_ALREADY_EXISTS")
 
 
-def validate_value_rating(value_rating):
+def validate_value_rating(value_rating) -> None:
     """Validate the value rating"""
     if value_rating is None:
         raise MissingInputException("VALUE_RATING_CANNOT_BE_NULL")
@@ -867,7 +871,7 @@ def validate_value_rating(value_rating):
 
 def create_daily_trips(
     address_departure_id, address_arrival_id, date_start, date_end, hour, passenger_number, days, user_id, status
-):
+) -> None:
     """Create daily trips"""
     date_start = datetime.strptime(date_start, "%Y-%m-%d")
     date_end = datetime.strptime(date_end, "%Y-%m-%d")
@@ -895,8 +899,8 @@ def create_daily_trips(
                 timestamp_proposed=timestamp_proposed,
                 status=status,
                 user_id=user_id,
-                departure_address_bo=AddressBO(id=address_departure_id),
-                arrival_address_bo=AddressBO(id=address_arrival_id),
+                departure_address=AddressBO(id=address_departure_id),
+                arrival_address=AddressBO(id=address_arrival_id),
             )
             trip_exists(trip_bo)
             check_address_existence(trip_bo.departure_address)

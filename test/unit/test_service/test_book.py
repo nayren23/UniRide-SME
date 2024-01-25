@@ -23,6 +23,7 @@ from uniride_sme.service.book_service import (
 )
 from uniride_sme.model.dto.trip_dto import TripDetailedDTO, TripShortDTO
 from uniride_sme.model.dto.user_dto import UserShortDTO
+from uniride_sme.model.bo.book_bo import BookBO
 from uniride_sme.model.dto.book_dto import BookDTO
 from uniride_sme.utils.exception.exceptions import (
     MissingInputException,
@@ -270,11 +271,21 @@ def test_get_booking_by_id_success(mock_get_query):
                 ("t_id", 60),
                 ("j_accepted", 1),
                 ("j_passenger_count", 1),
+                ("j_joined", False),
                 ("j_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
+                ("j_verification_code", 12345),
             ]
         )
     ]
-    expected_result = mock_get_query.return_value[0]
+    expected_result = BookBO(
+        user_id=143,
+        trip_id=60,
+        accepted=1,
+        passenger_count=1,
+        joined=False,
+        date_requested=datetime.datetime(2023, 12, 9, 14, 6, 37, 904962),
+        verification_code=12345,
+    )
     result = get_booking_by_id(143, 60)
     assert result == expected_result
 
@@ -340,14 +351,12 @@ def test_respond_booking_success(mock_get_trip_by_id, mock_get_booking_by_id, mo
         status=1,
         departure_date=str(datetime.datetime.now().replace(microsecond=0) + datetime.timedelta(days=1)),
     )
-    mock_get_booking_by_id.return_value = psycopg2.extras.RealDictRow(
-        [
-            ("u_id", 143),
-            ("t_id", 60),
-            ("j_accepted", 0),
-            ("j_passenger_count", 1),
-            ("j_date_requested", datetime.datetime(2023, 12, 9, 14, 6, 37, 904962)),
-        ]
+    mock_get_booking_by_id.return_value = BookBO(
+        user_id=143,
+        trip_id=60,
+        accepted=0,
+        passenger_count=1,
+        date_requested=datetime.datetime(2023, 12, 9, 14, 6, 37, 904962),
     )
     mock_execute_command.return_value = None
     respond_booking(60, 2, 143, 1)
@@ -427,7 +436,7 @@ def test_validate_trip_started_with_invalid_status():
 
 def test_validate_booking_unaccepted():
     """Test _validate_booking with an unaccepted booking"""
-    unaccepted_booking = {"j_accepted": 0, "j_verification_code": 12345, "j_joined": False}
+    unaccepted_booking = BookBO(accepted=0, joined=False, verification_code=12345)
     verification_code = 12345
 
     with pytest.raises(ForbiddenException) as e:
@@ -437,7 +446,7 @@ def test_validate_booking_unaccepted():
 
 def test_validate_booking_invalid_verification_code():
     """Test _validate_booking with an invalid verification code"""
-    booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
+    booking = BookBO(accepted=1, joined=False, verification_code=12345)
     invalid_verification_code = 54321
 
     with pytest.raises(ForbiddenException) as e:
@@ -447,7 +456,7 @@ def test_validate_booking_invalid_verification_code():
 
 def test_validate_booking_passenger_already_joined():
     """Test _validate_booking with the passenger already joined"""
-    booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": True}
+    booking = BookBO(accepted=1, joined=True, verification_code=12345)
     with pytest.raises(ForbiddenException) as e:
         _validate_booking(booking, 12345)
     assert "PASSENGER_AlREADY_JOINED" in str(e.value)
@@ -455,14 +464,14 @@ def test_validate_booking_passenger_already_joined():
 
 def test_validate_booking_success():
     """Test _validate_booking success"""
-    valid_booking = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
+    valid_booking = BookBO(accepted=1, joined=False, verification_code=12345)
     verification_code = 12345
     _validate_booking(valid_booking, verification_code)
 
 
 def test_join_success(mock_get_booking_by_id, mock_get_trip_by_id):
     """Test join success"""
-    mock_get_booking_by_id.return_value = {"j_accepted": 1, "j_verification_code": 12345, "j_joined": False}
+    mock_get_booking_by_id.return_value = BookBO(accepted=1, joined=False, verification_code=12345)
     mock_get_trip_by_id.return_value = {"status": 4, "driver_id": 1}
     join(1, 1, 2, 12345)
 

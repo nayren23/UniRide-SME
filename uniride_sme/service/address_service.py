@@ -15,7 +15,7 @@ from uniride_sme.utils.exception.exceptions import (
 )
 
 
-def add_address_in_db(address: AddressBO):
+def add_address(address: AddressBO) -> AddressBO:
     """Insert the address in the database"""
     existing_address_id = address_exists(address.street_number, address.street_name, address.city)
 
@@ -52,13 +52,13 @@ def add_address_in_db(address: AddressBO):
     return address
 
 
-def valid_street_number(street_number):
+def valid_street_number(street_number) -> None:
     """Check if the street number is valid"""
     if not street_number:
         raise InvalidInputException("STREET_NUMBER_CANNOT_BE_NULL")
 
 
-def valid_street_name(street_name):
+def valid_street_name(street_name) -> None:
     """Check if the street name is valid"""
     if not street_name:
         raise InvalidInputException("STREET_NAME_CANNOT_BE_NULL")
@@ -66,7 +66,7 @@ def valid_street_name(street_name):
         raise InvalidInputException("STREET_NAME_CANNOT_BE_GREATER_THAN_255")
 
 
-def valid_city(city):
+def valid_city(city) -> None:
     """Check if the city is valid"""
     if not city:
         raise InvalidInputException("CITY_CANNOT_BE_NULL")
@@ -74,13 +74,13 @@ def valid_city(city):
         raise InvalidInputException("CITY_CANNOT_BE_GREATER_THAN_255")
 
 
-def valid_postal_code(postal_code):
+def valid_postal_code(postal_code) -> None:
     """Check if the postal code is valid"""
     if not postal_code:
         raise InvalidInputException("POSTAL_CODE_CANNOT_BE_NULL")
 
 
-def valid_latitude(latitude):
+def valid_latitude(latitude) -> None:
     """Check if the latitude is valid"""
     if not latitude:
         raise InvalidInputException("LATITUDE_CANNOT_BE_NULL")
@@ -88,7 +88,7 @@ def valid_latitude(latitude):
         raise InvalidInputException("LATITUDE_CANNOT_BE_GREATER_THAN_90_OR_LESS_THAN_-90")
 
 
-def valid_longitude(longitude):
+def valid_longitude(longitude) -> None:
     """Check if the longitude is valid"""
     if not longitude:
         raise InvalidInputException("LONGITUDE_CANNOT_BE_NULL")
@@ -96,7 +96,7 @@ def valid_longitude(longitude):
         raise InvalidInputException("LONGITUDE_CANNOT_BE_GREATER_THAN_180_OR_LESS_THAN_-180")
 
 
-def valid_timestamp_modification(timestamp_modification):
+def valid_timestamp_modification(timestamp_modification) -> None:
     """Check if the timestamp modification is valid"""
     if timestamp_modification is None:
         raise MissingInputException("TTIMESTAMP_MODIFICATION_CANNOT_BE_NULL")
@@ -106,7 +106,7 @@ def valid_timestamp_modification(timestamp_modification):
         raise InvalidInputException("INVALID_TIMESTAMP_FORMAT") from e
 
 
-def address_exists(street_number, street_name, city):
+def address_exists(street_number, street_name, city) -> int:
     """Check if the address already exists in the database"""
 
     query = """SELECT a_id
@@ -121,7 +121,7 @@ def address_exists(street_number, street_name, city):
     return None
 
 
-def set_latitude_longitude_from_address(address_bo: AddressBO):
+def set_latitude_longitude_from_address(address_bo: AddressBO) -> None:
     """Get the latitude and longitude of the address, use the API Adresse GOUV"""
 
     # URL API Adresse GOUV  /search/
@@ -146,7 +146,7 @@ def set_latitude_longitude_from_address(address_bo: AddressBO):
         raise InvalidAddressException()
 
 
-def check_address_existence(address_bo: AddressBO):
+def check_address_existence(address_bo: AddressBO) -> None:
     """Get the address from the id"""
 
     validate_address_departure_id(address_bo.id)
@@ -172,7 +172,7 @@ def check_address_existence(address_bo: AddressBO):
         raise AddressNotFoundException()
 
 
-def check_address_exigeance(address: AddressBO):
+def check_address_exigeance(address: AddressBO) -> None:
     """Check if the address is valid"""
     valid_street_number(address.street_number)
     valid_street_name(address.street_name)
@@ -180,7 +180,7 @@ def check_address_exigeance(address: AddressBO):
     valid_postal_code(address.postal_code)
 
 
-def validate_address_departure_id(id_address):
+def validate_address_departure_id(id_address) -> None:
     """Check if the address departure id is valid"""
     if id_address is None:
         raise MissingInputException("ADDRESS_ID_CANNOT_BE_NULL")

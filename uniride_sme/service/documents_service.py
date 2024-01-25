@@ -1,17 +1,15 @@
 """Documents service module"""
+import os
 from datetime import datetime
-from uniride_sme import app
-from uniride_sme import connect_pg
+from uniride_sme import app, connect_pg
 from uniride_sme.model.bo.documents_bo import DocumentsBO
-from uniride_sme.utils.file import save_file, delete_file
+from uniride_sme.utils.file import save_file, delete_file, get_encoded_file
 from uniride_sme.service import user_service, admin_service
 from uniride_sme.utils.exception.exceptions import MissingInputException
 from uniride_sme.utils.exception.documents_exceptions import DocumentsNotFoundException, DocumentsTypeException
-from uniride_sme.utils.file import get_encoded_file
-import os
 
 
-def get_documents_by_user_id(user_id):
+def get_documents_by_user_id(user_id) -> DocumentsBO:
     """Get user infos from db"""
     if not user_id:
         raise MissingInputException("USER_ID_MISSING")
@@ -31,7 +29,7 @@ def get_documents_by_user_id(user_id):
     return document_bo
 
 
-def add_documents(user_id, files):
+def add_documents(user_id, files) -> None:
     """Insert documents in the database"""
     if not user_id:
         raise MissingInputException("USER_ID_MISSING")
@@ -75,28 +73,27 @@ def add_documents(user_id, files):
         pass
 
 
-
-def save_license(user_id, file, old_file_name=None):
+def save_license(user_id, file, old_file_name=None) -> None:
     """Save license"""
     _save_document(user_id, file, old_file_name, "license")
 
 
-def save_id_card(user_id, file, old_file_name=None):
+def save_id_card(user_id, file, old_file_name=None) -> None:
     """Save id card"""
     _save_document(user_id, file, old_file_name, "id_card")
 
 
-def save_school_certificate(user_id, file, old_file_name=None):
+def save_school_certificate(user_id, file, old_file_name=None) -> None:
     """Save school certificate"""
     _save_document(user_id, file, old_file_name, "school_certificate")
 
 
-def save_insurance(user_id, file, old_file_name=None):
+def save_insurance(user_id, file, old_file_name=None) -> None:
     """Save insurance"""
     _save_document(user_id, file, old_file_name, "insurance")
 
 
-def _save_document(user_id, file, old_file_name, document_type):
+def _save_document(user_id, file, old_file_name, document_type) -> None:
     """Save document"""
     if not file:
         raise MissingInputException(f"MISSING_{document_type.upper()}_FILE")
@@ -149,7 +146,7 @@ def document_to_verify():
     result = []
 
     for document in documents:
-        if(count_zero_and_minus_one(document) > 0):
+        if count_zero_and_minus_one(document) > 0:
             formatted_last_modified_date = datetime.strftime(document[5], "%Y-%m-%d %H:%M:%S")
             profile_picture_url = get_encoded_file(document[4], "PFP_UPLOAD_FOLDER")
             request_data = {
@@ -280,7 +277,6 @@ def document_check(data):
 
     query += " WHERE u_id = %s"
 
-
     if description_column:
         connect_pg.execute_command(conn, query, (status, description, user_id))
     else:
@@ -293,7 +289,7 @@ def document_check(data):
     return {"message": "DOCUMENT_STATUS_UPDATED"}
 
 
-def update_role(user_id, column=None):
+def update_role(user_id, column=None) -> None:
     """Update r_id to 1 if both v_license_verified and v_id_card_verified are 1"""
 
     user_bo = user_service.get_user_by_id(user_id)
@@ -304,8 +300,8 @@ def update_role(user_id, column=None):
     FROM uniride.ur_document_verification
     NATURAL JOIN uniride.ur_documents
     Where u_id = %s
-    """ 
-    documents = connect_pg.get_query(conn, query, (user_id,), True)    
+    """
+    documents = connect_pg.get_query(conn, query, (user_id,), True)
     if column and documents[0].get(column) == 1:
         match column:
             case "v_license_verified":
@@ -319,7 +315,11 @@ def update_role(user_id, column=None):
             case _:
                 pass
 
-    if user_bo.email_verified and documents[0].get("v_id_card_verified") == 1 and documents[0].get("v_school_certificate_verified") == 1:
+    if (
+        user_bo.email_verified
+        and documents[0].get("v_id_card_verified") == 1
+        and documents[0].get("v_school_certificate_verified") == 1
+    ):
         if documents[0].get("v_license_verified") == 1 and documents[0].get("v_insurance_verified") == 1:
             r_id = 1
         else:
@@ -337,14 +337,12 @@ def update_role(user_id, column=None):
     connect_pg.disconnect(conn)
 
 
-def delete_documents(documents, folder_documents,id_doc):
+def delete_documents(documents, folder_documents, id_doc) -> None:
     """Delete documents if they are verified"""
-    if(os.path.exists(os.path.join(app.config[folder_documents], documents[0].get(id_doc)))):
+    if os.path.exists(os.path.join(app.config[folder_documents], documents[0].get(id_doc))):
         os.remove(os.path.join(app.config[folder_documents], documents[0].get(id_doc)))
     else:
         raise MissingInputException("MISSING_DOCUMENTS_FOLDER")
-    
-
 
 
 def document_user(user_id):
@@ -406,6 +404,3 @@ def document_user(user_id):
         "user_id": user_id,
         "documents": documents,
     }
-
-
-
