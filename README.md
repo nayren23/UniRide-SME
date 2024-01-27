@@ -18,7 +18,7 @@ $ git clone https://github.com/DUT-Info-Montreuil/UniRide-SME.git
    Ces variables d'environnement doivent imperativement etre changer :
    
   ## Configuration API Google Maps 
-  - `GOOGLE_API_KEY=AIzaSyBMreuA5LC2BJ2f-HFPPhYISSIu0mSS2Gs`
+  - `GOOGLE_API_KEY=AIzdz74yBMre5LC2BJ2f-HFPPhYISSIu0mSSthtrt2Gs`
   
   ## Configuration de l'adresse de l'université
   - `UNIVERSITY_STREET_NUMBER=140`
