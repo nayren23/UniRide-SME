@@ -58,7 +58,7 @@ def authenticate():
     json_object = request.json
     try:
         user_bo = user_service.authenticate(json_object.get("login", None), json_object.get("password", None))
-        response = make_response(jsonify(message="AUTHENTIFIED_SUCCESSFULLY"))
+        response = make_response(jsonify(message="AUTHENTIFIED_SUCCESSFULLY", email_verified=user_bo.email_verified))
 
         access_token = create_access_token({"id": user_bo.id, "role": user_bo.r_id})
         set_access_cookies(response, access_token)
