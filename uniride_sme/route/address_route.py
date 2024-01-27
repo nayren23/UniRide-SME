@@ -3,14 +3,14 @@
 from flask import Blueprint, request, jsonify
 from uniride_sme import app
 from uniride_sme.model.bo.address_bo import AddressBO
-from uniride_sme.service.address_service import add_address_in_db
+from uniride_sme.service import address_service
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.field import validate_fields
 
-address = Blueprint("address", __name__)
+address = Blueprint("address", __name__, url_prefix="/address")
 
 
-@address.route("/address/add", methods=["POST"])
+@address.route("/add", methods=["POST"])
 def add_address():
     """Add an address endpoint"""
     try:
@@ -22,14 +22,14 @@ def add_address():
             city=json_object.get("city").strip(),
             postal_code=json_object.get("postal_code").strip(),
         )
-        add_address_in_db(address_bo)
+        address_service.add_address(address_bo)
         response = jsonify({"message": "ADDRESS_CREATED_SUCCESSFULLY", "id_address": address_bo.id}), 200
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
     return response
 
 
-@address.route("/address/university", methods=["GET"])
+@address.route("/university", methods=["GET"])
 def get_university_address():
     """Returns the university address"""
     street_number = app.config["UNIVERSITY_STREET_NUMBER"]

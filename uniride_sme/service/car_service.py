@@ -7,7 +7,7 @@ from uniride_sme.utils.exception.exceptions import InvalidInputException, Missin
 from uniride_sme.utils.exception.car_exceptions import CarAlreadyExist, CarNotFoundException
 
 
-def add_in_db(car: CarBO):
+def add_car(car: CarBO) -> None:
     """Insert the car in the database"""
     # validate values
     valid_model(car.model)
@@ -42,13 +42,13 @@ def add_in_db(car: CarBO):
         raise CarAlreadyExist() from e
 
 
-def valid_model(model):
+def valid_model(model) -> None:
     """Check if the model car is valid"""
     if not model:
         raise InvalidInputException("MODEL_CAR_CANNOT_BE_NULL")
 
 
-def valid_license_plate(license_plate):
+def valid_license_plate(license_plate) -> None:
     """Check if the license plate car is valid"""
     if not license_plate:
         raise InvalidInputException("LICENSE_PLATE_CAR_CANNOT_BE_NULL")
@@ -61,7 +61,7 @@ def valid_license_plate(license_plate):
         raise InvalidInputException("LICENSE_PLATE_TOO_HIGHT")
 
 
-def valid_country_license_plate(country_license_plate):
+def valid_country_license_plate(country_license_plate) -> None:
     """Check if the country liecence plate car is valid"""
     if not country_license_plate:
         raise InvalidInputException("COUNTRY_LICENSE_PLATE_CAR_CANNOT_BE_NULL")
@@ -72,19 +72,19 @@ def valid_country_license_plate(country_license_plate):
         raise InvalidInputException("LICENSE_PLATE_TOO_HIGHT")
 
 
-def valid_color(color):
+def valid_color(color) -> None:
     """Check if the color car is valid"""
     if not color:
         raise InvalidInputException("COLOR_CAR_CANNOT_BE_NULL")
 
 
-def valid_brand(brand):
+def valid_brand(brand) -> None:
     """Check if the brand car is valid"""
     if not brand:
         raise InvalidInputException("BRAND_CAR_CANNOT_BE_NULL")
 
 
-def validate_user_id(user_id):
+def validate_user_id(user_id) -> None:
     """Check if the user id is valid"""
     if not user_id:
         raise MissingInputException("USER_ID_CANNOT_BE_NULL")
@@ -92,7 +92,7 @@ def validate_user_id(user_id):
         raise InvalidInputException("USER_ID_CANNOT_BE_NEGATIVE")
 
 
-def validate_total_places(total_places):
+def validate_total_places(total_places) -> None:
     """Check if the total passenger count is valid"""
     if not total_places:
         raise MissingInputException("TOTAL_PLACES_CANNOT_BE_NULL")
@@ -102,7 +102,7 @@ def validate_total_places(total_places):
         raise InvalidInputException("TOTAL_PLACES_TOO_HIGH")
 
 
-def get_car_info_by_user_id(user_id):
+def get_car_info_by_user_id(user_id) -> CarBO:
     """Get car information by user ID"""
 
     query = """
@@ -132,7 +132,7 @@ def get_car_info_by_user_id(user_id):
     return car_bo
 
 
-def format_get_information_car(info_car):
+def format_get_information_car(info_car: CarBO) -> CarDTO:
     """Format the information car to return"""
     car_dto = CarDTO(
         model=info_car.model,
@@ -146,7 +146,7 @@ def format_get_information_car(info_car):
     return car_dto
 
 
-def update_car_information_in_db(car: CarBO):
+def update_car_information_in_db(car: CarBO) -> None:
     """Update car information"""
     valid_model(car.model)
     valid_license_plate(car.license_plate)

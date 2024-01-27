@@ -3,19 +3,21 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity
 
 from uniride_sme.model.bo.car_bo import CarBO
+from uniride_sme.service.car_service import (
+    add_car,
+    get_car_info_by_user_id,
+    format_get_information_car,
+    update_car_information_in_db,
+)
 
 from uniride_sme.utils.exception.exceptions import ApiException
 from uniride_sme.utils.field import validate_fields
-from uniride_sme.service.car_service import add_in_db
-from uniride_sme.service.car_service import get_car_info_by_user_id
-from uniride_sme.service.car_service import format_get_information_car
-from uniride_sme.service.car_service import update_car_information_in_db
 from uniride_sme.utils.role_user import RoleUser, role_required
 
-car = Blueprint("car", __name__)
+car = Blueprint("car", __name__, url_prefix="/car")
 
 
-@car.route("/car/add", methods=["POST"])
+@car.route("/add", methods=["POST"])
 @role_required(RoleUser.DRIVER)
 def add_car_information():
     """Add information car endpoint"""
@@ -41,14 +43,14 @@ def add_car_information():
             total_places=json_object.get("total_places"),
             user_id=get_jwt_identity()["id"],
         )
-        add_in_db(car_bo)
+        add_car(car_bo)
         response = jsonify({"message": "CAR_CREATED_SUCCESSFULLY", "id_car": car_bo.id}), 200
     except ApiException as e:
         response = jsonify({"message": e.message}), e.status_code
     return response
 
 
-@car.route("/car/info", methods=["GET"])
+@car.route("/info", methods=["GET"])
 @role_required(RoleUser.DRIVER)
 def get_car_information():
     """Get information about the user's car endpoint"""
@@ -62,7 +64,7 @@ def get_car_information():
     return response
 
 
-@car.route("/car/update", methods=["PUT"])
+@car.route("/update", methods=["PUT"])
 @role_required(RoleUser.DRIVER)
 def update_car_information():
     """Update information about the user's car endpoint"""

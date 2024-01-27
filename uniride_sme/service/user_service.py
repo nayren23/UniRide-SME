@@ -1,9 +1,7 @@
 """User service module"""
 import re
 import bcrypt
-from uniride_sme.utils.file import get_encoded_file
-from uniride_sme import app
-from uniride_sme import connect_pg
+from uniride_sme import app, connect_pg
 from uniride_sme.model.bo.user_bo import UserBO
 from uniride_sme.service.documents_service import update_role
 from uniride_sme.service.trip_service import get_trip_by_id
@@ -118,7 +116,7 @@ def add_user(  # pylint: disable=too-many-arguments, too-many-locals
     phone_number,
     description,
     pfp_file,
-):
+) -> UserBO:
     """Insert the user in the database"""
 
     _validate_login(login)
@@ -160,7 +158,7 @@ def add_user(  # pylint: disable=too-many-arguments, too-many-locals
     return get_user_by_id(user_id)
 
 
-def _validate_login(login):
+def _validate_login(login) -> None:
     """Check if the login is valid"""
     # check if exist
     if not login:
@@ -182,7 +180,7 @@ def _validate_login(login):
         raise InvalidInputException("LOGIN_TAKEN")
 
 
-def _validate_student_email(studen_email):
+def _validate_student_email(studen_email) -> None:
     """Check if the email is valid"""
 
     # check if exist
@@ -226,7 +224,7 @@ def _verify_password(password, hashed_password) -> bool:
         raise PasswordIncorrectException()
 
 
-def save_pfp(user_id, pfp_file, profile_picture=None):
+def save_pfp(user_id, pfp_file, profile_picture=None) -> None:
     """Save profil picture"""
     if not pfp_file:
         raise MissingInputException("MISSING_PFP_FILE")
@@ -247,7 +245,7 @@ def save_pfp(user_id, pfp_file, profile_picture=None):
     connect_pg.execute_command(conn, query, values)
 
 
-def verify_student_email(student_email):
+def verify_student_email(student_email) -> None:
     """Verify the student email"""
     # check if exist
     if not student_email:
@@ -272,17 +270,17 @@ def verify_student_email(student_email):
     update_role(email_verified[0][1])
 
 
-def _validate_firstname(firstname):
+def _validate_firstname(firstname) -> None:
     """Check if the firstname is valid"""
     _validate_name(firstname, "FIRSTNAME")
 
 
-def _validate_lastname(lastname):
+def _validate_lastname(lastname) -> None:
     """Check if the lastname is valid"""
     _validate_name(lastname, "LASTNAME")
 
 
-def _validate_name(name, name_type):
+def _validate_name(name, name_type) -> None:
     """Check if the name is valid"""
     # check if exist
     if not name:
@@ -297,7 +295,7 @@ def _validate_name(name, name_type):
         raise InvalidInputException(f"{name_type}_INVALID_CHARACTERS")
 
 
-def _validate_gender(gender):
+def _validate_gender(gender) -> None:
     """Check if the gender is valid"""
 
     # check if exist
@@ -309,7 +307,7 @@ def _validate_gender(gender):
         raise InvalidInputException("GENDER_INVALID")
 
 
-def _validate_phone_number(phone_number):
+def _validate_phone_number(phone_number) -> None:
     """Check if the phone number is valid"""
     if not phone_number:
         raise MissingInputException("PHONE_NUMBER_MISSING")
@@ -325,14 +323,14 @@ def _validate_phone_number(phone_number):
         raise InvalidInputException("PHONE_NUMBER_TAKEN")
 
 
-def _validate_description(description):
+def _validate_description(description) -> None:
     """Check if the description is valid"""
     # check if description not too long
     if description and len(description) > 500:
         raise InvalidInputException("DESCRIPTION_TOO_LONG")
 
 
-def _validate_password(password, password_confirmation):
+def _validate_password(password, password_confirmation) -> None:
     """Check if the password is valid"""
 
     # check if exist
@@ -362,7 +360,7 @@ def _validate_password(password, password_confirmation):
         raise InvalidInputException("PASSWORD_NOT_MATCHING")
 
 
-def change_password(user_id, old_password, new_password, new_password_confirmation):
+def change_password(user_id, old_password, new_password, new_password_confirmation) -> None:
     """Change password"""
     user_bo = get_user_by_id(user_id)
     if not old_password:
@@ -384,7 +382,7 @@ def change_password(user_id, old_password, new_password, new_password_confirmati
     connect_pg.disconnect(conn)
 
 
-def change_forgotten_password(studen_email, new_password, new_password_confirmation):
+def change_forgotten_password(studen_email, new_password, new_password_confirmation) -> None:
     """Change forgotten password"""
     _validate_password(new_password, new_password_confirmation)
 
@@ -396,7 +394,7 @@ def change_forgotten_password(studen_email, new_password, new_password_confirmat
     connect_pg.execute_command(conn, query, values)
 
 
-def change_student_email(user_id, student_email):
+def change_student_email(user_id, student_email) -> None:
     """Change student email"""
     user_bo = get_user_by_id(user_id)
     if user_bo.student_email == student_email:
@@ -411,7 +409,7 @@ def change_student_email(user_id, student_email):
     connect_pg.disconnect(conn)
 
 
-def update_user_attribute(user_id, attribute_name, new_value, validation_func):
+def update_user_attribute(user_id, attribute_name, new_value, validation_func) -> None:
     """General function to update a user attribute"""
     user_bo = get_user_by_id(user_id)
 
@@ -430,32 +428,32 @@ def update_user_attribute(user_id, attribute_name, new_value, validation_func):
     connect_pg.disconnect(conn)
 
 
-def change_login(user_id, login):
+def change_login(user_id, login) -> None:
     """Change login"""
     update_user_attribute(user_id, "login", login, _validate_login)
 
 
-def change_firstname(user_id, firstname):
+def change_firstname(user_id, firstname) -> None:
     """Change firstname"""
     update_user_attribute(user_id, "firstname", firstname, lambda name: _validate_name(name, "FIRSTNAME"))
 
 
-def change_lastname(user_id, lastname):
+def change_lastname(user_id, lastname) -> None:
     """Change lastname"""
     update_user_attribute(user_id, "lastname", lastname, lambda name: _validate_name(name, "LASTNAME"))
 
 
-def change_phone_number(user_id, phone_number):
+def change_phone_number(user_id, phone_number) -> None:
     """Change phone number"""
     update_user_attribute(user_id, "phone_number", phone_number, _validate_phone_number)
 
 
-def change_gender(user_id, gender):
+def change_gender(user_id, gender) -> None:
     """Change gender"""
     update_user_attribute(user_id, "gender", gender, _validate_gender)
 
 
-def change_description(user_id, description):
+def change_description(user_id, description) -> None:
     """Change description"""
     update_user_attribute(user_id, "description", description, _validate_description)
 
